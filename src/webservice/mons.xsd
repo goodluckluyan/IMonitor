@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <schema targetNamespace="http://tempuri.org/mons.xsd"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:mons="http://tempuri.org/mons.xsd"
+  xmlns="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="unqualified"
+  attributeFormDefault="unqualified">
+  <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+  <!-- operation request element -->
+  <element name="GetMontorState">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="MontorStateRes">
+   <complexType>
+    <sequence>
+     <element name="bMain" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::bMain -->
+     <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::iState -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetTMSState">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="TmsStateRes">
+   <complexType>
+    <sequence>
+     <element name="bRun" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__TmsStateRes::bRun -->
+     <element name="iWorkState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__TmsStateRes::iWorkState -->
+     <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__TmsStateRes::iState -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetSMSState">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="SMSState">
+   <complexType>
+    <sequence>
+     <element name="HallId" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::HallId -->
+     <element name="bRun" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::bRun -->
+     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::state -->
+     <element name="position" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::position -->
+     <element name="strSplUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::strSplUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetRaidtate">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="RaidStateRes">
+   <complexType>
+    <sequence>
+     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__RaidStateRes::state -->
+     <element name="ReadSpeed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__RaidStateRes::ReadSpeed -->
+     <element name="WriteSpeed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__RaidStateRes::WriteSpeed -->
+     <element name="diskState" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/><!-- mons__RaidStateRes::diskState -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetEthState">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ethstate">
+   <complexType>
+    <sequence>
+     <element name="ConnectState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::ConnectState -->
+     <element name="speed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::speed -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetSwitchState">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="SwitchStateRes">
+   <complexType>
+    <sequence>
+     <element name="Switch1State" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SwitchStateRes::Switch1State -->
+     <element name="Switch2State" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SwitchStateRes::Switch2State -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetIngestSpeedLimit">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="IngestSpeedLimitRes">
+   <complexType>
+    <sequence>
+     <element name="bEnableIngest" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__IngestSpeedLimitRes::bEnableIngest -->
+     <element name="speedLimit" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__IngestSpeedLimitRes::speedLimit -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetWorkState_CS">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="WorkStateRes">
+   <complexType>
+    <sequence>
+     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__WorkStateRes::state -->
+     <element name="info" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__WorkStateRes::info -->
+     <element name="hall" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__WorkStateRes::hall -->
+    </sequence>
+   </complexType>
+  </element>
+ </schema>
+
