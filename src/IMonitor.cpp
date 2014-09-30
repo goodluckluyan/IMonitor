@@ -99,37 +99,37 @@ void InitSigFun(C_LogManage *pLogManage)
 	// set signal; wzp
 	if(signal(SIGINT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGINT"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGINT"); 
 		printf("add signal Number:SIGINT\n");	
 	}
 	if(signal(SIGALRM,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGALRM"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
 		printf("add signal Number:SIGALRM\n");	
 	}
 	if(signal(SIGHUP,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGHUP"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
 		printf("add signal Number:SIGHUP\n");	
 	}  
 	if(signal(SIGPIPE,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGPIPE"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 
 		printf("add signal Number:SIGPIPE\n");	
 	}  
 	if(signal(SIGPOLL,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGPOLL"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPOLL"); 
 		printf("add signal Number:SIGPOLL\n");	
 	} 
 	if(signal(SIGPROF,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGPROF"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPROF"); 
 		printf("add signal Number:SIGPROF\n");	
 	}
 	if(signal(SIGSTKFLT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGSTKFLT"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGSTKFLT"); 
 		printf("add signal Number:SIGSTKFLT\n");	
 	} 
 	/* if(signal(SIGTERM,sig_fun) == SIG_ERR)
@@ -139,27 +139,27 @@ void InitSigFun(C_LogManage *pLogManage)
 	}*/
 	if(signal(SIGUSR1,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGUSR1"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR1"); 
 		printf("add signal Number:SIGUSR1\n");	
 	}
 	if(signal(SIGUSR2,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGUSR2"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR2"); 
 		printf("add signal Number:SIGUSR2\n");	
 	} 
 	if(signal(SIGVTALRM,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGVTALRM"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGVTALRM"); 
 		printf("add signal Number:SIGVTALRM\n");	
 	}  
 	if(signal(SIGIO,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGIO"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGIO"); 
 		printf("add signal Number:SIGIO\n");	
 	} 
 	if(signal(SIGABRT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGABRT"); 
+		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGABRT"); 
 		printf("add signal Number:SIGABRT\n");	
 	}                 
 }
@@ -218,15 +218,15 @@ int main(int argc, char** argv)
 
 	// ´ÅÅÌ¼à²âÄ£¿é³õÊ¼»¯
 	CheckDisk ds(&dm);
-	if(!ds.InitAndCheck())
-	{
-		printf("Initial Fail! Check Raid Status Fail!\n");
-		return -1;
-	}
-	else
-	{
-		printf("Raid Check Done.");
-	}
+// 	if(!ds.InitAndCheck())
+// 	{
+// 		printf("Initial Fail! Check Raid Status Fail!\n");
+// 		return -1;
+// 	}
+// 	else
+// 	{
+// 		printf("Raid Check Done.\n");
+// 	}
 	
 	// Íø¿¨¼à²âÄ£¿é³õÊ¼»¯
 	Test_NetCard ns(&dm);
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		printf("Eth Check Done.");
+		printf("Eth Check Done.\n");
 	}
 	
 	// ¼à²âSMSÄ£¿é
