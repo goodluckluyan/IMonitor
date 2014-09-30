@@ -449,7 +449,7 @@ bool Test_NetCard::GetAllEthStatus()
 
 
 
-bool Test_NetCard::InitCheck()
+bool Test_NetCard::InitAndCheck()
 {
 	bool bRet = true;
 	if(!m_bInit)
@@ -472,7 +472,7 @@ bool Test_NetCard::InitCheck()
 			if(nConnStatus != 1)
 			{
 				bRet = false;
-				printf("%s Connect Status Down!\n",vecEth[i].c_str());
+				printf("%s Connect Status Down!\n",m_vecEth[i].c_str());
 				break;
 			}
 		}

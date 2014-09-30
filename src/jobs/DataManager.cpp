@@ -1,6 +1,9 @@
 #include "DataManager.h"
 #include<stdio.h>
+#include<stdlib.h>
 #include"database/CppMySQL3DB.h"
+#include"para/C_Para.h"
+
 CDataManager::CDataManager()
 {
 
@@ -14,7 +17,8 @@ bool CDataManager::Init()
 {
 	C_Para *ptrPara = C_Para::GetInstance();
 	CppMySQL3DB mysql;
-	mysql.open(ptrPara->m_strDBServiceIP,ptrPara->m_strDBUserName,ptrPara->m_strDBPWD,ptrPara->m_strDBName);
+	mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str());
 
 	// 读取ethinfo ,初始化网卡信息
 	int nResult;
@@ -63,14 +67,6 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	return true;
 }
 
-bool CDataManager::IsErrorOfRaid()
-{
-	DiskInfo df;
-	m_csDisk.EnterCS();
-	df = m_df;
-	m_csDisk.LeaveCS();
-
-}
 
 bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 {

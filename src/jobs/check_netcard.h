@@ -25,7 +25,7 @@ public:
 	int Init();
 
 	//初始化检测
-	bool InitCheck();
+	bool InitAndCheck();
 
 	// 获取所有可用网卡状态
 	bool GetAllEthStatus();

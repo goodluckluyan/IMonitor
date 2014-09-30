@@ -203,16 +203,9 @@ int main(int argc, char** argv)
 		printf("Init Log error ,exit!\n");
 		return -1; //Add Log and Erorr Ctrl;
 	}
-	//M0001
 	pLogManage->WriteLog(0,16,0, INFO_IMonitor_START_RUN,"IMonitor system start run!!!");	
-	
-	//检测php访问地址是否为本机地址。
-// 	if(CompareCppListenIpAddr() != 0)
-// 	{
-// 		pLogManage->WriteLog(3,16,0, ERROR_WEB_VISIT_ADDRESS,"web访问地址设置错误，非本机地址。");
-// 		return -1;
-// 	}
 
+	// 初始化信号处理
 	InitSigFun(pLogManage);
 
 
@@ -223,7 +216,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	// 监测模块
+	// 磁盘监测模块初始化
 	CheckDisk ds(&dm);
 	if(!ds.InitAndCheck())
 	{
@@ -235,10 +228,9 @@ int main(int argc, char** argv)
 		printf("Raid Check Done.");
 	}
 	
-	
+	// 网卡监测模块初始化
 	Test_NetCard ns(&dm);
-	ns.Init();
-	if(!ns.InitCheck())
+	if(!ns.InitAndCheck())
 	{
 		printf("Initial Fail! Check Eth Status Fail!\n");
 		return -1;
@@ -248,9 +240,13 @@ int main(int argc, char** argv)
 		printf("Eth Check Done.");
 	}
 	
-
+	// 监测SMS模块
 	C_HallList * ptrLstHall = C_HallList::GetInstance();
 	ptrLstHall->Init(&dm);
+
+	// 监测对端高度软件
+	CMonitorSensor OMonitorSersor;
+	OMonitorSersor.Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,&dm);
 
 	//初试化线程
 	C_ThreadManage *pThreadManage = C_ThreadManage::GetInstance();
@@ -266,14 +262,11 @@ int main(int argc, char** argv)
 		return -1; //Add Log and Erorr Ctrl;
 	} 
 
-	
-	CMonitorSensor OMonitorSersor;
-	OMonitorSersor.Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,&dm);
-	CInvoke Invoker(ptrLstHall,&ds,&ns,&dispatch,&OMonitorSersor);
 
 	// 调度模块
 	CDispatch dispatch(&dm);
 	dispatch.Init();
+	CInvoke Invoker(ptrLstHall,&ds,&ns,&dispatch,&OMonitorSersor);
 
 	// 初始化定时任务
 	C_TaskList *pTaskList = C_TaskList::GetInstance();
