@@ -283,13 +283,6 @@ int C_LogManage::CreateLogStruct(std::string &strPath)
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "TimeTask";
 	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "TimeTask");
-	m_listLog.push_back(pLog);	
-	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 19;
-	pLog->iSubModule = 0;
-	pLog->strLogName = strPath + "ContentManage";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "ContentManage");
 	m_listLog.push_back(pLog);		
 	
 	pLog = new LOG_STRUCT;
@@ -306,41 +299,7 @@ int C_LogManage::CreateLogStruct(std::string &strPath)
 	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "Webservice");
 	m_listLog.push_back(pLog);		
 	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 22;
-	pLog->iSubModule = 0;
-	pLog->strLogName = strPath + "DeviceCtrl";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "DeviceCtrl");
-	m_listLog.push_back(pLog);	
-	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 22;
-	pLog->iSubModule = 1;
-	pLog->strLogName = strPath + "Projector";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "Audio");
-	m_listLog.push_back(pLog);	
-	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 22;
-	pLog->iSubModule = 2;
-	pLog->strLogName = strPath + "Audio";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "Audio");
-	m_listLog.push_back(pLog);	
-	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 22;
-	pLog->iSubModule = 3;
-	pLog->strLogName = strPath + "DCS";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "DCS");
-	m_listLog.push_back(pLog);	
-	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 22;
-	pLog->iSubModule = 4;
-	pLog->strLogName = strPath + "/Power";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "Power");
-	m_listLog.push_back(pLog);
-	
+
 	pLog = new LOG_STRUCT;
 	pLog->iModule = 23;
 	pLog->iSubModule = 0;
@@ -355,12 +314,7 @@ int C_LogManage::CreateLogStruct(std::string &strPath)
 	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "Schedule");
 	m_listLog.push_back(pLog);
 	
-	pLog = new LOG_STRUCT;
-	pLog->iModule = 26;
-	pLog->iSubModule = 0;
-	pLog->strLogName = strPath + "CUE";
-	pLog->pLogManage = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, strTmpPath.c_str(), "CUE");
-	m_listLog.push_back(pLog);
+
 	return 0;		
 }
 

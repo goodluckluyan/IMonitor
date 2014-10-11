@@ -21,55 +21,7 @@
 #include "execinfo.h"
 
 extern bool g_bQuit;
-
-int CompareCppListenIpAddr();//duheqing 2013-12-27
-//20140305 by xiaozhengxiu add
-//void init_ssl_env(C_ThreadManage *pThreadManage);
-//void clean_ssl_env(C_ThreadManage *pThreadManage);
-//20140305 by xiaozhengxiu add end
-
 static void sig_fun(int iSigNum);
-
-//duheqing 2013-12-27
-int CompareCppListenIpAddr()
-{
-	//duheqing 2014-5-26
-	string startTime;
-	ifstream fin("/proc/uptime");
-	fin>>startTime;
-	fin.close();
-
-	C_RunPara *pRunPara = C_RunPara::GetInstance();
-	if(atoi(startTime.c_str()) < pRunPara->GetOsStartWaitTime())
-		sleep(pRunPara->GetOsStartWaitTime() - atoi(startTime.c_str()));
-
-	CppMySQL3DB mySql;
-	int result = mySql.openTMS();
-	if(result != 0)
-		return -1;
-
-	string sql = "select conf_val from system_config where conf_item=\"proxy_host\";";
-	CppMySQLQuery recordset = mySql.querySQL(sql.c_str(), result);
-	if(result != 0)
-		return -1;
-	if(recordset.numRow() == 0)
-		return -1;
-
-	recordset.seekRow(0);
-	string listenIp = recordset.getStringField("conf_val");
-
-	std::vector<std::string> ipList;
-	result = GetThisAllIp(ipList);
-	if(result != 0)
-		return -1;
-
-	if(std::find(ipList.begin(), ipList.end(), listenIp) == ipList.end())
-	{
-		sql = "update system_config set conf_val=\"\" where conf_item=\"proxy_host\"";
-		mySql.execSQL(sql.c_str());
-	}
-	return std::find(ipList.begin(), ipList.end(), listenIp) == ipList.end() ? -1 : 0;
-}
 
 
 void sig_fun(int iSigNum)
@@ -210,26 +162,26 @@ int main(int argc, char** argv)
 
 
 	// 数据管理模块
-	CDataManager dm;
-	if(!dm.Init())
+	CDataManager *pDM = CDataManager::GetInstance();;
+	if(!pDM->Init())
 	{
 		return -1;
 	}
 
 	// 磁盘监测模块初始化
-	CheckDisk ds(&dm);
-// 	if(!ds.InitAndCheck())
-// 	{
-// 		printf("Initial Fail! Check Raid Status Fail!\n");
-// 		return -1;
-// 	}
-// 	else
-// 	{
-// 		printf("Raid Check Done.\n");
-// 	}
+	CheckDisk ds(pDM);
+	if(!ds.InitAndCheck())
+	{
+		printf("Initial Fail! Check Raid Status Fail!\n");
+		return -1;
+	}
+	else
+	{
+		printf("Raid Check Done.\n");
+	}
 	
 	// 网卡监测模块初始化
-	Test_NetCard ns(&dm);
+	Test_NetCard ns(pDM);
 	if(!ns.InitAndCheck())
 	{
 		printf("Initial Fail! Check Eth Status Fail!\n");
@@ -242,7 +194,7 @@ int main(int argc, char** argv)
 	
 	// 监测SMS模块
 	C_HallList * ptrLstHall = C_HallList::GetInstance();
-	ptrLstHall->Init(&dm);
+	ptrLstHall->Init(pDM);
 
 	// 监测对端高度软件
 	CMonitorSensor OMonitorSersor;
@@ -264,7 +216,7 @@ int main(int argc, char** argv)
 
 
 	// 调度模块
-	CDispatch dispatch(&dm);
+	CDispatch dispatch(pDM);
 	dispatch.Init();
 	CInvoke Invoker(ptrLstHall,&ds,&ns,&dispatch,&OMonitorSersor);
 

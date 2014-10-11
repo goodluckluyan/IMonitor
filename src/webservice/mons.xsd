@@ -9,6 +9,15 @@
   elementFormDefault="unqualified"
   attributeFormDefault="unqualified">
   <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+  <complexType name="ethstate"><!-- mons__ethstate -->
+
+   <sequence>
+     <element name="eth" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::eth -->
+     <element name="type" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::type -->
+     <element name="ConnectState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::ConnectState -->
+     <element name="speed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::speed -->
+   </sequence>
+  </complexType>
   <!-- operation request element -->
   <element name="GetMontorState">
    <complexType>
@@ -87,11 +96,10 @@
    </complexType>
   </element>
   <!-- operation response element -->
-  <element name="ethstate">
+  <element name="GetEthStateResponse">
    <complexType>
     <sequence>
-     <element name="ConnectState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::ConnectState -->
-     <element name="speed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::speed -->
+     <element name="vecret" type="mons:ethstate" minOccurs="1" maxOccurs="unbounded"/><!-- mons__GetEthState::vecret -->
     </sequence>
    </complexType>
   </element>

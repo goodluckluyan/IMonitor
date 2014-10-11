@@ -4,6 +4,7 @@
 #include"database/CppMySQL3DB.h"
 #include"para/C_Para.h"
 
+CDataManager *CDataManager::m_pinstance=NULL;
 CDataManager::CDataManager()
 {
 
@@ -15,31 +16,31 @@ CDataManager::~CDataManager()
 
 bool CDataManager::Init()
 {
-	C_Para *ptrPara = C_Para::GetInstance();
-	CppMySQL3DB mysql;
-	mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
-		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str());
-
-	// 读取ethinfo ,初始化网卡信息
-	int nResult;
-	CppMySQLQuery query = mysql.querySQL("select * from ethinfo",nResult);
-	int nRows = 0 ;
-	if((nRows = query.numRow()) == 0)
-	{
-		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
-		return false;
-	}
-
-	std::map<std::string,int> mapEthBaseInfo;
-	query.seekRow(0);
-	for(int i = 0 ;i < nRows ; i++)
-	{
-		std::string strName = query.getStringField("eth");
-		int nType = atoi(query.getStringField("type"));
-		mapEthBaseInfo[strName] = nType;
-		query.nextRow();
-	}
-	SetEthBaseInfo(mapEthBaseInfo);
+// 	C_Para *ptrPara = C_Para::GetInstance();
+// 	CppMySQL3DB mysql;
+// 	mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+// 		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str());
+// 
+// 	// 读取ethinfo ,初始化网卡信息
+// 	int nResult;
+// 	CppMySQLQuery query = mysql.querySQL("select * from ethinfo",nResult);
+// 	int nRows = 0 ;
+// 	if((nRows = query.numRow()) == 0)
+// 	{
+// 		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
+// 		return false;
+// 	}
+// 
+// 	std::map<std::string,int> mapEthBaseInfo;
+// 	query.seekRow(0);
+// 	for(int i = 0 ;i < nRows ; i++)
+// 	{
+// 		std::string strName = query.getStringField("eth");
+// 		int nType = atoi(query.getStringField("type"));
+// 		mapEthBaseInfo[strName] = nType;
+// 		query.nextRow();
+// 	}
+// 	SetEthBaseInfo(mapEthBaseInfo);
 
 	return true;
 }
@@ -81,8 +82,6 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 	
 	m_csNet.LeaveCS();
 
-
-
 	return true;
 }
 
@@ -96,13 +95,19 @@ bool CDataManager::UpdateTMSStat()
 	return true;
 }
 
-// 读取监测参数
-bool CDataManager::GetDevStat()
+// 读取disk监测参数
+bool CDataManager::GetDevStat(DiskInfo &df)
 {
-
+	m_csDisk.EnterCS();
+	df = m_df;
+	m_csDisk.LeaveCS();
 }
-bool CDataManager::GetNetStat()
+
+bool CDataManager::GetNetStat(std::map<std::string,EthStatus> &mapEthStatus)
 {
+	m_csNet.EnterCS();
+	mapEthStatus = m_mapEthStatus;
+	m_csNet.LeaveCS();
 	return true;
 }
 

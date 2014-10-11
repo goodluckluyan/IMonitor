@@ -8,7 +8,15 @@
 class CDataManager
 {
 public:
-	CDataManager();
+	static CDataManager * GetInstance()
+	{
+		if(m_pinstance == NULL)
+		{
+			m_pinstance = new CDataManager;
+		}
+		return m_pinstance;
+	}
+
 	~CDataManager();
 	
 	bool Init();
@@ -44,13 +52,14 @@ public:
 	bool UpdateTMSStat();
 
 	// 读取监测参数
-	bool GetDevStat();
-	bool GetNetStat();
+	bool GetDevStat(DiskInfo &df);
+	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
 	bool GetSMSStat();
 	bool GetTMSStat();
 
 	//其它方法
 private:
+	CDataManager();
 
 	//DiskStatus;
 	DiskInfo m_df;
@@ -61,7 +70,7 @@ private:
 	C_CS m_csNet;
 	C_CS m_csSMS;
 	C_CS m_csTMS;
-
+	static CDataManager * m_pinstance;
 
 };
 

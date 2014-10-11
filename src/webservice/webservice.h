@@ -36,10 +36,12 @@ int mons__GetRaidtate(struct mons__RaidStateRes &ret);
 
 struct mons__ethstate
 {
+	std::string eth;
+	int type;
 	int ConnectState;
 	int speed;
 };
-int mons__GetEthState(struct mons__ethstate &ret);
+int mons__GetEthState(std::vector<struct mons__ethstate> &vecret);
 
 struct mons__SwitchStateRes
 {

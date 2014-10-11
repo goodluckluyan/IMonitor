@@ -216,15 +216,15 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS:
-		{
-			int nConnectState;
-			int nSpeed;
-			bRet = ParseOtherMonitorEthState(retXml,nConnectState, nSpeed);
-			if(bRet && m_ptrDM != NULL)
-			{
-				m_ptrDM->UpdateOtherEthState(nConnectState,nSpeed);
-			}
-		}
+// 		{
+// 			int nConnectState;
+// 			int nSpeed;
+// 			bRet = ParseOtherMonitorEthState(retXml,nConnectState, nSpeed);
+// 			if(bRet && m_ptrDM != NULL)
+// 			{
+// 				m_ptrDM->UpdateOtherEthState(nConnectState,nSpeed);
+// 			}
+// 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS:
 		{

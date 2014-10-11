@@ -2,6 +2,7 @@
 #include "soapH.h"
 #include <iostream>
 #include "para/C_Para.h"
+#include "jobs/DataManager.h"
 using namespace std;
 
 int mons__GetMontorState(struct soap*, struct mons__MontorStateRes &ret)
@@ -33,21 +34,45 @@ int mons__GetSMSState(struct soap*, struct mons__SMSState &ret)
 
 int mons__GetRaidtate(struct soap*, struct mons__RaidStateRes &ret)
 {
-	ret.ReadSpeed = 200;
-	ret.WriteSpeed = 100;
-	ret.diskState.push_back(0xff);
-	ret.diskState.push_back(0x0f);
-	ret.diskState.push_back(0xfe);
+	CDataManager *pDM = CDataManager::GetInstance();
+	DiskInfo df;
+	pDM->GetDevStat(df);
+	int nLen = df.diskDrives.size();
+	int nSpeed = 0;
+	for(int i = 0 ;i < nLen ; i++)
+	{
+		// 取最小值
+		if(nSpeed == 0 || nSpeed > df.diskDrives[i].driveSpeed)
+		{
+			nSpeed = df.diskDrives[i].driveSpeed;
+		}
+		ret.diskState.push_back(df.diskDrives[i].driveFirmwareState);
+	}
+	ret.ReadSpeed = nSpeed;
+	ret.WriteSpeed = nSpeed;
 	ret.state = 0x01;
 
 	return 0;
 }
 
-int mons__GetEthState(struct soap*, struct mons__ethstate &ret)
+int mons__GetEthState(struct soap*, std::vector<struct mons__ethstate> &vecret)
 {
-	
-	ret.ConnectState =1 ;
-	ret.speed = 1000;
+	CDataManager *pDM = CDataManager::GetInstance();
+	std::map<std::string,EthStatus> mapEthStatus;
+	pDM->GetNetStat(mapEthStatus);
+	std::map<std::string,EthStatus>::iterator it = mapEthStatus.begin();
+	for(;it != mapEthStatus.end();it++)
+	{
+		mons__ethstate node;
+		EthStatus &Ethinfo = it->second;
+		node.eth=Ethinfo.strName;
+		node.type = Ethinfo.nTaskType;
+		node.ConnectState = Ethinfo.nConnStatue;
+		node.speed = (Ethinfo.nRxSpeed + Ethinfo.nTxSpeed)/2;
+		vecret.push_back(node);
+	}
+	 
+
 	return 0;
 }
 
