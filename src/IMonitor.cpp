@@ -198,7 +198,7 @@ int main(int argc, char** argv)
 
 	// 监测对端高度软件
 	CMonitorSensor OMonitorSersor;
-	OMonitorSersor.Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,&dm);
+	OMonitorSersor.Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,pDM);
 
 	//初试化线程
 	C_ThreadManage *pThreadManage = C_ThreadManage::GetInstance();
