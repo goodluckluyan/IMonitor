@@ -58,6 +58,7 @@ EXT:
 		strError = errmsg();
 		strError += buffer;
 		DBLOG((int &)ERROR_OPEN_DATABASE,strError);
+		printf("%s\n",strError.c_str());
 		//--zhangmiao end:11/28/2012
 
 		mysql_close( _db_ptr );
@@ -72,6 +73,7 @@ EXT:
 		strError = errmsg();
 		strError += buffer;
 		DBLOG((int &)ERROR_OPEN_DATABASE,strError);
+		printf("%s\n",strError.c_str());
 	}
 	//--zhangmiao end:11/28/2012
 

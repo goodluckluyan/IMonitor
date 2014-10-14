@@ -170,15 +170,15 @@ int main(int argc, char** argv)
 
 	// 磁盘监测模块初始化
 	CheckDisk ds(pDM);
-	if(!ds.InitAndCheck())
-	{
-		printf("Initial Fail! Check Raid Status Fail!\n");
-		return -1;
-	}
-	else
-	{
-		printf("Raid Check Done.\n");
-	}
+// 	if(!ds.InitAndCheck())
+// 	{
+// 		printf("Initial Fail! Check Raid Status Fail!\n");
+// 		return -1;
+// 	}
+// 	else
+// 	{
+// 		printf("Raid Check Done.\n");
+// 	}
 	
 	// 网卡监测模块初始化
 	Test_NetCard ns(pDM);

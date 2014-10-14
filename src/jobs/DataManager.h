@@ -32,7 +32,7 @@ public:
 		int nPosition,std::string strSplUuid);
 	bool UpdateOtherRaidState(int nState,int nReadSpeed,int nWriteSpeed,
 		std::vector<int> &vecDiskState);
-	bool UpdateOtherEthState(int nConnectState,int nSpeed);
+	bool UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus);
 	bool UpdateOtherSwitchState(int nSwitch1State,int nSwitch2State);
 	bool UpdateOtherSpeedLmtState(bool bEnableIngest,int nSpeedLimit);
 	bool UpdateOtherSMSEWState(int nState,std::string  strInfo,std::string  strHall);

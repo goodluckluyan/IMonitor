@@ -41,12 +41,13 @@ int mons__GetRaidtate(struct soap*, struct mons__RaidStateRes &ret)
 	int nSpeed = 0;
 	for(int i = 0 ;i < nLen ; i++)
 	{
-		// 取最小值
-		if(nSpeed == 0 || nSpeed > df.diskDrives[i].driveSpeed)
+		// 取最小值.
+		int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
+		if(nSpeed == 0 || nSpeed >nDriveSpeed )
 		{
-			nSpeed = df.diskDrives[i].driveSpeed;
+			nSpeed = nDriveSpeed;
 		}
-		ret.diskState.push_back(df.diskDrives[i].driveFirmwareState);
+		ret.diskState.push_back(atoi(df.diskDrives[i].driveFirmwareState.c_str()));
 	}
 	ret.ReadSpeed = nSpeed;
 	ret.WriteSpeed = nSpeed;

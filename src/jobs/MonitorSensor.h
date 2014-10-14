@@ -116,7 +116,7 @@ private:
 	bool ParseOtherMonitorSwitchState(std::string &retXml,int &nSwitch1State,int & nSwitch2State);
 
 	// ½âÎöÍø¿¨×´Ì¬
-	bool ParseOtherMonitorEthState(std::string &retXml,int &nConnectState,int &nSpeed);
+	bool ParseOtherMonitorEthState(std::string &retXml,std::vector<EthStatus> &vecEthStatus);
 	
 private:
 	std::string m_strURI;

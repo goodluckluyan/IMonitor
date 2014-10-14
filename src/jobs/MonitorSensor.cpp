@@ -216,15 +216,14 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS:
-// 		{
-// 			int nConnectState;
-// 			int nSpeed;
-// 			bRet = ParseOtherMonitorEthState(retXml,nConnectState, nSpeed);
-// 			if(bRet && m_ptrDM != NULL)
-// 			{
-// 				m_ptrDM->UpdateOtherEthState(nConnectState,nSpeed);
-// 			}
-// 		}
+		{
+			std::vector<EthStatus> vecEthStatus;
+			bRet = ParseOtherMonitorEthState(retXml,vecEthStatus);
+			if(bRet && m_ptrDM != NULL)
+			{
+				m_ptrDM->UpdateOtherEthState(vecEthStatus);
+			}
+		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS:
 		{
@@ -671,7 +670,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 }
 
 
-bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,int &nConnectState,int &nSpeed)
+bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<EthStatus> &vecEthStatus)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
 	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
@@ -682,46 +681,48 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,int &nConnec
 
 	try
 	{
+		//printf("%s\n",retXml.c_str());
 		ptrParser->parse(*ptrInputsource);
 		DOMDocument* ptrDoc = ptrParser->getDocument();	
 
-		// 读取connectstatus节点
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ConnectState"));
-		if(ptrNodeList == NULL)
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("vecret"));
+		int nLen = (int)ptrNodeList->getLength();
+		for(int i = 0 ;i < nLen ;i++)
 		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorEthState:没有找到connectstatus节点");
-			return false;
-		}
-		else
-		{
-			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-			if(!str_state.empty())
+			EthStatus EthNode;
+			DOMNode * ptrNode = ptrNodeList->item(i);
+			DOMNodeList* ptrCL = ptrNode->getChildNodes();
+			DOMNode* ptrEthNode = ptrCL->item(0);
+			std::string strEth =  XMLString::transcode(ptrEthNode->getFirstChild()->getNodeValue());
+			if(!strEth.empty())
 			{
-				nConnectState = atoi(str_state.c_str());
+				EthNode.strName = strEth;
 			}
-		}
 
-		// 读取speed节点
-		DOMNodeList *ptrSpeedNodeList = ptrDoc->getElementsByTagName(C2X("speed"));
-		if(ptrSpeedNodeList == NULL)
-		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorEthState:没有找到speed节点");
-			return false;
-		}
-		else 
-		{
-			DOMNode* ptrNode = ptrSpeedNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-			if(!str_state.empty())
+			DOMNode* ptrTypeNode = ptrCL->item(1);
+			std::string strType =  XMLString::transcode(ptrTypeNode->getFirstChild()->getNodeValue());
+			if(!strType.empty())
 			{
-				nSpeed = atoi(str_state.c_str());
+				EthNode.nTaskType = atoi(strType.c_str());
 			}
+
+			DOMNode* ptrConnectStatusNode = ptrCL->item(2);
+			std::string strConnectStatus =  XMLString::transcode(ptrConnectStatusNode->getFirstChild()->getNodeValue());
+			if(!strConnectStatus.empty())
+			{
+				EthNode.nConnStatue = atoi(strConnectStatus.c_str());
+			}
+
+			DOMNode* ptrSpeedNode = ptrCL->item(3);
+			std::string strSpeed =  XMLString::transcode(ptrSpeedNode->getFirstChild()->getNodeValue());
+			if(!strSpeed.empty())
+			{
+				EthNode.nRxSpeed = EthNode.nTxSpeed = atoi(strSpeed.c_str());
+			}
+
+			vecEthStatus.push_back(EthNode);
 		}
-
-
+		
 	}
 	catch(  XMLException& e )
 	{

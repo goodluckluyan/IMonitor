@@ -16,31 +16,35 @@ CDataManager::~CDataManager()
 
 bool CDataManager::Init()
 {
-// 	C_Para *ptrPara = C_Para::GetInstance();
-// 	CppMySQL3DB mysql;
-// 	mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
-// 		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str());
-// 
-// 	// 读取ethinfo ,初始化网卡信息
-// 	int nResult;
-// 	CppMySQLQuery query = mysql.querySQL("select * from ethinfo",nResult);
-// 	int nRows = 0 ;
-// 	if((nRows = query.numRow()) == 0)
-// 	{
-// 		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
-// 		return false;
-// 	}
-// 
-// 	std::map<std::string,int> mapEthBaseInfo;
-// 	query.seekRow(0);
-// 	for(int i = 0 ;i < nRows ; i++)
-// 	{
-// 		std::string strName = query.getStringField("eth");
-// 		int nType = atoi(query.getStringField("type"));
-// 		mapEthBaseInfo[strName] = nType;
-// 		query.nextRow();
-// 	}
-// 	SetEthBaseInfo(mapEthBaseInfo);
+	C_Para *ptrPara = C_Para::GetInstance();
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+	{
+		printf("mysql open failed!\n");
+		return false;
+	}
+
+	// 读取ethinfo ,初始化网卡信息
+	int nResult;
+	CppMySQLQuery query = mysql.querySQL("select * from EthInfo",nResult);
+	int nRows = 0 ;
+	if((nRows = query.numRow()) == 0)
+	{
+		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
+		return false;
+	}
+
+	std::map<std::string,int> mapEthBaseInfo;
+	query.seekRow(0);
+	for(int i = 0 ;i < nRows ; i++)
+	{
+		std::string strName = query.getStringField("eth");
+		int nType = atoi(query.getStringField("type"));
+		mapEthBaseInfo[strName] = nType;
+		query.nextRow();
+	}
+	SetEthBaseInfo(mapEthBaseInfo);
 
 	return true;
 }
@@ -152,9 +156,15 @@ bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 	return true;
 }
 
-bool  CDataManager::UpdateOtherEthState(int nConnectState,int nSpeed)
+bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 {
-	printf("Other Eth State:nConnectState:%d,nSpeed:%d\n",nConnectState,nSpeed);
+	int nlen = vecEthStatus.size();
+	for(int i = 0 ;i < nlen ;i++)
+	{
+		EthStatus &node = vecEthStatus[i];
+		printf("Other %s State:nConnectState:%d,nSpeed:%d\n",node.strName.c_str(),
+			node.nConnStatue,node.nRxSpeed);
+	}
 	return true;
 }
 

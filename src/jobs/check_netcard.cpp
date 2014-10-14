@@ -83,6 +83,14 @@ int GetIFInfo(std::vector<std::string> &vecEth)
 			continue;
 		}
 
+		char cName[4]={0};
+		strncpy(cName,ifr->ifr_name,3);
+		if(strcmp(cName,"eth") != 0)
+		{
+			ifr++;
+			continue;
+		}
+
 		printf("%s:%s\n",ifr->ifr_name,inet_ntoa(((struct sockaddr_in*)&(ifr->ifr_addr))->sin_addr));
 		vecEth.push_back(ifr->ifr_name);
 		ifr++;
