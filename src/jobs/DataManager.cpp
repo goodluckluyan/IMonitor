@@ -14,6 +14,7 @@ CDataManager::~CDataManager()
 
 }
 
+// 初始化
 bool CDataManager::Init()
 {
 	C_Para *ptrPara = C_Para::GetInstance();
@@ -49,6 +50,7 @@ bool CDataManager::Init()
 	return true;
 }
 
+// 设置网卡基本信息
 void CDataManager::SetEthBaseInfo(std::map<std::string,int> &mapEthBaseInfo)
 {	
 	m_csNet.EnterCS();
@@ -63,6 +65,19 @@ void CDataManager::SetEthBaseInfo(std::map<std::string,int> &mapEthBaseInfo)
 	m_csNet.LeaveCS();
 }
 
+// 设置SMS基本信息
+void CDataManager::SetSMSInfo(std::vector<SMSInfo> vecHall)
+{
+	m_csSMS.EnterCS();
+	int nLen = vecHall.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		SMSInfo & node = vecHall[i];
+		m_mapSmsStatus[node.strId] = node;
+	}
+	m_csSMS.LeaveCS();
+}
+
 // 更新各个模块的监测数据
 bool CDataManager::UpdateDevStat(DiskInfo &df)
 {
@@ -72,7 +87,7 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	return true;
 }
 
-
+// 更新网卡状态监测数据
 bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 {
 	m_csNet.EnterCS();
@@ -89,13 +104,28 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 	return true;
 }
 
-bool CDataManager::UpdateSMSStat()
+//更新SMS的状态
+bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string strInfo)
 {
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
+	if(it != m_mapSmsStatus.end())
+	{
+		SMSInfo &info = it->second;
+		info.stStatus.nStatus = nState;
+		//info.stStatus.bRun = 1;
+	}
+	m_csSMS.LeaveCS();
 	return true;
 }
 
-bool CDataManager::UpdateTMSStat()
+
+// 更新TMS的状态
+bool CDataManager::UpdateTMSStat(int state)
 {
+	m_csTMS.EnterCS();
+	m_nTMSState = state;
+	m_csTMS.LeaveCS();
 	return true;
 }
 
@@ -103,10 +133,11 @@ bool CDataManager::UpdateTMSStat()
 bool CDataManager::GetDevStat(DiskInfo &df)
 {
 	m_csDisk.EnterCS();
-	df = m_df;
-	m_csDisk.LeaveCS();
+	df = m_df; 
+	m_csDisk.LeaveCS();   
 }
 
+// 获取网卡状态
 bool CDataManager::GetNetStat(std::map<std::string,EthStatus> &mapEthStatus)
 {
 	m_csNet.EnterCS();
@@ -115,14 +146,16 @@ bool CDataManager::GetNetStat(std::map<std::string,EthStatus> &mapEthStatus)
 	return true;
 }
 
+// 获取SMS状态
 bool CDataManager::GetSMSStat()
 {
 	return true;
 }
 
-bool CDataManager::GetTMSStat()
+// 获取TMS的状态
+int CDataManager::GetTMSStat()
 {
-	return true;
+	return m_nTMSState;
 }
 
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)

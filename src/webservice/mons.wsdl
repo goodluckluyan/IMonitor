@@ -8,7 +8,6 @@
  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
  xmlns:mons="http://tempuri.org/mons.xsd"
  xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
- xmlns:HTTP="http://schemas.xmlsoap.org/wsdl/http/"
  xmlns:MIME="http://schemas.xmlsoap.org/wsdl/mime/"
  xmlns:DIME="http://schemas.xmlsoap.org/ws/2002/04/dime/wsdl/"
  xmlns:WSDL="http://schemas.xmlsoap.org/wsdl/"
@@ -25,7 +24,15 @@
   xmlns="http://www.w3.org/2001/XMLSchema"
   elementFormDefault="unqualified"
   attributeFormDefault="unqualified">
-  <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+  <import namespace="http://schemas.xmlsoap.org/soap/encoding/" schemaLocation="http://schemas.xmlsoap.org/soap/encoding/"/>
+  <complexType name="ethstate">
+   <sequence>
+     <element name="eth" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="type" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="ConnectState" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="speed" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+   </sequence>
+  </complexType>
   <!-- operation request element -->
   <element name="GetMontorState">
    <complexType>
@@ -37,8 +44,8 @@
   <element name="MontorStateRes">
    <complexType>
     <sequence>
-     <element name="bMain" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::bMain -->
-     <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::iState -->
+     <element name="bMain" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   </element>
@@ -53,9 +60,9 @@
   <element name="TmsStateRes">
    <complexType>
     <sequence>
-     <element name="bRun" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__TmsStateRes::bRun -->
-     <element name="iWorkState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__TmsStateRes::iWorkState -->
-     <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__TmsStateRes::iState -->
+     <element name="bRun" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="iWorkState" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   </element>
@@ -70,11 +77,11 @@
   <element name="SMSState">
    <complexType>
     <sequence>
-     <element name="HallId" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::HallId -->
-     <element name="bRun" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::bRun -->
-     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::state -->
-     <element name="position" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::position -->
-     <element name="strSplUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__SMSState::strSplUuid -->
+     <element name="HallId" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+     <element name="bRun" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="position" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="strSplUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   </element>
@@ -89,10 +96,10 @@
   <element name="RaidStateRes">
    <complexType>
     <sequence>
-     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__RaidStateRes::state -->
-     <element name="ReadSpeed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__RaidStateRes::ReadSpeed -->
-     <element name="WriteSpeed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__RaidStateRes::WriteSpeed -->
-     <element name="diskState" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/><!-- mons__RaidStateRes::diskState -->
+     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="ReadSpeed" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="WriteSpeed" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="diskState" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/>
     </sequence>
    </complexType>
   </element>
@@ -104,11 +111,10 @@
    </complexType>
   </element>
   <!-- operation response element -->
-  <element name="ethstate">
+  <element name="GetEthStateResponse">
    <complexType>
     <sequence>
-     <element name="ConnectState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::ConnectState -->
-     <element name="speed" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ethstate::speed -->
+     <element name="vecret" type="mons:ethstate" minOccurs="1" maxOccurs="unbounded"/>
     </sequence>
    </complexType>
   </element>
@@ -123,8 +129,8 @@
   <element name="SwitchStateRes">
    <complexType>
     <sequence>
-     <element name="Switch1State" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SwitchStateRes::Switch1State -->
-     <element name="Switch2State" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SwitchStateRes::Switch2State -->
+     <element name="Switch1State" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="Switch2State" type="xsd:int" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   </element>
@@ -139,8 +145,8 @@
   <element name="IngestSpeedLimitRes">
    <complexType>
     <sequence>
-     <element name="bEnableIngest" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__IngestSpeedLimitRes::bEnableIngest -->
-     <element name="speedLimit" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__IngestSpeedLimitRes::speedLimit -->
+     <element name="bEnableIngest" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="speedLimit" type="xsd:int" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   </element>
@@ -155,9 +161,9 @@
   <element name="WorkStateRes">
    <complexType>
     <sequence>
-     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__WorkStateRes::state -->
-     <element name="info" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__WorkStateRes::info -->
-     <element name="hall" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__WorkStateRes::hall -->
+     <element name="state" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="info" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+     <element name="hall" type="xsd:string" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   </element>
@@ -166,67 +172,67 @@
 </types>
 
 <message name="GetMontorState">
- <part name="Body" element="mons:GetMontorState"/><!-- mons__GetMontorState::mons__GetMontorState -->
+ <part name="parameters" element="mons:GetMontorState"/>
 </message>
 
 <message name="MontorStateRes">
- <part name="Body" element="mons:MontorStateRes"/><!-- mons__GetMontorState::ret -->
+ <part name="parameters" element="mons:MontorStateRes"/>
 </message>
 
 <message name="GetTMSState">
- <part name="Body" element="mons:GetTMSState"/><!-- mons__GetTMSState::mons__GetTMSState -->
+ <part name="parameters" element="mons:GetTMSState"/>
 </message>
 
 <message name="TmsStateRes">
- <part name="Body" element="mons:TmsStateRes"/><!-- mons__GetTMSState::ret -->
+ <part name="parameters" element="mons:TmsStateRes"/>
 </message>
 
 <message name="GetSMSState">
- <part name="Body" element="mons:GetSMSState"/><!-- mons__GetSMSState::mons__GetSMSState -->
+ <part name="parameters" element="mons:GetSMSState"/>
 </message>
 
 <message name="SMSState">
- <part name="Body" element="mons:SMSState"/><!-- mons__GetSMSState::ret -->
+ <part name="parameters" element="mons:SMSState"/>
 </message>
 
 <message name="GetRaidtate">
- <part name="Body" element="mons:GetRaidtate"/><!-- mons__GetRaidtate::mons__GetRaidtate -->
+ <part name="parameters" element="mons:GetRaidtate"/>
 </message>
 
 <message name="RaidStateRes">
- <part name="Body" element="mons:RaidStateRes"/><!-- mons__GetRaidtate::ret -->
+ <part name="parameters" element="mons:RaidStateRes"/>
 </message>
 
-<message name="GetEthState">
- <part name="Body" element="mons:GetEthState"/><!-- mons__GetEthState::mons__GetEthState -->
+<message name="GetEthStateRequest">
+ <part name="parameters" element="mons:GetEthState"/>
 </message>
 
-<message name="ethstate">
- <part name="Body" element="mons:ethstate"/><!-- mons__GetEthState::ret -->
+<message name="GetEthStateResponse">
+ <part name="parameters" element="mons:GetEthStateResponse"/>
 </message>
 
 <message name="GetSwitchState">
- <part name="Body" element="mons:GetSwitchState"/><!-- mons__GetSwitchState::mons__GetSwitchState -->
+ <part name="parameters" element="mons:GetSwitchState"/>
 </message>
 
 <message name="SwitchStateRes">
- <part name="Body" element="mons:SwitchStateRes"/><!-- mons__GetSwitchState::ret -->
+ <part name="parameters" element="mons:SwitchStateRes"/>
 </message>
 
 <message name="GetIngestSpeedLimit">
- <part name="Body" element="mons:GetIngestSpeedLimit"/><!-- mons__GetIngestSpeedLimit::mons__GetIngestSpeedLimit -->
+ <part name="parameters" element="mons:GetIngestSpeedLimit"/>
 </message>
 
 <message name="IngestSpeedLimitRes">
- <part name="Body" element="mons:IngestSpeedLimitRes"/><!-- mons__GetIngestSpeedLimit::ret -->
+ <part name="parameters" element="mons:IngestSpeedLimitRes"/>
 </message>
 
 <message name="GetWorkState_CS">
- <part name="Body" element="mons:GetWorkState_CS"/><!-- mons__GetWorkState_USCORECS::mons__GetWorkState_USCORECS -->
+ <part name="parameters" element="mons:GetWorkState_CS"/>
 </message>
 
 <message name="WorkStateRes">
- <part name="Body" element="mons:WorkStateRes"/><!-- mons__GetWorkState_USCORECS::ret -->
+ <part name="parameters" element="mons:WorkStateRes"/>
 </message>
 
 <portType name="ServicePortType">
@@ -252,8 +258,8 @@
  </operation>
  <operation name="GetEthState">
   <documentation>Service definition of function mons__GetEthState</documentation>
-  <input message="tns:GetEthState"/>
-  <output message="tns:ethstate"/>
+  <input message="tns:GetEthStateRequest"/>
+  <output message="tns:GetEthStateResponse"/>
  </operation>
  <operation name="GetSwitchState">
   <documentation>Service definition of function mons__GetSwitchState</documentation>
@@ -277,79 +283,79 @@
  <operation name="GetMontorState">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetTMSState">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetSMSState">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetRaidtate">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetEthState">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetSwitchState">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetIngestSpeedLimit">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
  <operation name="GetWorkState_CS">
   <SOAP:operation soapAction=""/>
   <input>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </input>
   <output>
-     <SOAP:body parts="Body" use="literal"/>
+     <SOAP:body parts="parameters" use="literal"/>
   </output>
  </operation>
 </binding>
 
 <service name="Service">
- <documentation>gSOAP 2.8.18 generated service definition</documentation>
+ <documentation>gSOAP 2.7.15 generated service definition</documentation>
  <port name="Service" binding="tns:Service">
   <SOAP:address location="http://localhost:80"/>
  </port>

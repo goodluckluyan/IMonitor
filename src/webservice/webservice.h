@@ -36,7 +36,7 @@ int mons__GetRaidtate(struct mons__RaidStateRes &ret);
 
 struct mons__ethstate
 {
-	std::string eth;
+	int eth;
 	int type;
 	int ConnectState;
 	int speed;

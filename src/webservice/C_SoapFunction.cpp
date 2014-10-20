@@ -1,6 +1,7 @@
 #include "mons.nsmap"
 #include "soapH.h"
 #include <iostream>
+#include <cstdio>
 #include "para/C_Para.h"
 #include "jobs/DataManager.h"
 using namespace std;
@@ -8,15 +9,14 @@ using namespace std;
 int mons__GetMontorState(struct soap*, struct mons__MontorStateRes &ret)
 {
 	ret.bMain = C_Para::GetInstance()->m_bMain;
-	ret.iState = 0xff;
-	//在此添加代码
+	ret.iState = 0;
 	return 0;
 }
 
 int mons__GetTMSState(struct soap*, struct mons__TmsStateRes &ret)
 {
-	
-	ret.bRun = 1;
+	CDataManager *pDM = CDataManager::GetInstance();
+	ret.bRun = pDM->GetTMSStat();
 	ret.iState = 0x01;
 	ret.iWorkState = 0x0f;
 	return 0;
@@ -24,6 +24,7 @@ int mons__GetTMSState(struct soap*, struct mons__TmsStateRes &ret)
 
 int mons__GetSMSState(struct soap*, struct mons__SMSState &ret)
 {
+	CDataManager *pDM = CDataManager::GetInstance();
 	ret.bRun = 1;
 	ret.HallId = "tms01";
 	ret.position = 0x25;
@@ -36,22 +37,40 @@ int mons__GetRaidtate(struct soap*, struct mons__RaidStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	DiskInfo df;
-	pDM->GetDevStat(df);
+	//pDM->GetDevStat(df);
+	df.diskState = "1" ;
+	df.diskSize = "8000000000";
+	df.diskNumOfDrives = "8" ;
+	for(int i = 0 ;i < 8 ;i++)
+	{
+		DiskDriveInfo node;
+		node.driveErrorCount = "0";
+		node.driveFirmwareState = "1";
+		char buf[16]={'\0'};
+		snprintf(buf,16,"%d",i);
+		node.driveID = buf;
+		node.driveSize = "1000000000";
+		node.driveSlotNum = buf;
+		node.driveSpeed = "1000000";
+		df.diskDrives.push_back(node);
+	}
+
 	int nLen = df.diskDrives.size();
 	int nSpeed = 0;
 	for(int i = 0 ;i < nLen ; i++)
 	{
 		// 取最小值.
-		int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
-		if(nSpeed == 0 || nSpeed >nDriveSpeed )
-		{
-			nSpeed = nDriveSpeed;
-		}
+// 		int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
+// 		if(nSpeed == 0 || nSpeed > nDriveSpeed )
+// 		{
+// 			nSpeed = nDriveSpeed;
+// 		}
 		ret.diskState.push_back(atoi(df.diskDrives[i].driveFirmwareState.c_str()));
-	}
-	ret.ReadSpeed = nSpeed;
-	ret.WriteSpeed = nSpeed;
-	ret.state = 0x01;
+ 	}
+
+	ret.ReadSpeed = 1000000;
+	ret.WriteSpeed = 1000000;
+	ret.state =atoi( df.diskState.c_str());
 
 	return 0;
 }
@@ -66,7 +85,7 @@ int mons__GetEthState(struct soap*, std::vector<struct mons__ethstate> &vecret)
 	{
 		mons__ethstate node;
 		EthStatus &Ethinfo = it->second;
-		node.eth=Ethinfo.strName;
+		node.eth=atoi(Ethinfo.strName.substr(3).c_str());
 		node.type = Ethinfo.nTaskType;
 		node.ConnectState = Ethinfo.nConnStatue;
 		node.speed = (Ethinfo.nRxSpeed + Ethinfo.nTxSpeed)/2;

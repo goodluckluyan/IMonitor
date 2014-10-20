@@ -422,6 +422,14 @@
 				RelativePath="..\..\jobs\MonitorSensor.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\jobs\TMSSensor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\jobs\TMSSensor.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="webservice"

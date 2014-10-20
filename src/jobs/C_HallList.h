@@ -21,42 +21,20 @@
 
 class C_HallList
 {
-protected:
-	C_HallList();
-    
 public:
+	C_HallList(CDataManager * ptr)
+		:m_ptrDM(ptr)
+	{};
+   
 	
     ~C_HallList();
-    static C_HallList *GetInstance();
-	static void DestoryInstance();
 
    	//初始化所有影厅。
     int Init(CDataManager *);
    
-	//初试化各个影厅的计划任务；
-    int InitHallsTask();
-
-	//添加影厅
-	int AddHall(HALL_PARA &hallPara, std::string &strError);
-
-	// 获取影厅状态
-	bool GetHallStat(std::string &strHallID);
-
 	// 获取SMS工作状态
-	bool GetSMSWorkState(std::string &strHallID,int &iState,std::string &strInfo);
+	bool GetSMSWorkState();
 
-	// 添加DCP
-	bool SMSIngest(std::string &strHallID,std::string strPath);
-
-	// 添加KDM
-	bool SMSIngestKeyForm(std::string &strHallID,std::string strPathName);
-
-	// 删除KDM
-	bool SMSDeleteKDM(std::string &strHallID,std::string strKDMID);
-
-public:
-	// 创建影厅
-	int CreateHall(HALL_PARA &hallPara, std::string &strError);
 
 private:
 	 

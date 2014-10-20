@@ -22,90 +22,98 @@
 
 // using namespace std;
 C_HallList* C_HallList::m_pInstance = NULL;
-C_HallList::C_HallList()
-{
-	m_ptrDM = NULL;
- return;   
-}
 
 C_HallList::~C_HallList()
 {
 	return;   
 }
 
-C_HallList* C_HallList::GetInstance()
-{
-   if(m_pInstance == NULL)
-   {
-       m_pInstance = new C_HallList;
-   }
-   return m_pInstance;
-}
-
-void  C_HallList::DestoryInstance()
-{
-	if(m_pInstance != NULL)
-	{
-		delete m_pInstance;
-		m_pInstance = NULL;
-	}
-}
 
 
 int C_HallList::Init(CDataManager * ptr )
 {
+	m_ptrDM = ptr;
+	C_Para *ptrPara = C_Para::GetInstance();
 
+	// 打开数据库
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+	{
+		printf("mysql open failed!\n");
+		return false;
+	}
+
+	// 读取hallinfo表,初始化sms信息
+	int nResult;
+	CppMySQLQuery query = mysql.querySQL("select * from hallinfo",nResult);
+	int nRows = 0 ;
+	if((nRows = query.numRow()) == 0)
+	{
+		printf("C_HallList Initial failed,hallinfo talbe no rows!\n");
+		return false;
+	}
+
+	std::vector<SMSInfo> vecSMSInfo;
+	query.seekRow(0);
+	for(int i = 0 ;i < nRows ; i++)
+	{
+		SMSInfo node;
+		node.strId = query.getStringField("hallid");
+		node.strIp = query.getStringField("ip");
+		node.nPort = atoi(query.getStringField("port"));
+		int nTmp = query.getIntField("role");
+		node.nRole = nTmp == 1 ? 1 : 2;
+		node.strExepath = query.getStringField("exepath");
+		node.strConfpath = query.getStringField("confpath");
+		query.nextRow();
+	}
+	
+	int nLen = vecSMSInfo.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		SMSInfo &node = vecSMSInfo[i];
+		if(ptrPara->m_bMain && node.nRole == 1)
+		{
+			C_Hall * ptrHall = new C_Hall(node);
+			m_Halllist.push_back(ptrHall);
+		}
+		else if(!ptrPara->m_bMain && node.nRole == 2)
+		{
+			C_Hall * ptrHall = new C_Hall(node);
+			m_Halllist.push_back(ptrHall);
+		}
+
+	}
+
+	if(ptr != NULL)
+	{
+		ptr->SetSMSInfo(vecSMSInfo);
+	}
+
+
+	
+	
 	return 0;
 }
 
-
-
-int C_HallList::AddHall(HALL_PARA &hallPara, std::string &strError)
-{
-
-	return 0; 
-}
-
-
-int C_HallList::InitHallsTask()
-{
-
-	return 0;
-}
-
-
-int C_HallList::CreateHall(HALL_PARA &hallPara, string &strError)
-{
-
-	return 0;
-}
-
-// 获取影厅状态
-bool C_HallList::GetHallStat(std::string &strHallID)
-{
-	return true;
-}
 
 // 获取SMS工作状态
-bool C_HallList::GetSMSWorkState(std::string &strHallID,int &iState,std::string &strInfo)
+bool C_HallList::GetSMSWorkState()
 {
-	return true;
-}
-// 添加DCP
-bool C_HallList::SMSIngest(std::string &strHallID,std::string strPath)
-{
+	std::list<C_Hall *>::iterator it = m_Halllist.begin();
+	for( ;it != m_Halllist.end() ;it++)
+	{
+		C_Hall * ptr = *it;
+		int nState;
+		std::string strInfo;
+		ptr->GetSMSWorkState(nState,strInfo);
+		if(m_ptrDM != NULL)
+		{
+			m_ptrDM->UpdateSMSStat(ptr->GetHallID(),nState,strInfo);
+		}
+	}
 	return true;
 }
 
-// 添加KDM
-bool C_HallList::SMSIngestKeyForm(std::string &strHallID,std::string strPathName)
-{
-	return true;
-}
-
-// 删除KDM
-bool C_HallList::SMSDeleteKDM(std::string &strHallID,std::string strKDMID)
-{
-	return true;
-}
 

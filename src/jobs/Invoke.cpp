@@ -10,6 +10,78 @@ bool g_bQuit = false;
 #define Log LogN(1005)
 
 
+int  CInvoke::Init()
+{
+	// 数据管理模块
+	CDataManager *pDM = CDataManager::GetInstance();
+	if(!pDM->Init())
+	{
+		return -1;
+	}
+
+	// 磁盘监测模块初始化
+	if(m_ptrDisk == NULL)
+	{
+		m_ptrDisk = new CheckDisk(pDM);
+// 		if(!m_ptrDisk->InitAndCheck())
+// 		{
+// 			printf("Initial Fail! Check Raid Status Fail!\n");
+// 			return -1;
+// 		}
+// 		else
+// 		{
+// 			printf("Raid Check Done.\n");
+// 		}
+	}
+	
+
+	// 网卡监测模块初始化
+	if(m_ptrNet == NULL)
+	{
+		m_ptrNet = new Test_NetCard(pDM);
+		if(!m_ptrNet->InitAndCheck())
+		{
+			printf("Initial Fail! Check Eth Status Fail!\n");
+			return -1;
+		}
+		else
+		{
+			printf("Eth Check Done.\n");
+		}
+	}
+	
+
+	// 监测SMS模块
+	if(m_ptrLstHall == NULL)
+	{
+		m_ptrLstHall = new C_HallList(pDM);
+		m_ptrLstHall->Init(pDM);
+	}
+	
+
+	// 监测对端高度软件
+	if(m_ptrMonitor == NULL)
+	{
+		C_Para *pPara = C_Para::GetInstance();
+		m_ptrMonitor = new  CMonitorSensor(pDM);
+		m_ptrMonitor->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,pDM);
+	}
+
+	if(m_ptrTMS == NULL)
+	{
+		m_ptrTMS  = new CTMSSensor(pDM);
+	}
+
+	// 调度模块
+	if(m_ptrDispatch == NULL)
+	{
+		m_ptrDispatch = new CDispatch(pDM);
+		m_ptrDispatch->Init();
+	}
+	
+	
+}
+
 bool CInvoke::AddInitTask()
 {
 	// 设置各个状态检测的时间间隔
@@ -23,6 +95,8 @@ bool CInvoke::AddInitTask()
 	m_nOtherSwitchCheckDelay = 5;
 	m_nOtherSpeedLmtCheckDelay = 5;
 	m_nOtherEWCheckDelay = 5;
+	m_nHallListCheckDelay = 5;
+	m_nTMSCheckDelay = 5;
 
 	C_TaskList * ptrTaskList = C_TaskList::GetInstance();
 	C_RunPara * ptrRunPara = C_RunPara::GetInstance();
@@ -31,6 +105,8 @@ bool CInvoke::AddInitTask()
 	ptrTaskList->AddTask(TASK_NUMBER_GET_DISK_STATUS,NULL,ptrRunPara->GetCurTime()+m_nDiskCheckDelay);
 
 	ptrTaskList->AddTask(TASK_NUMBER_GET_NET_STATUS,NULL,ptrRunPara->GetCurTime()+m_nEthCheckDelay);
+
+	ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+m_nTMSCheckDelay);
 	
 	
 	// 添加对对端调度程序的检测的定时任务
@@ -71,6 +147,12 @@ int CInvoke::GetCheckDelay(int nStateType)
 		break;
 	case TASK_NUMBER_GET_NET_STATUS:
 		nDelay = m_nEthCheckDelay;
+		break;
+	case TASK_NUMBER_GET_HALL_STATUS:
+		nDelay = m_nHallListCheckDelay ;
+		break;
+	case TASK_NUMBER_GET_TMS_STATUS:
+		nDelay = m_nTMSCheckDelay ;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
 		nDelay = m_nOtherMonitorCheckDelay;
@@ -125,7 +207,10 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		nResult = 0;
 		break;
 	case TASK_NUMBER_GET_HALL_STATUS:
-		//m_ptrLstHall->GetHallStat("123");
+		m_ptrLstHall->GetSMSWorkState();
+		break;
+	case TASK_NUMBER_GET_TMS_STATUS:
+		m_ptrTMS->GetTMSWorkState();
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
 	case TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS:

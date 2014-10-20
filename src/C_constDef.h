@@ -149,12 +149,27 @@ const int DEFAULT_LOG_LEVEL = 0;
 	 nTxSpeed(0),
 	 nTaskType(-1)
 	 {
+	 }
+ };
+
+ // SMS状态
+ struct SMSStatus
+ {
+	 int nStatus;
+	 bool bRun;				//0：没有运行 1：主机运行，2：辅机运行
+	 int  nPosition;
+	 std::string strSPLUuid;
+
+	 SMSStatus():
+		 nStatus(-1)
+		 ,bRun(false)
+		 ,nPosition(-1)
+	 {
 
 	 }
 
-
-
  };
+
 
 // SMS参数
  struct SMSInfo
@@ -162,31 +177,46 @@ const int DEFAULT_LOG_LEVEL = 0;
 	 std::string strId;		// 标识id或序列号
 	 std::string strIp;		// 通信的ip地址
 	 int nPort ;			// 通信的端口
-	 int nRunstatus;		// 状态  0:没有运行 1:本地运行  2:异地运行
 	 int nRole;				// 角色，是主要运行角色还是候选角色 1:为主角，2:为候选 
 	 std::string strExepath;// sms执行文件路径
-	 int nPID;				// SMS进程PID
+	 std::string strConfpath;// 配置文件路径
+	 SMSStatus stStatus;
+	
 
 	 SMSInfo():
 	 nPort(-1)
-		 ,nRunstatus(-1)
-		 ,nRole(-1)
-		 ,nPID(0)
+	,nRole(-1)
 	 {}
- };
 
- struct ProjectorInfo
- {
-	 std::string strId;
-	 std::string strIp;
-	 int nPort;
-
-	 ProjectorInfo():
-	 nPort(-1)
+	 SMSInfo(const SMSInfo &obj)
 	 {
+		strId = obj.strId;
+		strIp = obj.strIp;
+		nPort = obj.nPort;
+		nRole = obj.nRole;
+		strExepath = obj.strExepath;
+		strConfpath = obj.strConfpath;
+		stStatus = obj.stStatus;
+	 }
 
+	 SMSInfo& operator =(const SMSInfo &obj)
+	 {
+		 if(this != &obj)
+		 {
+			 strId = obj.strId;
+			 strIp = obj.strIp;
+			 nPort = obj.nPort;
+			 nRole = obj.nRole;
+			 strExepath = obj.strExepath;
+			 strConfpath = obj.strConfpath;
+			 stStatus = obj.stStatus;
+		 }
+		 return *this;
 	 }
  };
+
+
+
 
 
 typedef struct HallPara

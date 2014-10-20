@@ -1,3 +1,8 @@
+//@file:DataManager.h
+//@brief: 所有状态数据的管理。
+//@author:luyan@oristartech.com
+//date:2014-09-17
+
 #ifndef DATAMANAGER_INC
 #define DATAMANAGER_INC
 
@@ -25,6 +30,9 @@ public:
 	// 设置网卡基本信息
 	void SetEthBaseInfo(std::map<std::string,int> &mapEthBaseInfo);
 
+	// 设置sms基本信息
+	void SetSMSInfo(std::vector<SMSInfo> vecHall);
+
 	// 更新另一台主机上运行的调度程序各个模块的监测数据
 	bool UpdateOtherMonitorState(bool bMain,int nState);
 	bool UpdateOtherTMSState(bool bRun,int nWorkState,int nState);
@@ -46,16 +54,16 @@ public:
 	bool UpdateNetStat(std::vector<EthStatus> &vecEthStatus);
 
 	// 更新sms状态
-	bool UpdateSMSStat();
+	bool UpdateSMSStat(std::string strHallID,int nState,std::string strInfo);
 
 	// 更新TMS状态
-	bool UpdateTMSStat();
+	bool UpdateTMSStat(int state);
 
 	// 读取监测参数
 	bool GetDevStat(DiskInfo &df);
 	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
 	bool GetSMSStat();
-	bool GetTMSStat();
+	int GetTMSStat();
 
 	//其它方法
 private:
@@ -65,6 +73,8 @@ private:
 	DiskInfo m_df;
 
 	std::map<std::string,EthStatus> m_mapEthStatus;
+	std::map<std::string,SMSInfo> m_mapSmsStatus;
+	int m_nTMSState;
 
 	C_CS m_csDisk;
 	C_CS m_csNet;

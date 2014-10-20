@@ -71,7 +71,8 @@ private :
 class CMonitorSensor
 {
 public:
-	CMonitorSensor();
+	CMonitorSensor(CDataManager * ptr);
+
 	~CMonitorSensor();
 
 	// ≥ı ºªØ

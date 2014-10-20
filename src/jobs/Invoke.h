@@ -1,14 +1,20 @@
- #ifndef INVOKE_INC
+//@file:Invoke.h
+//@brief: 命令适配类，负责对所有命令的的调用。
+//@author:luyan@oristartech.com
+//date:2014-09-17 
+
+#ifndef INVOKE_INC
  #define INVOKE_INC
-
-
-
 #include "C_HallList.h"
 #include "CheckDisk.h"
 #include "DataManager.h"
 #include "Dispatch.h"
 #include "check_netcard.h"
 #include "MonitorSensor.h"
+#include "TMSSensor.h"
+
+
+#define SAFE_DELETE(ptr) if(ptr != NULL) {delete ptr ; ptr = NULL;}
 class CInvoke
 {
 public:
@@ -17,35 +23,42 @@ public:
 	  ,m_ptrDisk(NULL)
 	  ,m_ptrNet(NULL)
 	  ,m_ptrMonitor(NULL)
+	  ,m_ptrDispatch(NULL)
+	  ,m_ptrTMS(NULL)
 	  {
 	  }
 
-	  CInvoke(C_HallList *ptrLstHall,CheckDisk *ptrDisk,
-		  Test_NetCard *ptrNet,CDispatch *ptrDispatch ,CMonitorSensor * ptrMonitor)
-		  : m_ptrLstHall(ptrLstHall)
-		  ,m_ptrDisk(ptrDisk)
-		  ,m_ptrNet(ptrNet)
-		  ,m_ptrDispatch(ptrDispatch)
-		  ,m_ptrMonitor(ptrMonitor)
-	  {
-	  }
 
 	~CInvoke()
 	{
-
+		SAFE_DELETE(m_ptrLstHall);
+		SAFE_DELETE(m_ptrDisk);
+		SAFE_DELETE(m_ptrNet);
+		SAFE_DELETE(m_ptrDispatch);
+		SAFE_DELETE(m_ptrMonitor);
+		SAFE_DELETE(m_ptrTMS);
 	}
+
+	// 初始化
+	int  Init();
 	
+	// 添加任务
 	bool AddInitTask();
+
+	// 执行命令
 	int Exec(int iCmd,void * ptrPara);
 
+	//获取定时任务的时间间隔
 	int GetCheckDelay(int nStateType);
 
 private:
-
+	// 打印帮助信息
 	void PrintProductInfo();
 
+	// 处理用户命令输入
 	int Controller();
 
+	// 解析用户命令
 	void ParseCmd(std::string strCmd, std::vector<std::string> &vecParam);
 	
 private:
@@ -54,6 +67,12 @@ private:
 
 	// 检测网卡状态时间间隔
 	int m_nEthCheckDelay;
+
+	// 检测网卡状态时间间隔
+	int m_nHallListCheckDelay;
+
+	// 检测网卡状态时间间隔
+	int m_nTMSCheckDelay;
 
 	// 检测对端调度程序状态时间间隔
 	int m_nOtherMonitorCheckDelay;
@@ -84,6 +103,7 @@ private:
 	Test_NetCard *m_ptrNet;
 	CDispatch *m_ptrDispatch;
 	CMonitorSensor * m_ptrMonitor;
+	CTMSSensor * m_ptrTMS;
 };
 
 #endif

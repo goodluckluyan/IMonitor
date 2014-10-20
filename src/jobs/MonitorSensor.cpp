@@ -4,8 +4,9 @@
 #include"utility/C_TcpTransport.h"
 #include"log/C_LogManage.h"
 
-CMonitorSensor::CMonitorSensor()
+CMonitorSensor::CMonitorSensor(CDataManager * ptr)
 {
+	m_ptrDM= ptr;
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_STATUS] = "<ns2:GetMontorState></ns2:GetMontorState>";
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS] = "<ns2:GetTMSState></ns2:GetTMSState>";
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS] = "<ns2:GetSMSState></ns2:GetSMSState>";
@@ -696,7 +697,7 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 			std::string strEth =  XMLString::transcode(ptrEthNode->getFirstChild()->getNodeValue());
 			if(!strEth.empty())
 			{
-				EthNode.strName = strEth;
+				EthNode.strName = "eth"+strEth;
 			}
 
 			DOMNode* ptrTypeNode = ptrCL->item(1);

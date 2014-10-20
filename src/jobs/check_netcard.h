@@ -1,3 +1,8 @@
+//@file:check_netcard.h
+//@brief: Íø¿¨×´Ì¬¼à²â¡£
+//@author:zhangmiao@oristartech.com
+//date:2014-09-17
+
 #ifndef CHECKNETCARD_INC
 #define CHECKNETCARD_INC
 

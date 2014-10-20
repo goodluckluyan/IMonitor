@@ -160,46 +160,6 @@ int main(int argc, char** argv)
 	// 初始化信号处理
 	InitSigFun(pLogManage);
 
-
-	// 数据管理模块
-	CDataManager *pDM = CDataManager::GetInstance();;
-	if(!pDM->Init())
-	{
-		return -1;
-	}
-
-	// 磁盘监测模块初始化
-	CheckDisk ds(pDM);
-// 	if(!ds.InitAndCheck())
-// 	{
-// 		printf("Initial Fail! Check Raid Status Fail!\n");
-// 		return -1;
-// 	}
-// 	else
-// 	{
-// 		printf("Raid Check Done.\n");
-// 	}
-	
-	// 网卡监测模块初始化
-	Test_NetCard ns(pDM);
-	if(!ns.InitAndCheck())
-	{
-		printf("Initial Fail! Check Eth Status Fail!\n");
-		return -1;
-	}
-	else
-	{
-		printf("Eth Check Done.\n");
-	}
-	
-	// 监测SMS模块
-	C_HallList * ptrLstHall = C_HallList::GetInstance();
-	ptrLstHall->Init(pDM);
-
-	// 监测对端高度软件
-	CMonitorSensor OMonitorSersor;
-	OMonitorSersor.Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,pDM);
-
 	//初试化线程
 	C_ThreadManage *pThreadManage = C_ThreadManage::GetInstance();
 	iResult = pThreadManage->InitThreadData();
@@ -214,20 +174,18 @@ int main(int argc, char** argv)
 		return -1; //Add Log and Erorr Ctrl;
 	} 
 
-
-	// 调度模块
-	CDispatch dispatch(pDM);
-	dispatch.Init();
-	CInvoke Invoker(ptrLstHall,&ds,&ns,&dispatch,&OMonitorSersor);
+	// 创建执行体
+	CInvoke Invoker;
+	if(Invoker.Init() == -1)
+	{
+		printf("Invoker Init Failed !\n");
+		return -1;
+	}
 
 	// 初始化定时任务
 	C_TaskList *pTaskList = C_TaskList::GetInstance();
-	iResult = pTaskList->InitTaskList(&Invoker);
-	if(iResult != 0)
-	{
-		return -1; //Add Log and Erorr Ctrl;
-	}
-	
+	iResult = pTaskList->InitTaskList(&Invoker);	
+
 	//添加任务; 
 	Invoker.AddInitTask();
 
@@ -300,7 +258,6 @@ int main(int argc, char** argv)
 	}
 
 	C_TaskList::DestoryInstance();
-	C_HallList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
 	C_LogManage::DestoryInstance();
 	C_RunPara::DestoryInstance();
