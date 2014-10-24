@@ -24,7 +24,7 @@ public:
 
 	~CDataManager();
 	
-	bool Init();
+	bool Init(void *);
 
 
 	// 设置网卡基本信息
@@ -65,7 +65,20 @@ public:
 	bool GetSMSStat();
 	int GetTMSStat();
 
-	//其它方法
+	// 其它方法
+	// 打印tms状态
+	void PrintTMSState();
+
+	// 打印磁盘状态
+	void PrintDiskState();
+
+	// 打印sms状态
+	void PrintSMSState();
+
+	// 打印网卡状态
+	void PrintEthState();
+
+	void *GetInvokerPtr();
 private:
 	CDataManager();
 
@@ -81,6 +94,7 @@ private:
 	C_CS m_csSMS;
 	C_CS m_csTMS;
 	static CDataManager * m_pinstance;
+	void * m_ptrInvoker;
 
 };
 

@@ -14,7 +14,7 @@ int  CInvoke::Init()
 {
 	// 数据管理模块
 	CDataManager *pDM = CDataManager::GetInstance();
-	if(!pDM->Init())
+	if(!pDM->Init((void *)this))
 	{
 		return -1;
 	}
@@ -22,7 +22,7 @@ int  CInvoke::Init()
 	// 磁盘监测模块初始化
 	if(m_ptrDisk == NULL)
 	{
-		m_ptrDisk = new CheckDisk(pDM);
+		m_ptrDisk = new CheckDisk();
 // 		if(!m_ptrDisk->InitAndCheck())
 // 		{
 // 			printf("Initial Fail! Check Raid Status Fail!\n");
@@ -38,7 +38,7 @@ int  CInvoke::Init()
 	// 网卡监测模块初始化
 	if(m_ptrNet == NULL)
 	{
-		m_ptrNet = new Test_NetCard(pDM);
+		m_ptrNet = new Test_NetCard();
 		if(!m_ptrNet->InitAndCheck())
 		{
 			printf("Initial Fail! Check Eth Status Fail!\n");
@@ -54,32 +54,31 @@ int  CInvoke::Init()
 	// 监测SMS模块
 	if(m_ptrLstHall == NULL)
 	{
-		m_ptrLstHall = new C_HallList(pDM);
-		m_ptrLstHall->Init(pDM);
+		m_ptrLstHall = new C_HallList();
+		m_ptrLstHall->Init();
 	}
 	
 
+	C_Para *pPara = C_Para::GetInstance();
 	// 监测对端高度软件
 	if(m_ptrMonitor == NULL)
 	{
-		C_Para *pPara = C_Para::GetInstance();
-		m_ptrMonitor = new  CMonitorSensor(pDM);
-		m_ptrMonitor->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort,pDM);
+		m_ptrMonitor = new  CMonitorSensor();
+		m_ptrMonitor->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort);
 	}
 
 	if(m_ptrTMS == NULL)
 	{
-		m_ptrTMS  = new CTMSSensor(pDM);
+		m_ptrTMS  = new CTMSSensor();
+		m_ptrTMS->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort);
 	}
 
 	// 调度模块
 	if(m_ptrDispatch == NULL)
 	{
-		m_ptrDispatch = new CDispatch(pDM);
+		m_ptrDispatch = new CDispatch();
 		m_ptrDispatch->Init();
 	}
-	
-	
 }
 
 bool CInvoke::AddInitTask()
@@ -87,8 +86,8 @@ bool CInvoke::AddInitTask()
 	// 设置各个状态检测的时间间隔
 	m_nDiskCheckDelay = 300;
 	m_nEthCheckDelay = 10;
-	m_nOtherMonitorCheckDelay = 5;
-	m_nOtherTMSCheckDelay = 5;
+	m_nOtherMonitorCheckDelay = 10;
+	m_nOtherTMSCheckDelay = 10;
 	m_nOtherSMSCheckDelay = 5;
 	m_nOtherRAIDCheckDelay = 5;
 	m_nOtherEthCheckDelay = 5;
@@ -288,6 +287,9 @@ void CInvoke::PrintProductInfo()
 	printf("# Command Usage:                                                              #\n");
 	printf("# help:print help info\n");
 	printf("# print -t:print tms status\n");
+	printf("# print -d:print RAID status\n");
+	printf("# print -s:print SMS status\n");
+	printf("# print -e:print Eth status\n");
 	printf("#-----------------------------------------------------------------------------#\n");
 }
 
@@ -344,21 +346,23 @@ int CInvoke::Controller ()
 
 		if ("print" == vecParam[0] && vecParam.size() >= 2)
 		{
+			CDataManager * ptr = CDataManager::GetInstance();
+			
 			if(vecParam[1] == "d")
 			{
-				m_ptrDisk->PrintState();
+				ptr->PrintDiskState();
 			}
-			else if(vecParam[1] == "sms")
+			else if(vecParam[1] == "s")
 			{
-				//m_ptrLstHall->PrintState();
+				ptr->PrintSMSState();
 			}
-			else if(vecParam[1] == "eth")
+			else if(vecParam[1] == "e")
 			{
-				//m_ptrNet->PrintState();
+				ptr->PrintEthState();
 			}
-			else if(vecParam[1] == "o")
+			else if(vecParam[1] == "t")
 			{
-				//m_ptrMonitor->PrintState();
+				ptr->PrintTMSState();
 			}
 			else
 			{
@@ -371,4 +375,17 @@ int CInvoke::Controller ()
 	printf("Stop input! IMonitor will be exit!\n");
 	close(fdStdin);
 	return 0;
+}
+
+// 切换TMS
+bool CInvoke::SwitchTMS()
+{
+	if(m_ptrTMS != NULL)
+	{
+		return m_ptrTMS->SwitchTMS();
+	}
+	else
+	{
+		return false;
+	}
 }

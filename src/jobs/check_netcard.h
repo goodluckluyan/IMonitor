@@ -23,7 +23,7 @@
 class Test_NetCard
 {
 public:
-	Test_NetCard(CDataManager * ptrDM);
+	Test_NetCard();
 	~Test_NetCard();
 
 	//初始化函数，必须先被调用

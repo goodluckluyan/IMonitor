@@ -34,7 +34,7 @@ class CheckDisk
 {
 public:
 	//cus
-	CheckDisk(CDataManager *ptrDM);
+	CheckDisk();
 	//dis
 	~CheckDisk();
 

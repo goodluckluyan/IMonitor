@@ -4,9 +4,8 @@
 #include"utility/C_TcpTransport.h"
 #include"log/C_LogManage.h"
 
-CMonitorSensor::CMonitorSensor(CDataManager * ptr)
+CMonitorSensor::CMonitorSensor()
 {
-	m_ptrDM= ptr;
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_STATUS] = "<ns2:GetMontorState></ns2:GetMontorState>";
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS] = "<ns2:GetTMSState></ns2:GetTMSState>";
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS] = "<ns2:GetSMSState></ns2:GetSMSState>";
@@ -15,7 +14,7 @@ CMonitorSensor::CMonitorSensor(CDataManager * ptr)
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS] = "<ns2:GetSwitchState></ns2:GetSwitchState>";
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS] = "<ns2:GetIngestSpeedLimit></ns2:GetIngestSpeedLimit>";
 	m_mapStateType[TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS] = "<ns2:GetWorkState_CS></ns2:GetWorkState_CS>";
-
+	m_ptrDM = NULL;
 }
 
 CMonitorSensor::~CMonitorSensor()
@@ -23,13 +22,14 @@ CMonitorSensor::~CMonitorSensor()
 	xercesc::XMLPlatformUtils::Terminate();
 }
 
-bool CMonitorSensor::Init(std::string strURI,std::string strIP,int nPort,CDataManager * ptr)
+bool CMonitorSensor::Init(std::string strURI,std::string strIP,int nPort)
 {
 	m_strURI =strURI;
 	m_strIP = strIP;
 	m_nPort = nPort;
-	m_ptrDM = ptr;
 	
+	m_ptrDM = CDataManager::GetInstance();
+
 	try
 	{
 		xercesc::XMLPlatformUtils::Initialize();

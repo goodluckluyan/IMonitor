@@ -43,7 +43,7 @@ void* MonitorSoapServerMain(void *port)
 		}
 		else
 		{
-			printf("MonitorSoapServerMain:recv a webservice request!\n");//recv a request,success
+			//printf("MonitorSoapServerMain:recv a webservice request!\n");//recv a request,success
 		}
 
 		if(g_bWebServiceQuit)

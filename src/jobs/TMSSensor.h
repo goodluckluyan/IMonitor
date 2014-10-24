@@ -18,20 +18,55 @@ History:
 #include <iostream>
 #include <string>
 #include "DataManager.h"
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/util/XercesDefs.hpp>
+#include <xercesc/dom/DOM.hpp>
+#include <xercesc/dom/DOMNode.hpp>	
+#include <xercesc/dom/DOMDocument.hpp>
+#include <xercesc/dom/DOMDocumentType.hpp>
+#include <xercesc/dom/DOMElement.hpp>
+#include <xercesc/dom/DOMImplementation.hpp>
+#include <xercesc/dom/DOMImplementationLS.hpp>
+#include <xercesc/dom/DOMNodeIterator.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/dom/DOMText.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/util/XMLUni.hpp>
+#include <xercesc/util/XMLString.hpp>
 
 class CTMSSensor
 {
 public:
 	
-	CTMSSensor(CDataManager * ptr);
+	CTMSSensor();
 	
 	~CTMSSensor();
 
-	
+	bool SwitchTMS();
+		
 	//获取TMS 工作状态
 	int GetTMSWorkState();
+
+	bool Init(std::string strURI,std::string strIP,int nPort);
+private:
+	bool ShutDownTMS();
+	bool StartTMS();
+	int InvokerWebServer(std::string &xml,std::string &strResponse);
+	int GetHttpContent(const std::string &http, std::string &response);
+	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime = 3);
+	bool ParseXml(std::string &retXml,int &nRet);
+	bool CallStandbySwitchTMS();
+	
+
 private:
 	CDataManager * m_ptrDM;
+	int m_nPid;
+
+	//对端主机信息
+	std::string m_strIP;
+	int m_nPort;
+	std::string m_strURI;
 
 };
 

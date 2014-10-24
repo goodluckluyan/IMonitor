@@ -5,11 +5,6 @@ CDispatch::CDispatch()
 {
 
 }
-CDispatch::CDispatch(CDataManager *ptr)
-:m_ptrDM(ptr)
-{
-
-}
 
 CDispatch::~CDispatch()
 {
@@ -18,6 +13,7 @@ CDispatch::~CDispatch()
 
 bool CDispatch::Init()
 {
+	m_ptrDM = CDataManager::GetInstance();
 	return true;
 }
 

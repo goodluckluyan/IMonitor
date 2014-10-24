@@ -64,3 +64,5 @@ struct mons__WorkStateRes
 	std::string hall;
 };
 int mons__GetWorkState_USCORECS(struct mons__WorkStateRes &ret);
+
+int mons__ExeSwitchTMSToOther(int &ret);

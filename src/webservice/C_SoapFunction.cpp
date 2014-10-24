@@ -4,6 +4,7 @@
 #include <cstdio>
 #include "para/C_Para.h"
 #include "jobs/DataManager.h"
+#include "jobs/Invoke.h"
 using namespace std;
 
 int mons__GetMontorState(struct soap*, struct mons__MontorStateRes &ret)
@@ -16,7 +17,7 @@ int mons__GetMontorState(struct soap*, struct mons__MontorStateRes &ret)
 int mons__GetTMSState(struct soap*, struct mons__TmsStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
-	ret.bRun = pDM->GetTMSStat();
+	ret.bRun = pDM->GetTMSStat() == 0 ? 1 : 0;
 	ret.iState = 0x01;
 	ret.iWorkState = 0x0f;
 	return 0;
@@ -116,4 +117,21 @@ int mons__GetWorkState_USCORECS(struct soap*, struct mons__WorkStateRes &ret)
 	ret.state = 1;
 	ret.info = "error 0081";
 	return 0;
+}
+
+int mons__ExeSwitchTMSToOther(struct soap* cSoap,int &ret)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	if(ptr->SwitchTMS())
+	{	
+		ret = 0;
+		return 0;
+	}
+	else
+	{
+		soap_sender_fault_subcode(cSoap, "mons:1", "Switch Fail", "SwitchTMS");
+		ret = 1;
+		return 1;
+	}
 }

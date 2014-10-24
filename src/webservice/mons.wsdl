@@ -167,6 +167,21 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeSwitchTMSToOther">
+   <complexType>
+    <sequence>
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeSwitchTMSToOtherResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 
 </types>
@@ -235,6 +250,14 @@
  <part name="parameters" element="mons:WorkStateRes"/>
 </message>
 
+<message name="ExeSwitchTMSToOtherRequest">
+ <part name="parameters" element="mons:ExeSwitchTMSToOther"/>
+</message>
+
+<message name="ExeSwitchTMSToOtherResponse">
+ <part name="parameters" element="mons:ExeSwitchTMSToOtherResponse"/>
+</message>
+
 <portType name="ServicePortType">
  <operation name="GetMontorState">
   <documentation>Service definition of function mons__GetMontorState</documentation>
@@ -275,6 +298,11 @@
   <documentation>Service definition of function mons__GetWorkState_USCORECS</documentation>
   <input message="tns:GetWorkState_CS"/>
   <output message="tns:WorkStateRes"/>
+ </operation>
+ <operation name="ExeSwitchTMSToOther">
+  <documentation>Service definition of function mons__ExeSwitchTMSToOther</documentation>
+  <input message="tns:ExeSwitchTMSToOtherRequest"/>
+  <output message="tns:ExeSwitchTMSToOtherResponse"/>
  </operation>
 </portType>
 
@@ -344,6 +372,15 @@
   </output>
  </operation>
  <operation name="GetWorkState_CS">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="parameters" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="parameters" use="literal"/>
+  </output>
+ </operation>
+ <operation name="ExeSwitchTMSToOther">
   <SOAP:operation soapAction=""/>
   <input>
      <SOAP:body parts="parameters" use="literal"/>

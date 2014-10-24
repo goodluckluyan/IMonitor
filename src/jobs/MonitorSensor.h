@@ -71,12 +71,12 @@ private :
 class CMonitorSensor
 {
 public:
-	CMonitorSensor(CDataManager * ptr);
+	CMonitorSensor();
 
 	~CMonitorSensor();
 
 	// 初始化
-	bool Init(std::string strURI,std::string strIP,int nPort,CDataManager * ptr);
+	bool Init(std::string strURI,std::string strIP,int nPort);
 	
 	// 获取另一台主机的调度程序的状态
 	bool GetOtherMonitorState(int nStateType);

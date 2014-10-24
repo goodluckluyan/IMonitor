@@ -27,12 +27,12 @@ const int MAX_BUFF_LEN = 128;
 
 
 
-CheckDisk :: CheckDisk(CDataManager *ptrDM)
-:m_ptrDM(ptrDM)
+CheckDisk :: CheckDisk()
 {
 	DiskSize = "";
 	DiskState = "";
 	DiskNumOfDrives = "";
+	m_ptrDM = NULL;
 }
 
 CheckDisk ::~CheckDisk()
@@ -41,6 +41,7 @@ CheckDisk ::~CheckDisk()
 
 bool CheckDisk::InitAndCheck()
 {
+	m_ptrDM=CDataManager::GetInstance();
 	if(ReadMegaSASInfo() != 0)
 	{
 		return false;
@@ -445,9 +446,3 @@ int CheckDisk::isblank( const char *pbuf )
 }
 
 
-void CheckDisk::PrintState()
-{
-	printf("Number of RAID Disk :%s\n",diskInfo.diskNumOfDrives.c_str());
-	printf("RAID Disk State :%s\n",diskInfo.diskState.c_str());
-	printf("RAID Disk State: %s\n",diskInfo.diskSize.c_str());
-}

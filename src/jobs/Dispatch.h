@@ -8,7 +8,6 @@ class CDispatch
 {
 public:
 	CDispatch();
-	CDispatch(CDataManager *);
 	~CDispatch();
 
 	bool Init();

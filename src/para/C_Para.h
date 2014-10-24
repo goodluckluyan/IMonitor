@@ -55,6 +55,8 @@ public:
 
 	//对端的调度程序wsdl的URI
 	std::string m_strOURI;
+
+	std::string m_strTMSPath;
 private:
     static C_Para *m_pInstance;
 };

@@ -30,9 +30,9 @@ C_HallList::~C_HallList()
 
 
 
-int C_HallList::Init(CDataManager * ptr )
+int C_HallList::Init( )
 {
-	m_ptrDM = ptr;
+	m_ptrDM = CDataManager::GetInstance();
 	C_Para *ptrPara = C_Para::GetInstance();
 
 	// 打开数据库
@@ -85,10 +85,10 @@ int C_HallList::Init(CDataManager * ptr )
 		}
 
 	}
-
-	if(ptr != NULL)
+	m_ptrDM = CDataManager::GetInstance();
+	if(m_ptrDM != NULL)
 	{
-		ptr->SetSMSInfo(vecSMSInfo);
+		m_ptrDM->SetSMSInfo(vecSMSInfo);
 	}
 
 
@@ -116,4 +116,8 @@ bool C_HallList::GetSMSWorkState()
 	return true;
 }
 
-
+// 切换sms
+// bool C_HallList::SwitchSMS(std::string strHallID)
+// {
+//    
+// }

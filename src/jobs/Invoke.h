@@ -51,6 +51,8 @@ public:
 	//获取定时任务的时间间隔
 	int GetCheckDelay(int nStateType);
 
+	bool SwitchTMS();
+
 private:
 	// 打印帮助信息
 	void PrintProductInfo();

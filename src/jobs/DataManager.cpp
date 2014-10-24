@@ -7,16 +7,20 @@
 CDataManager *CDataManager::m_pinstance=NULL;
 CDataManager::CDataManager()
 {
-
+	m_ptrInvoker = NULL;
 }
 CDataManager::~CDataManager()
 {
-
 }
 
 // ³õÊ¼»¯
-bool CDataManager::Init()
+bool CDataManager::Init(void * vptr)
 {
+	if(vptr != NULL)
+	{
+		m_ptrInvoker = vptr;
+	}
+
 	C_Para *ptrPara = C_Para::GetInstance();
 	CppMySQL3DB mysql;
 	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
@@ -158,6 +162,11 @@ int CDataManager::GetTMSStat()
 	return m_nTMSState;
 }
 
+void * CDataManager::GetInvokerPtr()
+{
+	return m_ptrInvoker;
+}
+
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	printf("Other Monitor State:bMain:%d,nState:%d\n",bMain,nState);
@@ -173,48 +182,94 @@ bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 bool CDataManager::UpdateOtherSMSState(std::string strHallId,bool bRun,int nState,
 						 int nPosition,std::string strSplUuid)
 {
-	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
-		bRun,nState,nPosition,strSplUuid.c_str());
+// 	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
+// 		bRun,nState,nPosition,strSplUuid.c_str());
 	return true;
 }
 
 bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 										int nWriteSpeed,std::vector<int> &vecDiskState)
 {
-	printf("Other Raid State:State:%d,RS:%d,WS:%d\n",nState,nReadSpeed,nWriteSpeed);
-	for(int i=0;i<vecDiskState.size();i++)
-	{
-		printf("Raid%d:%d\n",i,vecDiskState[i]);
-	}
+// 	printf("Other Raid State:State:%d,RS:%d,WS:%d\n",nState,nReadSpeed,nWriteSpeed);
+// 	for(int i=0;i<vecDiskState.size();i++)
+// 	{
+// 		printf("Raid%d:%d\n",i,vecDiskState[i]);
+// 	}
 	return true;
 }
 
 bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 {
-	int nlen = vecEthStatus.size();
-	for(int i = 0 ;i < nlen ;i++)
-	{
-		EthStatus &node = vecEthStatus[i];
-		printf("Other %s State:nConnectState:%d,nSpeed:%d\n",node.strName.c_str(),
-			node.nConnStatue,node.nRxSpeed);
-	}
+// 	int nlen = vecEthStatus.size();
+// 	for(int i = 0 ;i < nlen ;i++)
+// 	{
+// 		EthStatus &node = vecEthStatus[i];
+// 		printf("Other %s State:nConnectState:%d,nSpeed:%d\n",node.strName.c_str(),
+// 			node.nConnStatue,node.nRxSpeed);
+// 	}
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSwitchState(int nSwitch1State,int nSwitch2State)
 {
-	printf("Other Switch nSwitch1State:%d,nSwitch2State:%d\n",nSwitch1State,nSwitch2State);
+	//printf("Other Switch nSwitch1State:%d,nSwitch2State:%d\n",nSwitch1State,nSwitch2State);
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSpeedLmtState(bool bEnableIngest,int nSpeedLimit)
 {
-	printf("Other SpeedLmt bEnableIngest:%d,nSpeedLimit:%d\n",bEnableIngest,nSpeedLimit);
+	//printf("Other SpeedLmt bEnableIngest:%d,nSpeedLimit:%d\n",bEnableIngest,nSpeedLimit);
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSMSEWState(int nState,std::string  strInfo,std::string  strHall)
 {
-	printf("Other SMSEW nState:%d,strInfo:%s,strHall:%s\n",nState,strInfo.c_str(),strHall.c_str());
+	//printf("Other SMSEW nState:%d,strInfo:%s,strHall:%s\n",nState,strInfo.c_str(),strHall.c_str());
 	return true;
 }
+
+void CDataManager::PrintTMSState()
+{
+	printf("TMS Current State:\n");
+	printf("bRun:%d\n",m_nTMSState);
+}
+
+void CDataManager::PrintDiskState()
+{
+	printf("Number of RAID Disk :%s\n",m_df.diskNumOfDrives.c_str());
+	printf("RAID Disk State :%s\n",m_df.diskState.c_str());
+	printf("RAID Disk State: %s\n",m_df.diskSize.c_str());
+}
+
+void CDataManager::PrintSMSState()
+{
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>maptmp = m_mapSmsStatus;
+	m_csSMS.LeaveCS();
+
+	std::map<std::string,SMSInfo>::iterator it = maptmp.begin();
+	for(;it != maptmp.end(); it++)
+	{
+		SMSInfo &info = it->second;
+		printf("hallid:%s\n",info.strId.c_str());
+		printf("SMS state:%d\n",info.stStatus.nStatus);
+	}
+}
+
+void CDataManager::PrintEthState()
+{
+	m_csNet.EnterCS();
+	std::map<std::string,EthStatus> mapTmp = m_mapEthStatus;
+	m_csNet.LeaveCS();
+
+	std::map<std::string,EthStatus>::iterator it = mapTmp.begin();
+	for(;it != mapTmp.end(); it++)
+	{
+		EthStatus &node = it->second;
+		printf("EthName:%s\n",node.strName.c_str());
+		printf("TaskType:%d\n",node.nTaskType);
+		printf("ConnState:%d\n",node.nConnStatue);
+		printf("Speed:%d\n",node.nRxSpeed);
+	}
+}
+

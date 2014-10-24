@@ -171,6 +171,14 @@ int C_Para::ReadPara()
 	}
 	m_strOURI = a;
 
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","TMSPath",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strTMSPath = a;
+
 
     return 0;
     

@@ -22,15 +22,15 @@
 class C_HallList
 {
 public:
-	C_HallList(CDataManager * ptr)
-		:m_ptrDM(ptr)
+	C_HallList()
+		:m_ptrDM(NULL)
 	{};
    
 	
     ~C_HallList();
 
    	//初始化所有影厅。
-    int Init(CDataManager *);
+    int Init();
    
 	// 获取SMS工作状态
 	bool GetSMSWorkState();

@@ -225,11 +225,11 @@ int Read_NetDataBytes(const char * eth_name  , char rwMode , unsigned long long&
 }
 
 
-Test_NetCard::Test_NetCard(CDataManager * ptrDM)
+Test_NetCard::Test_NetCard()
 {
 	int nIndex = 0;
 	m_bInit = false;
-	m_ptrDM = ptrDM;
+	m_ptrDM = NULL;
 }
 
 Test_NetCard::~Test_NetCard()
@@ -240,6 +240,7 @@ Test_NetCard::~Test_NetCard()
 //初始化函数，必须先被调用
 int Test_NetCard::Init()
 {
+	m_ptrDM = CDataManager::GetInstance();
 	int ret = 0;
 	int nEth = GetIFInfo(m_vecEth);
 	if(nEth <= 1)
@@ -262,7 +263,7 @@ int Test_NetCard::Init()
 		}
 		else
 		{
-			printf( "Init Error:eth=%s ,Recv nInitRx_bytes\n" , m_vecEth[nIndex].c_str() );
+			//printf( "Init Error:eth=%s ,Recv nInitRx_bytes\n" , m_vecEth[nIndex].c_str() );
 			//return -10;
 		}
 
@@ -291,7 +292,7 @@ int Test_NetCard::Init()
 int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long& TranBPS ,
 									 unsigned long long& RecvBPS )
 {
-	printf("Enter Check_NewWork_Flow()!\n\n");
+	//printf("Enter Check_NewWork_Flow()!\n\n");
 
 	int ret = 0;
 	int nEthNameIndex = 0;
@@ -324,7 +325,7 @@ int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long&
 		ret = Read_NetDataBytes( eth_name.c_str() , 'r' ,  nInitRx_bytes );
 		if ( ret == 0 )
 		{
-			printf( "Read_NetDataBytes:Recv Operate nInitRx_bytes = %llu\n" , nInitRx_bytes );
+			//printf( "Read_NetDataBytes:Recv Operate nInitRx_bytes = %llu\n" , nInitRx_bytes );
 			m_oldRx_bytes[eth_name] = nInitRx_bytes;
 		}
 		else
@@ -339,7 +340,7 @@ int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long&
 		ret = Read_NetDataBytes( eth_name.c_str() , 't' ,  nInitTx_bytes );
 		if ( ret == 0 )
 		{
-			printf( "Read_NetDataBytes:Send Operate nInitTx_bytes = %llu\n" , nInitTx_bytes );
+			//printf( "Read_NetDataBytes:Send Operate nInitTx_bytes = %llu\n" , nInitTx_bytes );
 			m_oldTx_bytes[eth_name] = nInitTx_bytes;
 		}
 		else
@@ -358,7 +359,7 @@ int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long&
 	}
 	else
 	{
-		printf( "Read_NetDataBytes:Recv Operate newRx_bytes = %llu\n" , newRx_bytes );
+		//printf( "Read_NetDataBytes:Recv Operate newRx_bytes = %llu\n" , newRx_bytes );
 	}
 	
 	unsigned long long newTx_bytes = 0;
@@ -369,7 +370,7 @@ int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long&
 	}
 	else
 	{
-		printf( "Read_NetDataBytes:Send Operate newTx_bytes = %llu\n" , newTx_bytes );
+		//printf( "Read_NetDataBytes:Send Operate newTx_bytes = %llu\n" , newTx_bytes );
 	}
 
 	unsigned long long nRealRecv_bytes = 0 , nRealSend_bytes = 0;
@@ -386,9 +387,9 @@ int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long&
 
 	RecvBPS = nRealRecv_bytes/(unsigned long long)nIntervalTime;
 
-	printf( "Real Recv bytes %llu B \n" , nRealRecv_bytes );
-	printf( "Net Speed RecvBPS: %llu B/S \n" , RecvBPS );
-	printf( "Net Speed Recv: %llu KB/S \n" , RecvBPS/1024 );
+	//printf( "Real Recv bytes %llu B \n" , nRealRecv_bytes );
+	//printf( "Net Speed RecvBPS: %llu B/S \n" , RecvBPS );
+	//printf( "Net Speed Recv: %llu KB/S \n" , RecvBPS/1024 );
 
 	if ( nRealRecv_bytes != 0 )
 	{
@@ -408,16 +409,16 @@ int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long&
 
 	TranBPS = nRealSend_bytes/(unsigned long long)nIntervalTime;
 
-	printf( "Real Send bytes %llu B \n" , nRealSend_bytes );
-	printf( "Net Speed TranBPS: %llu B/S \n" , TranBPS );
-	printf( "Net Speed Send: %llu KB/S \n" , TranBPS/1024 );
+	//printf( "Real Send bytes %llu B \n" , nRealSend_bytes );
+	//printf( "Net Speed TranBPS: %llu B/S \n" , TranBPS );
+	//printf( "Net Speed Send: %llu KB/S \n" , TranBPS/1024 );
 
 	if ( nRealSend_bytes != 0 )
 	{
 		m_oldTx_bytes[eth_name] = newTx_bytes;
 	}
 
-	printf("Finished Check_NewWork_Flow()!\n\n");
+	//printf("Finished Check_NewWork_Flow()!\n\n");
 
 	return 0;
 }

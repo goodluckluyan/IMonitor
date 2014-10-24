@@ -113,7 +113,9 @@ void InitSigFun(C_LogManage *pLogManage)
 	{
 		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGABRT"); 
 		printf("add signal Number:SIGABRT\n");	
-	}                 
+	}
+
+	signal(SIGCLD,SIG_IGN);
 }
 
 //@brief 程序入点，进行系统的各种初试化操作。
