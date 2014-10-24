@@ -116,8 +116,8 @@ bool C_HallList::GetSMSWorkState()
 	return true;
 }
 
-// ÇÐ»»sms
-// bool C_HallList::SwitchSMS(std::string strHallID)
-// {
-//    
-// }
+//ÇÐ»»sms
+bool C_HallList::SwitchSMS(std::string strHallID)
+{
+   
+}
