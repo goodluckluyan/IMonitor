@@ -87,7 +87,25 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 {
 	m_csDisk.EnterCS();
 	m_df = df;
+        printf("*****************Raid State************\n");
+	printf("diskSize:%s\n",df.diskSize.c_str());
+	printf("diskState:%s\n",df.diskState.c_str());
+	printf("diskNumberOfDrives:%s\n",df.diskNumOfDrives.c_str());
+	printf("-------------------Detail--------------\n");
+	int nLen = df.diskDrives.size();
+	for(int i = 0 ;i < nLen ;i ++)
+	{	
+	    printf("----------------%d----------------\n",i);
+	    printf("dirveID:%s\n",df.diskDrives[i].driveID.c_str());
+	    printf("dirveSlotNum:%s\n",df.diskDrives[i].driveSlotNum.c_str());
+	    printf("dirveErrorCount:%s\n",df.diskDrives[i].driveErrorCount.c_str());
+	    printf("dirveSize:%s\n",df.diskDrives[i].driveSize.c_str());
+	    printf("dirveFirmwareState:%s\n",df.diskDrives[i].driveFirmwareState.c_str());
+	    printf("dirveSpeed:%s\n",df.diskDrives[i].driveSpeed.c_str());
+	}
+	printf("---------------------------------------\n");
 	m_csDisk.LeaveCS();
+
 	return true;
 }
 

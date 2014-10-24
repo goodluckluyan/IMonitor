@@ -84,13 +84,13 @@ int CheckDisk::ReadMegaSASInfo()
 
 	//删除之前的MegaSAS.log日志
 	iResult = RemoveDir( strInipath);
-	if (iResult != 0)
-	{
-		return -1;
-	}
+//	if (iResult != 0)
+//	{
+//		return -1;
+//	}
 
 	//获取新的MegaSAS.log信息
-	iResult = GetDickInfoLog();
+	iResult = GetDickInfoLog(strInipath);
 	if (iResult != 0)
 	{
 		return -1;
@@ -186,7 +186,18 @@ int CheckDisk :: GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.lo
 			else if ( !strcmp( cfg_key.c_str(), "Port's Linkspeed"))
 			{
 				disDriveInfo.driveSpeed = cfg_value;
-				diskInfo.diskDrives.push_back( disDriveInfo);
+				bool bFind = false;
+			        int nLen = diskInfo.diskDrives.size();
+				for(int i = 0 ;i < nLen ;i++)
+				{
+				  if(!strcmp(diskInfo.diskDrives[i].driveSlotNum.c_str(),disDriveInfo.driveSlotNum.c_str()) )
+				  {
+				    bFind = true;
+			            break;	
+				   }
+				}
+				if(!bFind)
+				   diskInfo.diskDrives.push_back( disDriveInfo);
 			}
 		}
 	}
@@ -196,24 +207,24 @@ int CheckDisk :: GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.lo
 }
 
 
-int CheckDisk::GetDickInfoLog()
+int CheckDisk::GetDickInfoLog(std::string ppath)
 {
 	int iResult;
-	string cmd;
+	char cmd[256]={'\0'};
+	snprintf(cmd,256,"sudo /usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -LDInfo -LALL -aAll > %s",ppath.c_str());
+	iResult = system( cmd);
+	sleep(3);
+//	if (iResult != 0)
+//	{
+//		return CHECKDISK_ERROR_NO_INFOLOG;
+//	}
 
-	cmd = "/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -LDInfo -LALL -aAll";
-	iResult = system( cmd.c_str());
-	if (iResult != 0)
-	{
-		return CHECKDISK_ERROR_NO_INFOLOG;
-	}
-
-	cmd = "/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -PDList -aAll";
-	iResult = system(cmd.c_str());
-	if (iResult != 0)
-	{
-		return CHECKDISK_ERROR_NO_INFOLOG;
-	}
+	snprintf(cmd,256, "sudo /usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -PDList -aAll >> %s",ppath.c_str());
+	iResult = system(cmd);
+//	if (iResult != 0)
+//	{
+//		return CHECKDISK_ERROR_NO_INFOLOG;
+//	}
 
 	return 0;
 }
@@ -224,7 +235,8 @@ int CheckDisk::RemoveDir( const string &logpath)
 
 //	if( ( iResult = access( logpath.c_str() , F_OK ) ) == 0 )
 //	{
-	iResult = system( (DIR+logpath).c_str());
+//	iResult = system( (DIR+logpath).c_str());
+	iResult = unlink(logpath.c_str());
 	if (iResult != 0)
 	{
 		return CHECKDISK_ERROR_RM_INFOLOG;
