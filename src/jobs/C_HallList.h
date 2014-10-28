@@ -35,11 +35,11 @@ public:
 	// 获取SMS工作状态
 	bool GetSMSWorkState();
 
-
+	bool SwitchSMS(std::string strHallID);
 private:
 	 
     C_CS m_CS;
-	std::list<C_Hall *> m_Halllist;
+	std::map<std::string,C_Hall *> m_mapHall;
     static C_HallList *m_pInstance; 
 	CDataManager *m_ptrDM;
 

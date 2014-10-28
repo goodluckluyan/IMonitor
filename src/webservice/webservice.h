@@ -23,7 +23,7 @@ struct mons__SMSState
 	int position;
 	std::string strSplUuid;
 };
-int mons__GetSMSState(struct mons__SMSState &ret);
+int mons__GetSMSState(std::vector<struct mons__SMSState> &vecret);
 
 struct mons__RaidStateRes
 {
@@ -66,3 +66,4 @@ struct mons__WorkStateRes
 int mons__GetWorkState_USCORECS(struct mons__WorkStateRes &ret);
 
 int mons__ExeSwitchTMSToOther(int &ret);
+int mons__ExeSwitchSMSToOther(std::string strHallID,int &ret);

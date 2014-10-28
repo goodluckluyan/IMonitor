@@ -36,8 +36,7 @@ public:
 	// 更新另一台主机上运行的调度程序各个模块的监测数据
 	bool UpdateOtherMonitorState(bool bMain,int nState);
 	bool UpdateOtherTMSState(bool bRun,int nWorkState,int nState);
-	bool UpdateOtherSMSState(std::string strHallId,bool bRun,int nState,
-		int nPosition,std::string strSplUuid);
+	bool UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus);
 	bool UpdateOtherRaidState(int nState,int nReadSpeed,int nWriteSpeed,
 		std::vector<int> &vecDiskState);
 	bool UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus);
@@ -62,7 +61,7 @@ public:
 	// 读取监测参数
 	bool GetDevStat(DiskInfo &df);
 	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
-	bool GetSMSStat();
+	bool GetSMSStat(std::vector<SMSStatus> vecSMSState);
 	int GetTMSStat();
 
 	// 其它方法

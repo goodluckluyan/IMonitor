@@ -67,33 +67,24 @@ int C_HallList::Init( )
 		node.strExepath = query.getStringField("exepath");
 		node.strConfpath = query.getStringField("confpath");
 		query.nextRow();
+		vecSMSInfo.push_back(node);
 	}
 	
 	int nLen = vecSMSInfo.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
 		SMSInfo &node = vecSMSInfo[i];
-		if(ptrPara->m_bMain && node.nRole == 1)
-		{
-			C_Hall * ptrHall = new C_Hall(node);
-			m_Halllist.push_back(ptrHall);
-		}
-		else if(!ptrPara->m_bMain && node.nRole == 2)
-		{
-			C_Hall * ptrHall = new C_Hall(node);
-			m_Halllist.push_back(ptrHall);
-		}
-
+	
+		bool bRun = ptrPara->m_bMain ? node.nRole == 1 : node.nRole == 2;
+		C_Hall * ptrHall = new C_Hall(node);
+		ptrHall->Init(bRun);
+		m_mapHall[node.strId]= ptrHall;
 	}
 	m_ptrDM = CDataManager::GetInstance();
 	if(m_ptrDM != NULL)
 	{
 		m_ptrDM->SetSMSInfo(vecSMSInfo);
 	}
-
-
-	
-	
 	return 0;
 }
 
@@ -101,23 +92,58 @@ int C_HallList::Init( )
 // 获取SMS工作状态
 bool C_HallList::GetSMSWorkState()
 {
-	std::list<C_Hall *>::iterator it = m_Halllist.begin();
-	for( ;it != m_Halllist.end() ;it++)
+	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
+	for( ;it != m_mapHall.end() ;it++)
 	{
-		C_Hall * ptr = *it;
+		C_Hall * ptr = it->second;
 		int nState;
 		std::string strInfo;
-		ptr->GetSMSWorkState(nState,strInfo);
-		if(m_ptrDM != NULL)
+		if( ptr->IsLocal())
 		{
-			m_ptrDM->UpdateSMSStat(ptr->GetHallID(),nState,strInfo);
+			ptr->GetSMSWorkState(nState,strInfo);
+			if(m_ptrDM != NULL)
+			{
+				m_ptrDM->UpdateSMSStat(ptr->GetHallID(),nState,strInfo);
+			}
 		}
+		
 	}
 	return true;
 }
 
-//切换sms
+//切换SMS
 bool C_HallList::SwitchSMS(std::string strHallID)
 {
-   
-}
+	if(strHallID.empty())
+	{
+		return false;
+	}
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	C_Hall * ptr = fit->second;
+	if(ptr->IsLocal())
+	{
+		ptr->ShutDownSMS();
+		if(C_Para::GetInstance()->m_bMain)
+		{
+			// 调用备机的切换Sms
+ 			C_Para *ptrPara = C_Para::GetInstance();
+ 			ptr->CallStandbySwitchSMS(ptrPara->m_strOURI,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+		}
+	}
+	else
+	{
+		if(C_Para::GetInstance()->m_bMain)
+		{
+			// 调用备机的切换Sms
+ 			C_Para *ptrPara = C_Para::GetInstance();
+ 			ptr->CallStandbySwitchSMS(ptrPara->m_strOURI,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+		}
+		ptr->StartSMS();
+	}
+	return true;
+}	

@@ -5,8 +5,18 @@
 
 #include "C_Hall.h"
 #include <algorithm>
+#include <string>
+#include <cstdlib>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include "database/CppMySQL3DB.h"
 #include "para/C_RunPara.h"
+#include "../C_ErrorDef.h"
 const int ERROR_PLAYER_AQ_BADHTTPRESPONSE = -1;
 const int ERROR_PLAYER_AQ_NEEDSOAPELEM = -2;
 const int BufferLength = 2048;
@@ -16,6 +26,8 @@ using namespace xercesc;
 C_Hall::C_Hall(SMSInfo &stSms)
 {
    m_SMS = stSms;
+   m_bInitRun = false;
+   m_pid = 0;
 }
 
 C_Hall::~C_Hall()
@@ -23,13 +35,75 @@ C_Hall::~C_Hall()
     
 }
 
+// 初始化
+bool C_Hall::Init(bool bRun)
+{
+	 m_bInitRun = bRun;
+	 if(bRun)
+	 {
+		 // 本机运行
+		 StartSMS();
+		 m_SMS.stStatus.nRun = 1;
+	 }
+	 else
+	 {
+		 // 另一台机子运行
+		m_SMS.stStatus.nRun = 2;
+	 }
+}
+
 // 启动SMS
 bool C_Hall::StartSMS()
 {
+	
+	if(m_SMS.strExepath.empty())
+	{
+		return false;
+	}
+
+	pid_t pid ;
+	if((pid = fork()) < 0)
+	{
+		perror("failed to create process/n");
+		return false;
+	}
+	else if(pid == 0)
+	{
+		m_pid = pid;
+		m_SMS.stStatus.nRun = 1;
+		printf("Fork Process(%d) Start SMS ... \n",getpid());
+		if(execl(m_SMS.strExepath.c_str(),"oristar_sms_server",m_SMS.strConfpath.c_str(),NULL) < 0)
+		{
+			perror("execl error");
+			m_SMS.stStatus.nRun = 0;
+			m_pid = 0;
+			exit(0);
+		}
+	}
 	return true;
 }
 
-int C_Hall :: SmsInit( )
+// 关闭SMS
+bool C_Hall::ShutDownSMS()
+{
+	if(m_pid > 0)
+	{
+		int nRet = kill(m_pid,9);
+		if(nRet == 0)
+		{
+			printf("Kill Local SMS(%d) Done!\n",m_pid);
+		}
+		return nRet == 0 ? true: false;
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
+
+int C_Hall::SmsWebInvokerInit( )
 // const string &strUserName, const string &strPassword)
 {
 	m_xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
@@ -49,25 +123,24 @@ int C_Hall :: SmsInit( )
 	return 0;
 }
 
-
 //获取SMS 运行状态
-int C_Hall :: GetSMSWorkState( int &state, string &info)
+int C_Hall::GetSMSWorkState( int &state, string &info)
 {
 	//初始化获取AQ33的ip和port
 	if (m_SMS.strIp.empty())
 	{
 		return -1;
 	}
-	SmsInit();
+	SmsWebInvokerInit();
 
 	int iResult;
 	string response_c;
 	string content_c;
 
 	string cmd = GetSMSWorkState_Xml();
-	string http = UsherHttp( cmd, "GetWorkState_CS");
+	string http = UsherHttp(m_SMS.strIp, cmd, "GetWorkState_CS");
 
-	iResult = SendAndRecvInfo( http, response_c, 30);
+	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 30);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP
@@ -87,7 +160,86 @@ int C_Hall :: GetSMSWorkState( int &state, string &info)
 	return 0;
 }
 
-string C_Hall :: GetSMSWorkState_Xml()
+
+int  C_Hall::CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int nPort,std::string strHallID)
+{
+	int iResult;
+	string response_c;
+	string content_c;
+
+	if (strOtherIP.empty())
+	{
+		return -1;
+	}
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns2:ExeSwitchSMSToOther><strHallID>"+strHallID+"</strHallID></ns0:ExeSwitchSMSToOther>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	string http = UsherHttp(strURI,strOtherIP,xml);
+
+	iResult = TcpOperator(strOtherIP,nPort, http, response_c, 30);
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_TCP
+	}
+
+	iResult = GetHttpContent( response_c, content_c);
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_HTTP
+	}
+
+	int nRet;
+	iResult = Parser_SwitchSMS(content_c,nRet );
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_XMLPARSER
+	}
+	return nRet;
+}
+
+
+// 解析切换结果
+int C_Hall::Parser_SwitchSMS(std::string &content,int &nRet)
+{
+	XercesDOMParser *parser = new XercesDOMParser();
+	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
+	DOMElement *rootChild = NULL;
+
+	int result = GetRootChild( content, parser, errHandler, &rootChild);
+	if (result < 0 || rootChild == NULL)
+		return -1;
+
+
+	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "ExeSwitchSMSToOtherResponse");
+	if(child == NULL)
+	{
+		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+	}
+
+	char *p;
+	DOMElement *root = GetElementByName(child->getFirstChild(), "ret");
+	if ( child == NULL || child->getFirstChild() == NULL || child->getFirstChild()->getNodeValue() == NULL)
+	{
+		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+	}
+	p = (char *)XMLString::transcode(root->getFirstChild()->getNodeValue());
+	nRet = atoi(p);
+	XMLString::release( &p);
+
+
+	delete errHandler;
+	delete parser;
+	return result;
+}
+
+string C_Hall::GetSMSWorkState_Xml()
 {
 	string temp;
 	temp = m_xmlHeader + m_envelopeBgn + m_bodyBgn
@@ -96,13 +248,13 @@ string C_Hall :: GetSMSWorkState_Xml()
 	return temp;
 }
 
-string &C_Hall::UsherHttp(const string &xml, const string &action)
+string &C_Hall::UsherHttp(std::string strURI,std::string strIP,const string &xml, const string &action)
 {
 	m_request.ClearHttp();
 	m_request.SetMethod("POST");
-	m_request.SetUri( m_usherLocation.c_str());
+	m_request.SetUri( strURI.c_str());
 	m_request.SetVersion("HTTP/1.0");
-	m_request.SetHost(m_SMS.strIp.c_str());
+	m_request.SetHost(strIP.c_str());
 	m_request.SetContentType("text/xml; charset=utf-8");
 	m_request.SetContent(xml);
 	m_request.SetSoapAction((m_usherNs + action).c_str());
@@ -174,16 +326,27 @@ int C_Hall :: Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, i
 }
 
 //发送与接收 数据/////////////////////////////////////////////////////////////////
-int C_Hall :: SendAndRecvInfo(const string &send, string &recv, int overtime)
+int C_Hall :: TcpOperator(std::string strIp,int nPort ,const string &send, string &recv,int overtime)
 {
-	//send
-	int result = m_tcp.TcpConnect(m_SMS.strIp.c_str(), m_SMS.nPort);
+	int result = m_tcp.TcpConnect(strIp.c_str(), nPort);
 	if(result < 0)
 	{
-		printf("C_Hall::SendAndRecvInfo TcpConnect %s:%d Fail !\n",m_SMS.strIp.c_str(), m_SMS.nPort);
-		return  -1;
+		//SetAq10Error(-ERROR_PLAYER_CTRL_DEVICECONNECTFAILED, "Player can not connect! 01");
+		return ERROR_PLAYER_AQ_TCPCONNECT;
 	}
-	result = m_tcp.BlockSend(send.c_str(), send.size());
+
+	result = SendAndRecvInfo(send, recv, overtime);
+
+	if(m_tcp.BeConnected())
+		m_tcp.ReleaseConnect();
+	return result;
+}
+
+
+//发送与接收 数据/////////////////////////////////////////////////////////////////
+int C_Hall :: SendAndRecvInfo(const string &send, string &recv, int overtime)
+{
+	int result = m_tcp.BlockSend(send.c_str(), send.size());
 	if(result < 0)
 	{
 		//SetAq10Error(ERROR_PLAYER_AQ_TCPSEND, "Player can not connect! 03");
@@ -230,11 +393,16 @@ int C_Hall :: SendAndRecvInfo(const string &send, string &recv, int overtime)
 	int waitTime = ((overtime > 120) ? overtime : 60);
 	result = ReceiveCommand(http, waitTime);//wait 60 second
 	if(result < 0)
+	{
 		return result;
-
+	}
+	
 	result = GetHttpContent(http, content);
+
+
 	if(result < 0)
 		return result;
+
 	else if(result < HttpResponseParser::Success)
 	{
 		//SetAq10Error(ERROR_PLAYER_AQ_HTTPUNKNOW, "bad http response! 02");

@@ -190,15 +190,11 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS:
 		{
-			std::string strHallId;	
-			bool bRun;	
-			int nState;	
-			int nPosition;	
-			std::string strSplUuid;
-			bRet = ParseOtherMonitorSMSState(retXml,strHallId,bRun,nState,nPosition,strSplUuid);
+			std::vector<SMSStatus> vecSMSStatus;
+			bRet = ParseOtherMonitorSMSState(retXml,vecSMSStatus);
 			if(bRet && m_ptrDM != NULL)
 			{
-				m_ptrDM->UpdateOtherSMSState(strHallId,bRun,nState,nPosition,strSplUuid);
+				m_ptrDM->UpdateOtherSMSState(vecSMSStatus);
 			}
 		}
 		
@@ -442,8 +438,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 	return true;
 }
 
-bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::string &strHallID,
-							   bool &bRun,int &nState,int &nPosition,std::string &strSplUuid)
+bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<SMSStatus> vecSMSStatus)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
 	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
@@ -457,86 +452,47 @@ bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::string &
 		ptrParser->parse(*ptrInputsource);
 		DOMDocument* ptrDoc = ptrParser->getDocument();	
 
-		// 读取HallId节点
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("HallId"));
-		if(ptrNodeList == NULL)
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("vecret"));
+		int nLen = (int)ptrNodeList->getLength();
+		for(int i = 0 ;i < nLen ;i++)
 		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorSMSState:没有找到HallId节点");
-			return false;
-		}
-		else
-		{
-			DOMNode* ptrNode = ptrNodeList->item(0);
-			strHallID =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-		}
+			SMSStatus node;
+			DOMNode * ptrNode = ptrNodeList->item(i);
+			DOMNodeList* ptrCL = ptrNode->getChildNodes();
 
-		// 读取bRun节点
-		DOMNodeList *ptrRunNodeList = ptrDoc->getElementsByTagName(C2X("bRun"));
-		if(ptrRunNodeList == NULL)
-		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorSMSState:没有找到bRun节点");
-			return false;
-		}
-		else
-		{
-			DOMNode* ptrNode = ptrRunNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			//HallId
+			DOMNode* ptrHallIdNode = ptrCL->item(0);
+			node.hallid =  XMLString::transcode(ptrHallIdNode->getFirstChild()->getNodeValue());
+	
+			// bRun
+			DOMNode* ptrRunNode = ptrCL->item(1);
+			std::string str_run =  XMLString::transcode(ptrRunNode->getFirstChild()->getNodeValue());
+			if(!str_run.empty())
+			{
+				node.nRun = atoi(str_run.c_str()) ;
+			}
+
+			// 读取state节点
+			DOMNode* ptrStatNode = ptrCL->item(2);
+			std::string str_state =  XMLString::transcode(ptrStatNode->getFirstChild()->getNodeValue());
 			if(!str_state.empty())
 			{
-				bRun = atoi(str_state.c_str()) == 1? true :false;
+				node.nStatus = atoi(str_state.c_str());
 			}
-		}
-
-		// 读取state节点
-		DOMNodeList *ptrStateNodeList = ptrDoc->getElementsByTagName(C2X("state"));
-		if(ptrStateNodeList == NULL)
-		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorSMSState:没有找到State节点");
-			return false;
-		}
-		else
-		{
-			DOMNode* ptrNode = ptrStateNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-			if(!str_state.empty())
+		
+			// 读取position节点
+			DOMNode* ptrPosNode = ptrCL->item(3);
+			std::string str_pos =  XMLString::transcode(ptrPosNode->getFirstChild()->getNodeValue());
+			if(!str_pos.empty())
 			{
-				nState = atoi(str_state.c_str());
+				node.nPosition = atoi(str_pos.c_str());
 			}
-		}
 
-		// 读取position节点
-		DOMNodeList *ptrPosNodeList = ptrDoc->getElementsByTagName(C2X("position"));
-		if(ptrPosNodeList == NULL)
-		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorSMSState:没有找到position节点");
-			return false;
-		}
-		else
-		{
-			DOMNode* ptrNode = ptrPosNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-			if(!str_state.empty())
-			{
-				nPosition = atoi(str_state.c_str());
-			}
-		}
+			// 读取strsqluuid节点
+			DOMNode* ptrUUIDNode = ptrCL->item(4);
+			node.strSPLUuid =  XMLString::transcode(ptrUUIDNode->getFirstChild()->getNodeValue());
 
-		// 读取strsqluuid节点
-		DOMNodeList *ptrUUIDNodeList = ptrDoc->getElementsByTagName(C2X("strSplUuid"));
-		if(ptrUUIDNodeList == NULL)
-		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,
-				"ParseOtherMonitorSMSState:没有找到strsqluuid节点");
-			return false;
-		}
-		else
-		{
-			DOMNode* ptrNode = ptrUUIDNodeList->item(0);
-			strSplUuid =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			vecSMSStatus.push_back(node);
 		}
 	}
 	catch(  XMLException& e )
@@ -557,6 +513,7 @@ bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::string &
 	ptrParser = NULL;
 	return true;
 }
+
 
 bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,int &nReadSpeed,int &nWriteSpeed,
 								std::vector<int> &vecDiskState)
@@ -667,7 +624,6 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 	ptrInputsource = NULL;
 	ptrParser = NULL;
 	return true;
-
 }
 
 
@@ -693,6 +649,8 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 			EthStatus EthNode;
 			DOMNode * ptrNode = ptrNodeList->item(i);
 			DOMNodeList* ptrCL = ptrNode->getChildNodes();
+
+			//index
 			DOMNode* ptrEthNode = ptrCL->item(0);
 			std::string strEth =  XMLString::transcode(ptrEthNode->getFirstChild()->getNodeValue());
 			if(!strEth.empty())
@@ -700,6 +658,7 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 				EthNode.strName = "eth"+strEth;
 			}
 
+			//tasktype
 			DOMNode* ptrTypeNode = ptrCL->item(1);
 			std::string strType =  XMLString::transcode(ptrTypeNode->getFirstChild()->getNodeValue());
 			if(!strType.empty())
@@ -707,6 +666,7 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 				EthNode.nTaskType = atoi(strType.c_str());
 			}
 
+			// connect state
 			DOMNode* ptrConnectStatusNode = ptrCL->item(2);
 			std::string strConnectStatus =  XMLString::transcode(ptrConnectStatusNode->getFirstChild()->getNodeValue());
 			if(!strConnectStatus.empty())
@@ -714,6 +674,7 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 				EthNode.nConnStatue = atoi(strConnectStatus.c_str());
 			}
 
+			// speed
 			DOMNode* ptrSpeedNode = ptrCL->item(3);
 			std::string strSpeed =  XMLString::transcode(ptrSpeedNode->getFirstChild()->getNodeValue());
 			if(!strSpeed.empty())

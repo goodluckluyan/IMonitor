@@ -389,3 +389,16 @@ bool CInvoke::SwitchTMS()
 		return false;
 	}
 }
+
+// ÇÐ»»SMS
+bool CInvoke::SwitchSMS(std::string strHallID)
+{
+	if(m_ptrLstHall != NULL)
+	{
+		return m_ptrLstHall->SwitchSMS(strHallID);
+	}
+	else
+	{
+		return false;
+	}
+}

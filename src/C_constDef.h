@@ -152,17 +152,20 @@ const int DEFAULT_LOG_LEVEL = 0;
 	 }
  };
 
+
+
  // SMS状态
  struct SMSStatus
  {
+	 std::string hallid;
 	 int nStatus;
-	 bool bRun;				//0：没有运行 1：主机运行，2：辅机运行
+	 int nRun;				//0：没有运行 1：本机运行，2：另一台运行
 	 int  nPosition;
 	 std::string strSPLUuid;
 
 	 SMSStatus():
 		 nStatus(-1)
-		 ,bRun(false)
+		 ,nRun(0)
 		 ,nPosition(-1)
 	 {
 

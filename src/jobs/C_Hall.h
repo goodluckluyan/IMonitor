@@ -41,32 +41,48 @@ class C_Hall
 
 public:
 	
+	bool Init(bool bRun);
+
 	 // 获取SMS工作状态
 	int  GetSMSWorkState( int &state, std::string &info);
 	
 	// 启动SMS
 	bool StartSMS();
 
+	// 关闭SMS
+	bool ShutDownSMS();
+
 	// 获取hallid
-	std::string GetHallID()
+	std::string GetHallID()	
 	{
 		return m_SMS.strId;
 	}
+
+	bool IsLocal()
+	{
+		return m_SMS.stStatus.nRun == 1;
+	}
+
+	int CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int nPort,std::string strHallID);
 private:
 
 	//Sms
-	int SmsInit();
+	int SmsWebInvokerInit();
 
 	//拼串 发送给SMS
 	std::string GetSMSWorkState_Xml();
 
-	std::string &UsherHttp(const std::string &xml, const std::string &action);
+	std::string &UsherHttp(std::string strURI,std::string strIP,const std::string &xml, const std::string &action="");
 
 	int GetHttpContent(const std::string &http, std::string &content);
 
 	int Parser_GetSMSWorkState( const std::string &content, int &state, std::string &info);
 
 	int Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, std::string &info);
+
+	int Parser_SwitchSMS(std::string &content,int &nRet);
+
+	int TcpOperator(std::string strIP,int nPort,const std::string &send, std::string &recv, int overtime);
 
 	int SendAndRecvInfo(const std::string &send, std::string &recv, int overtime);
 
@@ -108,6 +124,11 @@ private:
 	HttpResponseParser m_response;
 	//tcp protocol
 	TcpTransport m_tcp;
+
+	pid_t m_pid;
+
+	// 初始运行标记 
+	bool m_bInitRun;
 
 };
 #endif //HALL_DEFINE

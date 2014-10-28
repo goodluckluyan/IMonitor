@@ -87,7 +87,7 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 {
 	m_csDisk.EnterCS();
 	m_df = df;
-        printf("*****************Raid State************\n");
+    printf("*****************Raid State************\n");
 	printf("diskSize:%s\n",df.diskSize.c_str());
 	printf("diskState:%s\n",df.diskState.c_str());
 	printf("diskNumberOfDrives:%s\n",df.diskNumOfDrives.c_str());
@@ -169,8 +169,28 @@ bool CDataManager::GetNetStat(std::map<std::string,EthStatus> &mapEthStatus)
 }
 
 // »ñÈ¡SMS×´Ì¬
-bool CDataManager::GetSMSStat()
+bool CDataManager::GetSMSStat(std::vector<SMSStatus> vecSMSState)
 {
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo> mapTmp = m_mapSmsStatus;
+	m_csSMS.LeaveCS();
+
+	std::map<std::string,SMSInfo>::iterator it = mapTmp.begin();
+	for(;it != mapTmp.end();it++)
+	{
+		SMSStatus state;
+		SMSInfo &info = it->second;
+		if(info.stStatus.nRun ==1)
+		{
+			state.nStatus = info.stStatus.nStatus;
+			state.hallid = info.strId;
+			state.nPosition = info.stStatus.nPosition;
+			state.nRun = info.stStatus.nRun;
+			state.strSPLUuid = info.stStatus.strSPLUuid;
+			vecSMSState.push_back(state);
+		}
+	}
+	
 	return true;
 }
 
@@ -197,8 +217,7 @@ bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 	return true;
 }
 
-bool CDataManager::UpdateOtherSMSState(std::string strHallId,bool bRun,int nState,
-						 int nPosition,std::string strSplUuid)
+bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
 // 	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
 // 		bRun,nState,nPosition,strSplUuid.c_str());

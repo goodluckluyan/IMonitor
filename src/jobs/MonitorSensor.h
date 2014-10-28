@@ -99,8 +99,7 @@ private:
 	bool ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,int &nWorkState,int &nState);
 
 	// ½âÎöSMS×´Ì¬
-	bool ParseOtherMonitorSMSState(std::string &retXml,std::string &strHallID,
-		bool &bRun,int &nState,int &nPosition,std::string &strSplUuid);
+	bool ParseOtherMonitorSMSState(std::string &retXml,std::vector<SMSStatus> vecSMSStatus);
 
 	// ½âÎö´ÅÅÌ³ÂÁĞ×´Ì¬
 	bool ParseOtherMonitorRaidState(std::string &retXml,int &nState,int &nReadSpeed,int &nWriteSpeed,

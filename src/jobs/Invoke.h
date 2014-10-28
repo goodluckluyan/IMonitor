@@ -53,6 +53,8 @@ public:
 
 	bool SwitchTMS();
 
+	bool SwitchSMS(std::string strHallID);
+
 private:
 	// ¥Ú”°∞Ô÷˙–≈œ¢
 	void PrintProductInfo();

@@ -7,14 +7,14 @@
 #include "jobs/Invoke.h"
 using namespace std;
 
-int mons__GetMontorState(struct soap*, struct mons__MontorStateRes &ret)
+int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 {
 	ret.bMain = C_Para::GetInstance()->m_bMain;
 	ret.iState = 0;
 	return 0;
 }
 
-int mons__GetTMSState(struct soap*, struct mons__TmsStateRes &ret)
+int mons__GetTMSState(struct soap* cSoap, struct mons__TmsStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	ret.bRun = pDM->GetTMSStat() == 0 ? 1 : 0;
@@ -23,18 +23,32 @@ int mons__GetTMSState(struct soap*, struct mons__TmsStateRes &ret)
 	return 0;
 }
 
-int mons__GetSMSState(struct soap*, struct mons__SMSState &ret)
+int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &vecret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
-	ret.bRun = 1;
-	ret.HallId = "tms01";
-	ret.position = 0x25;
-	ret.state = 0x01;
-	ret.strSplUuid = "asdfasdfasdfasdfasdfasdf";
+	std::vector<SMSStatus> vecSMSState;
+	pDM->GetSMSStat(vecSMSState);
+	int nLen = vecSMSState.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		mons__SMSState node;
+		node.HallId = vecSMSState[i].hallid;
+		node.bRun = vecSMSState[i].nRun != 0 ? true:false;
+		node.state = vecSMSState[i].nStatus;
+		node.position = vecSMSState[i].nPosition;
+		node.strSplUuid = vecSMSState[i].strSPLUuid;
+// 		node.bRun = 1;
+// 		node.HallId = "tms01";
+// 		node.position = 0x25;
+// 		node.state = 0x01;
+// 		node.strSplUuid = "asdfasdfasdfasdfasdfasdf";
+		vecret.push_back(node);
+	}
+	
 	return 0;
 }
 
-int mons__GetRaidtate(struct soap*, struct mons__RaidStateRes &ret)
+int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	DiskInfo df;
@@ -76,7 +90,7 @@ int mons__GetRaidtate(struct soap*, struct mons__RaidStateRes &ret)
 	return 0;
 }
 
-int mons__GetEthState(struct soap*, std::vector<struct mons__ethstate> &vecret)
+int mons__GetEthState(struct soap* cSoap, std::vector<struct mons__ethstate> &vecret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	std::map<std::string,EthStatus> mapEthStatus;
@@ -97,21 +111,21 @@ int mons__GetEthState(struct soap*, std::vector<struct mons__ethstate> &vecret)
 	return 0;
 }
 
-int mons__GetSwitchState(struct soap*, struct mons__SwitchStateRes &ret)
+int mons__GetSwitchState(struct soap* cSoap, struct mons__SwitchStateRes &ret)
 {
 	ret.Switch1State = 1;
 	ret.Switch2State = 2;
 	return 0;
 }
 
-int mons__GetIngestSpeedLimit(struct soap*, struct mons__IngestSpeedLimitRes &ret)
+int mons__GetIngestSpeedLimit(struct soap* cSoap, struct mons__IngestSpeedLimitRes &ret)
 {
 	ret.bEnableIngest =1 ;
 	ret.speedLimit = 1000;
 	return 0;
 }
 
-int mons__GetWorkState_USCORECS(struct soap*, struct mons__WorkStateRes &ret)
+int mons__GetWorkState_USCORECS(struct soap* cSoap, struct mons__WorkStateRes &ret)
 {
 	ret.hall = "tms01";
 	ret.state = 1;
@@ -131,6 +145,24 @@ int mons__ExeSwitchTMSToOther(struct soap* cSoap,int &ret)
 	else
 	{
 		soap_sender_fault_subcode(cSoap, "mons:1", "Switch Fail", "SwitchTMS");
+		ret = 1;
+		return 1;
+	}
+}
+
+
+int mons__ExeSwitchSMSToOther(struct soap* cSoap,std::string strHallID,int &ret)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	if(ptr->SwitchSMS(strHallID))
+	{	
+		ret = 0;
+		return 0;
+	}
+	else
+	{
+		soap_sender_fault_subcode(cSoap, "mons:2", "Switch Fail", "SwitchSMS");
 		ret = 1;
 		return 1;
 	}
