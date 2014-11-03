@@ -34,9 +34,9 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 		mons__SMSState node;
 		node.HallId = vecSMSState[i].hallid;
 		node.bRun = vecSMSState[i].nRun != 0 ? true:false;
-		node.state = vecSMSState[i].nStatus;
-		node.position = vecSMSState[i].nPosition;
-		node.strSplUuid = vecSMSState[i].strSPLUuid;
+		node.state = 1;//vecSMSState[i].nStatus;
+		node.position = 25;//vecSMSState[i].nPosition;
+		node.strSplUuid = "C80CF8FC-D6F5-26F8-3927-E30B0AE06C56";//vecSMSState[i].strSPLUuid;
 // 		node.bRun = 1;
 // 		node.HallId = "tms01";
 // 		node.position = 0x25;

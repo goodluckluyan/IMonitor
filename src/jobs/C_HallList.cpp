@@ -16,6 +16,7 @@
 #include "C_HallList.h"
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -64,6 +65,7 @@ int C_HallList::Init( )
 		node.nPort = atoi(query.getStringField("port"));
 		int nTmp = query.getIntField("role");
 		node.nRole = nTmp == 1 ? 1 : 2;
+		node.stStatus.hallid = node.strId;
 		node.strExepath = query.getStringField("exepath");
 		node.strConfpath = query.getStringField("confpath");
 		query.nextRow();
@@ -77,8 +79,17 @@ int C_HallList::Init( )
 	
 		bool bRun = ptrPara->m_bMain ? node.nRole == 1 : node.nRole == 2;
 		C_Hall * ptrHall = new C_Hall(node);
-		ptrHall->Init(bRun);
+		node.stStatus.nRun = ptrHall->Init(bRun);
 		m_mapHall[node.strId]= ptrHall;
+
+		if(bRun)
+		{
+			m_WebServiceLocalIP = node.strIp;
+		}
+		else
+		{
+			m_WebServiceOtherIP = node.strIp;
+		}
 	}
 	m_ptrDM = CDataManager::GetInstance();
 	if(m_ptrDM != NULL)
@@ -127,12 +138,18 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 	C_Hall * ptr = fit->second;
 	if(ptr->IsLocal())
 	{
-		ptr->ShutDownSMS();
+		bool bRet = ptr->ShutDownSMS();
 		if(C_Para::GetInstance()->m_bMain)
 		{
 			// 调用备机的切换Sms
  			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOURI,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+		}
+		if(bRet)
+		{
+		     SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,false);
+		     m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+			
 		}
 	}
 	else
@@ -143,7 +160,25 @@ bool C_HallList::SwitchSMS(std::string strHallID)
  			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOURI,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 		}
-		ptr->StartSMS();
+		int nPid = 0;
+		ptr->StartSMS(nPid);
+		if(nPid == 0)
+		{
+			return false;
+		}
+
+		char buf[64]={'\0'};
+		snprintf(buf,64,"/proc/%d",nPid);
+		struct stat dstat;
+		if(stat(buf,&dstat) == 0)
+		{
+			if(S_ISDIR(dstat.st_mode))
+			{
+				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
+				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+			}
+		}
+
 	}
 	return true;
 }	

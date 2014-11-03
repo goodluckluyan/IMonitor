@@ -68,7 +68,7 @@ bool CTMSSensor ::Init(std::string strURI,std::string strIP,int nPort)
 
 
 //获取TMS 运行状态
-int CTMSSensor :: GetTMSWorkState()
+int CTMSSensor::GetTMSWorkState()
 {	
 	int state = 0;
 	char buf[20] = {0};
@@ -269,8 +269,6 @@ bool  CTMSSensor::ParseXml(std::string &retXml,int &nRet)
 			}
 			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
-
-		
 	}
 	catch(  XMLException& e )
 	{

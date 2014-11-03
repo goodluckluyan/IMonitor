@@ -45,6 +45,7 @@ public:
 	bool m_bMain ;
 
 	//本机webservice服务打开的端口
+	//std::string m_strWebServiceIP;
 	int m_nWebServicePort;
 
 	//对端的调度程序的IP

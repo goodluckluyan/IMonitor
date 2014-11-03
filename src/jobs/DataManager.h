@@ -54,6 +54,7 @@ public:
 
 	// 更新sms状态
 	bool UpdateSMSStat(std::string strHallID,int nState,std::string strInfo);
+	bool UpdateSMSStat(std::string strHallID,SMSInfo &stSMSInfo);
 
 	// 更新TMS状态
 	bool UpdateTMSStat(int state);
@@ -61,7 +62,7 @@ public:
 	// 读取监测参数
 	bool GetDevStat(DiskInfo &df);
 	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
-	bool GetSMSStat(std::vector<SMSStatus> vecSMSState);
+	bool GetSMSStat(std::vector<SMSStatus>& vecSMSState);
 	int GetTMSStat();
 
 	// 其它方法

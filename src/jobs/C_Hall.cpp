@@ -36,13 +36,14 @@ C_Hall::~C_Hall()
 }
 
 // 初始化
-bool C_Hall::Init(bool bRun)
+int C_Hall::Init(bool bRun)
 {
 	 m_bInitRun = bRun;
 	 if(bRun)
 	 {
 		 // 本机运行
-		 StartSMS();
+		int pid;
+		 StartSMS(pid);
 		 m_SMS.stStatus.nRun = 1;
 	 }
 	 else
@@ -50,10 +51,19 @@ bool C_Hall::Init(bool bRun)
 		 // 另一台机子运行
 		m_SMS.stStatus.nRun = 2;
 	 }
+	return m_SMS.stStatus.nRun;
+}
+
+// 改变SMS的运行主机信息	
+SMSInfo& C_Hall::ChangeSMSHost(std::string strIP,bool bLocalRun)
+{
+	m_SMS.strIp = strIP;
+	m_SMS.stStatus.nRun = bLocalRun ? 1:2;
+	return m_SMS;
 }
 
 // 启动SMS
-bool C_Hall::StartSMS()
+bool C_Hall::StartSMS(int &nPid)
 {
 	
 	if(m_SMS.strExepath.empty())
@@ -69,17 +79,28 @@ bool C_Hall::StartSMS()
 	}
 	else if(pid == 0)
 	{
-		m_pid = pid;
-		m_SMS.stStatus.nRun = 1;
 		printf("Fork Process(%d) Start SMS ... \n",getpid());
-		if(execl(m_SMS.strExepath.c_str(),"oristar_sms_server",m_SMS.strConfpath.c_str(),NULL) < 0)
+		if(execl("/usr/bin/top","top",NULL) < 0)
 		{
 			perror("execl error");
-			m_SMS.stStatus.nRun = 0;
 			m_pid = 0;
 			exit(0);
 		}
+		//char buf[64]={'\0'};
+		//snprintf(buf,64,"gnome-terminal -e %s",m_SMS.strExepath.c_str());
+		//system(buf);
+		//exit(0);
 	}
+
+	//等待1秒
+	sleep(2);
+
+	if(pid > 0)
+	{	
+                m_pid = pid;
+		nPid = pid;
+	}
+	
 	return true;
 }
 

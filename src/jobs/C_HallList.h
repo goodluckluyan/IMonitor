@@ -36,11 +36,12 @@ public:
 	bool GetSMSWorkState();
 
 	bool SwitchSMS(std::string strHallID);
-private:
 	 
     C_CS m_CS;
 	std::map<std::string,C_Hall *> m_mapHall;
     static C_HallList *m_pInstance; 
+	std::string m_WebServiceLocalIP;
+	std::string m_WebServiceOtherIP;
 	CDataManager *m_ptrDM;
 
 };

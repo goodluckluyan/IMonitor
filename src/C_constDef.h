@@ -170,6 +170,28 @@ const int DEFAULT_LOG_LEVEL = 0;
 	 {
 
 	 }
+	
+         SMSStatus(const SMSStatus &obj)
+	{
+	   hallid = obj.hallid;
+	   nStatus = obj.nStatus;
+	   nRun = obj.nRun;
+           nPosition = obj.nPosition;
+	   strSPLUuid = obj.strSPLUuid;
+	}
+
+        SMSStatus& operator=(const SMSStatus &obj)
+	{
+	   if(this != &obj)
+	   {   
+	   	hallid = obj.hallid;
+	        nStatus = obj.nStatus;
+	   	nRun = obj.nRun;
+	        nPosition = obj.nPosition;
+	 	strSPLUuid = obj.strSPLUuid;
+	   }
+		return *this;
+	}
 
  };
 

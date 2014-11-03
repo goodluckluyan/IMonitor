@@ -141,6 +141,20 @@ bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string st
 	return true;
 }
 
+//更新SMS的状态
+bool CDataManager::UpdateSMSStat(std::string strHallID,SMSInfo &stSMSInfo)
+{
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
+	if(it != m_mapSmsStatus.end())
+	{
+		SMSInfo &info = it->second;
+		info = stSMSInfo;
+	}
+	m_csSMS.LeaveCS();
+	return true;
+}
+
 
 // 更新TMS的状态
 bool CDataManager::UpdateTMSStat(int state)
@@ -169,7 +183,7 @@ bool CDataManager::GetNetStat(std::map<std::string,EthStatus> &mapEthStatus)
 }
 
 // 获取SMS状态
-bool CDataManager::GetSMSStat(std::vector<SMSStatus> vecSMSState)
+bool CDataManager::GetSMSStat(std::vector<SMSStatus>& vecSMSState)
 {
 	m_csSMS.EnterCS();
 	std::map<std::string,SMSInfo> mapTmp = m_mapSmsStatus;
@@ -221,6 +235,21 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
 // 	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
 // 		bRun,nState,nPosition,strSplUuid.c_str());
+
+	int nLen = vecSMSStatus.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		std::string strID = vecSMSStatus[i].hallid;
+		std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strID);
+		if(it != m_mapSmsStatus.end())
+		{
+			SMSInfo& node = it->second;
+			node.stStatus.nPosition = vecSMSStatus[i].nPosition;
+			node.stStatus.nRun = vecSMSStatus[i].nRun == 1 ? 2:vecSMSStatus[i].nRun;
+			node.stStatus.nStatus = vecSMSStatus[i].nStatus;
+			node.stStatus.strSPLUuid = vecSMSStatus[i].strSPLUuid;
+		}
+	}
 	return true;
 }
 

@@ -41,19 +41,22 @@ class C_Hall
 
 public:
 	
-	bool Init(bool bRun);
+	int Init(bool bRun);
 
 	 // 获取SMS工作状态
 	int  GetSMSWorkState( int &state, std::string &info);
 	
 	// 启动SMS
-	bool StartSMS();
+	bool StartSMS(int &nPid);
 
 	// 关闭SMS
 	bool ShutDownSMS();
 
+	// 改变SMS的运行主机信息	
+	SMSInfo& ChangeSMSHost(std::string strIP,bool bLocalRun);
+
 	// 获取hallid
-	std::string GetHallID()	
+	std::string GetHallID()
 	{
 		return m_SMS.strId;
 	}

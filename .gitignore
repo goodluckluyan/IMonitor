@@ -29,3 +29,11 @@
 *.suo
 *.user
 
+#dir
+bin/
+
+#vim bk file
+*~
+
+#tags
+tags
