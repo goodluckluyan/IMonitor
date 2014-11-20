@@ -3,11 +3,12 @@
 #include<stdlib.h>
 #include"database/CppMySQL3DB.h"
 #include"para/C_Para.h"
-
+#include <algorithm>
 CDataManager *CDataManager::m_pinstance=NULL;
 CDataManager::CDataManager()
 {
 	m_ptrInvoker = NULL;
+	m_ptrDispatch = NULL;
 }
 CDataManager::~CDataManager()
 {
@@ -89,6 +90,7 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	m_df = df;
     printf("*****************Raid State************\n");
 	printf("diskSize:%s\n",df.diskSize.c_str());
+	std::transform(m_df.diskState.begin(),m_df.diskState.end(),m_df.diskState.begin(),::tolower);
 	printf("diskState:%s\n",df.diskState.c_str());
 	printf("diskNumberOfDrives:%s\n",df.diskNumOfDrives.c_str());
 	printf("-------------------Detail--------------\n");
@@ -100,13 +102,68 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	    printf("dirveSlotNum:%s\n",df.diskDrives[i].driveSlotNum.c_str());
 	    printf("dirveErrorCount:%s\n",df.diskDrives[i].driveErrorCount.c_str());
 	    printf("dirveSize:%s\n",df.diskDrives[i].driveSize.c_str());
+		std::transform(df.diskDrives[i].driveFirmwareState.begin(),
+			df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
 	    printf("dirveFirmwareState:%s\n",df.diskDrives[i].driveFirmwareState.c_str());
 	    printf("dirveSpeed:%s\n",df.diskDrives[i].driveSpeed.c_str());
 	}
 	printf("---------------------------------------\n");
 	m_csDisk.LeaveCS();
+	
+	std::vector<stError> vecRE;
+	if(!CheckRaidError(vecRE))
+	{
+		if(m_ptrDispatch)
+		{
+			m_ptrDispatch->RaidTriggerDispatch(vecRE);
+		}
+	}
 
 	return true;
+}
+
+bool CDataManager::CheckRaidError(std::vector<stError> &vecErr)
+{
+	bool bRet = true;
+	DiskInfo df;
+	m_csDisk.EnterCS();
+	df = m_df;
+	m_csDisk.LeaveCS();
+	
+	if(df.diskState == "degraded")
+	{
+		stError re;
+		re.ErrorName = "diskState";
+		re.ErrorVal = "degraded";
+		vecErr.push_back(re);
+		bRet = false;
+	}
+
+	int nLen = df.diskDrives.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		DiskDriveInfo &di = df.diskDrives[i];
+		if(di.driveFirmwareState.find("online") == std::string::npos)
+		{
+			stError re;
+			re.ErrorName = "driveFirmwareState";
+			re.ErrorVal = di.driveFirmwareState;
+			re.nOrdinal = atoi(di.driveSlotNum.c_str());
+			vecErr.push_back(re);
+			bRet = false;
+		}
+
+		if(di.driveErrorCount != "0")
+		{
+			stError re;
+			re.ErrorName = "driveErrorCount";
+			re.ErrorVal = di.driveErrorCount;
+			re.nOrdinal = atoi(di.driveSlotNum.c_str());
+			vecErr.push_back(re);
+			bRet = false;
+		}
+	}
+	return bRet;
 }
 
 // 更新网卡状态监测数据
@@ -194,7 +251,7 @@ bool CDataManager::GetSMSStat(std::vector<SMSStatus>& vecSMSState)
 	{
 		SMSStatus state;
 		SMSInfo &info = it->second;
-		if(info.stStatus.nRun ==1)
+		//if(info.stStatus.nRun ==1)
 		{
 			state.nStatus = info.stStatus.nStatus;
 			state.hallid = info.strId;
@@ -236,43 +293,67 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 // 	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
 // 		bRun,nState,nPosition,strSplUuid.c_str());
 
+	
 	int nLen = vecSMSStatus.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
+		if(vecSMSStatus[i].nRun == 0)
+		{
+			continue;
+		}
+
 		std::string strID = vecSMSStatus[i].hallid;
-		std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strID);
-		if(it != m_mapSmsStatus.end())
+		std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.find(strID);
+		if(it != m_mapOtherSMSStatus.end())
 		{
 			SMSInfo& node = it->second;
-			node.stStatus.nPosition = vecSMSStatus[i].nPosition;
-			node.stStatus.nRun = vecSMSStatus[i].nRun == 1 ? 2:vecSMSStatus[i].nRun;
-			node.stStatus.nStatus = vecSMSStatus[i].nStatus;
-			node.stStatus.strSPLUuid = vecSMSStatus[i].strSPLUuid;
+			node.stStatus = vecSMSStatus[i];
 		}
 	}
+
+	// 更新主结构
+	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
+	for(;it != m_mapOtherSMSStatus.end();it++)
+	{
+		SMSInfo &info = it->second;
+		if(info.nRole == 1 && info.stStatus.nRun == 1)
+		{
+			m_csSMS.EnterCS();
+			std::map<std::string,SMSInfo>::iterator fit= m_mapSmsStatus.find(info.strId);
+			if(fit != m_mapSmsStatus.end())
+			{
+				it->second.stStatus.nRun = 2;
+			}
+			m_csSMS.LeaveCS();
+		}
+	}
+
+
 	return true;
 }
 
 bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 										int nWriteSpeed,std::vector<int> &vecDiskState)
 {
-// 	printf("Other Raid State:State:%d,RS:%d,WS:%d\n",nState,nReadSpeed,nWriteSpeed);
-// 	for(int i=0;i<vecDiskState.size();i++)
-// 	{
-// 		printf("Raid%d:%d\n",i,vecDiskState[i]);
-// 	}
+	printf("Other Raid State:State:%d,RS:%d,WS:%d\n",nState,nReadSpeed,nWriteSpeed);
+	for(int i=0;i<vecDiskState.size();i++)
+	{
+		printf("Raid%d:%d\n",i,vecDiskState[i]);
+	}
+
+
 	return true;
 }
 
 bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 {
-// 	int nlen = vecEthStatus.size();
-// 	for(int i = 0 ;i < nlen ;i++)
-// 	{
-// 		EthStatus &node = vecEthStatus[i];
-// 		printf("Other %s State:nConnectState:%d,nSpeed:%d\n",node.strName.c_str(),
-// 			node.nConnStatue,node.nRxSpeed);
-// 	}
+	int nlen = vecEthStatus.size();
+	for(int i = 0 ;i < nlen ;i++)
+	{
+		EthStatus &node = vecEthStatus[i];
+		printf("Other %s State:nConnectState:%d,nSpeed:%d\n",node.strName.c_str(),
+			node.nConnStatue,node.nRxSpeed);
+	}
 	return true;
 }
 

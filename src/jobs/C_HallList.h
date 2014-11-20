@@ -30,12 +30,14 @@ public:
     ~C_HallList();
 
    	//初始化所有影厅。
-    int Init();
+    int Init(bool bRunOther);
    
 	// 获取SMS工作状态
 	bool GetSMSWorkState();
 
 	bool SwitchSMS(std::string strHallID);
+
+	bool SwitchAllSMS();
 	 
     C_CS m_CS;
 	std::map<std::string,C_Hall *> m_mapHall;

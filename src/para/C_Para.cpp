@@ -13,19 +13,19 @@ C_Para *C_Para::m_pInstance = NULL;
 
 C_Para::C_Para()
 {
-    
+	m_nStartSMSType = 1;
 }
 C_Para::~C_Para()
 {
-    
+
 }
 C_Para* C_Para::GetInstance()
 {
-    if(m_pInstance == NULL)
-    {
-        m_pInstance = new C_Para;
-    }
-    return m_pInstance;
+	if(m_pInstance == NULL)
+	{
+		m_pInstance = new C_Para;
+	}
+	return m_pInstance;
 }
 
 void  C_Para::DestoryInstance()
@@ -39,96 +39,95 @@ void  C_Para::DestoryInstance()
 }
 int C_Para::ReadPara()
 {
-   int iResult = -1;
-    ec_config config;
-	 char a[64];
+	int iResult = -1;
+	ec_config config;
+	char a[64];
 	memset(a,0,64);
-	
+
 	char tmp[256];
 	char buf[256];
 	memset(tmp, 0, 256);
 	memset(buf, 0, 256);
 
-  sprintf(tmp,"/proc/%d/exe",getpid());
-  readlink(tmp,buf,256);
-  string str = buf;
-  size_t iPos = -1;
-  if((iPos =str.rfind('/')) == string::npos)
-  {
-  	return -1;
-  }
-  string strInipath = str.substr(0,iPos);
-  strInipath += "/para.ini";
+	sprintf(tmp,"/proc/%d/exe",getpid());
+	readlink(tmp,buf,256);
+	string str = buf;
+	size_t iPos = -1;
+	if((iPos =str.rfind('/')) == string::npos)
+	{
+		return -1;
+	}
+	m_strInipath = str.substr(0,iPos);
+	string strInipath = m_strInipath;
+	strInipath += "/para.ini";
 
-	
-	
 	iResult = config.readvalue("PARA","DBServiceIP", a, strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    m_strDBServiceIP = a;
-    
-  	memset(a,0,64);
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strDBServiceIP = a;
+
+	memset(a,0,64);
 	iResult = config.readvalue("PARA","DBServicePort",a, strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    int iTmp  =  atoi(a); 
-    if(iTmp <= 0)
-    {
-        return -1;
-    }
-    m_usDBServicePort = (unsigned short) iTmp;
-    
-    memset(a,0,64);
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	int iTmp  =  atoi(a); 
+	if(iTmp <= 0)
+	{
+		return -1;
+	}
+	m_usDBServicePort = (unsigned short) iTmp;
 
-		iResult = config.readvalue("PARA","DBName",a,strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    m_strDBName = a;
-     memset(a,0,64);    
-   
+	memset(a,0,64);
+
+	iResult = config.readvalue("PARA","DBName",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strDBName = a;
+	memset(a,0,64);    
+
 	iResult = config.readvalue("PARA","DBUserName",a,strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    m_strDBUserName = a;
-     memset(a,0,64);
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strDBUserName = a;
+	memset(a,0,64);
 	iResult = config.readvalue("PARA","DBPWD",a,strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    m_strDBPWD = a;    
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strDBPWD = a;    
 
 
 
-    memset(a,0,64);
+	memset(a,0,64);
 	iResult = config.readvalue("PARA","ThreadCount",a,strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    iTmp  =  atoi(a); 
-    if(iTmp <= 0)
-    {
-        return -1;
-    }
-    m_uiThreadCount = (unsigned int)iTmp;  
-    
-    memset(a,0,64);
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	iTmp  =  atoi(a); 
+	if(iTmp <= 0)
+	{
+		return -1;
+	}
+	m_uiThreadCount = (unsigned int)iTmp;  
+
+	memset(a,0,64);
 	iResult = config.readvalue("PARA","LogPath",a,strInipath.c_str());
-    if(iResult != 0)
-    {
-        return iResult;
-    }
-    m_strLogPath = a; 
-	
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strLogPath = a; 
+
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","Main",a,strInipath.c_str());
 	if(iResult != 0)
@@ -136,14 +135,14 @@ int C_Para::ReadPara()
 		return iResult;
 	}
 	m_bMain = atoi(a) == 1 ?true: false;
-	
-// 	memset(a,0,64);
-// 	iResult = config.readvalue("PARA","WebServiceIP",a,strInipath.c_str());
-// 	if(iResult != 0)
-// 	{
-// 		return iResult;
-// 	}
-// 	m_strWebServiceIP = a ;
+
+	// 	memset(a,0,64);
+	// 	iResult = config.readvalue("PARA","WebServiceIP",a,strInipath.c_str());
+	// 	if(iResult != 0)
+	// 	{
+	// 		return iResult;
+	// 	}
+	// 	m_strWebServiceIP = a ;
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","WebServicePort",a,strInipath.c_str());
@@ -187,7 +186,15 @@ int C_Para::ReadPara()
 	}
 	m_strTMSPath = a;
 
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","StartTMSSMSType",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_nStartSMSType = atoi(a);
 
-    return 0;
-    
+
+	return 0;
+
 }

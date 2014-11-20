@@ -20,8 +20,10 @@ History:
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <algorithm>
 #include "para/C_Para.h"
 #include "utility/C_TcpTransport.h"
 #include "utility/C_HttpParser.h"
@@ -33,12 +35,12 @@ using namespace std;
 using namespace xercesc;
 
 
-CTMSSensor :: CTMSSensor():
+CTMSSensor::CTMSSensor():
 m_ptrDM(NULL)
 ,m_nPid(-1)
 {};
 
-CTMSSensor :: ~CTMSSensor()
+CTMSSensor::~CTMSSensor()
 {
 	xercesc::XMLPlatformUtils::Terminate();
 }
@@ -62,6 +64,11 @@ bool CTMSSensor ::Init(std::string strURI,std::string strIP,int nPort)
 	{
 		char* message = xercesc::XMLString::transcode( e.getMessage() );
 		xercesc::XMLString::release( &message );
+	}
+
+	if(C_Para::GetInstance()->m_bMain)
+	{
+		StartTMS();
 	}
 	return true;
 }
@@ -162,9 +169,129 @@ bool CTMSSensor::ShutDownTMS()
 		return false;
 	}
 }
-
-
 bool CTMSSensor::StartTMS()
+{
+	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
+	if(nStartType == 1)
+	{
+		StartTMS_CurTerminal();
+	}
+	else if(nStartType == 2)
+	{
+		StartTMS_NewTerminal();
+	}
+}
+
+int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
+{	
+	char acExe[64]={'\0'};
+	snprintf(acExe,64,"pidof %s",strName.c_str());
+	FILE *pp = popen(acExe,"r");
+	if(!pp)
+	{
+		printf("popen fail\n");
+		return -1;
+	}
+	char tmpbuf[128]={'\0'};
+	std::vector<std::string> vecBuf;
+	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+	{
+		vecBuf.push_back(tmpbuf);
+	}
+
+	int nLen = vecBuf.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		std::string &strtmp=vecBuf[i];
+		int nStart = 0;
+		int nPos = strtmp.find(' ',nStart);
+		while(nPos != std::string::npos)
+		{
+			vecPID.push_back(atoi(strtmp.substr(nStart,nPos-nStart).c_str()));
+			nStart = nPos+1;
+			nPos = strtmp.find(' ',nStart);
+		}
+		vecPID.push_back(atoi(strtmp.substr(nStart).c_str()));
+	}
+
+	pclose(pp);
+	return 0;
+}
+
+// 打开新终端启动SMS
+bool CTMSSensor::StartTMS_NewTerminal()
+{
+
+	std::string strTMSPath = C_Para::GetInstance()->m_strTMSPath;
+	if(strTMSPath.empty())
+	{
+		return false;
+	}
+
+	int nPos = strTMSPath.rfind('/');
+	std::string strEXE = strTMSPath.substr(nPos+1);
+	std::string strDir = strTMSPath.substr(0,nPos);
+	std::vector<int> vecCurPID;
+	if(Getpid(strEXE,vecCurPID) < 0)
+	{
+		return false;
+	}
+
+	char buf[256]={'\0'};
+	snprintf(buf,256,"gnome-terminal --working-directory=%s -e \"%s\"",strDir.c_str(),strTMSPath.c_str());
+	//	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
+	printf("%s\n",buf);
+	system(buf);
+
+	//等待3秒
+	bool bRun = false;
+	int exepid = 0;
+	time_t tm1;
+	time(&tm1);
+	while(!bRun)
+	{
+		sleep(1);
+		std::vector<int> vecNowPID;
+		if(Getpid(strEXE,vecNowPID) < 0)
+			//if(Getpid("top",vecNowPID) < 0)
+		{
+			return false;
+		}
+
+		std::vector<int>::iterator fit;
+		for(int i = 0 ;i <vecNowPID.size();i++)
+		{
+			fit = std::find(vecCurPID.begin(),vecCurPID.end(),vecNowPID[i]);
+			if(fit == vecCurPID.end())
+			{
+				exepid = vecNowPID[i];
+				bRun = true;
+				printf("Fork Process(%d) Start SMS ... \n",exepid);
+				break;
+			}
+		}
+
+		time_t tm2;
+		time(&tm2);
+		if( tm2-tm1 > 5)
+		{
+			printf("waiting 5 sec ,but SMS not run..\n");
+			break;
+		}
+	}
+
+	if(exepid > 0)
+	{	
+		m_nPid = exepid;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool CTMSSensor::StartTMS_CurTerminal()
 {
 	std::string strTMSPath = C_Para::GetInstance()->m_strTMSPath;
 	if(strTMSPath.empty())
@@ -188,6 +315,7 @@ bool CTMSSensor::StartTMS()
 		}
 	}
 
+	m_nPid = pid;
 	return true;
 }
 

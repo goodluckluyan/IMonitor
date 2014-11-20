@@ -55,6 +55,8 @@ public:
 	// 改变SMS的运行主机信息	
 	SMSInfo& ChangeSMSHost(std::string strIP,bool bLocalRun);
 
+	
+
 	// 获取hallid
 	std::string GetHallID()
 	{
@@ -69,13 +71,13 @@ public:
 	int CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int nPort,std::string strHallID);
 private:
 
-	//Sms
-	int SmsWebInvokerInit();
+	// 在当前终端启动SMS
+	bool StartSMS_CurTerminal(int &nPid);
 
-	//拼串 发送给SMS
-	std::string GetSMSWorkState_Xml();
+	// 打开新终端启动SMS
+	bool StartSMS_NewTerminal(int &nPid);
 
-	std::string &UsherHttp(std::string strURI,std::string strIP,const std::string &xml, const std::string &action="");
+	int UsherHttp(std::string &strURI,std::string& strIP,std::string &xml,std::string action,std::string &strRequest);
 
 	int GetHttpContent(const std::string &http, std::string &content);
 
@@ -100,6 +102,9 @@ private:
 
 	xercesc::DOMElement *FindElementByName( const xercesc::DOMNode *elem, const std::string &name);
 
+
+	int Getpid(std::string strName,std::vector<int>& vecPID);
+
 private:
 	
 	// SMS信息
@@ -118,13 +123,9 @@ private:
 	std::string m_bodyBgn;
 	std::string m_bodyEnd;
 
-	//for location
-	std::string m_usherLocation;
-	std::string m_usherNs;
-
 	//http protocol
-	HttpRequestParser m_request;
 	HttpResponseParser m_response;
+
 	//tcp protocol
 	TcpTransport m_tcp;
 

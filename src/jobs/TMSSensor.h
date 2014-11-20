@@ -52,6 +52,9 @@ public:
 private:
 	bool ShutDownTMS();
 	bool StartTMS();
+	bool StartTMS_CurTerminal();
+	bool StartTMS_NewTerminal();
+	int Getpid(std::string strName,std::vector<int>& vecPID);
 	int InvokerWebServer(std::string &xml,std::string &strResponse);
 	int GetHttpContent(const std::string &http, std::string &response);
 	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime = 3);

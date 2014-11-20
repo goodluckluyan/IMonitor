@@ -134,6 +134,16 @@ const int DEFAULT_LOG_LEVEL = 0;
 	 std::string driveSpeed;
  }DiskDriveInfo;
 
+
+ // 故障
+ struct stError
+ {
+	 int nOrdinal;
+	 std::string ErrorName;
+	 std::string ErrorVal;
+ };
+
+
  // 网卡状态
  struct EthStatus
  {
@@ -159,7 +169,7 @@ const int DEFAULT_LOG_LEVEL = 0;
  {
 	 std::string hallid;
 	 int nStatus;
-	 int nRun;				//0：没有运行 1：本机运行，2：另一台运行
+	 int nRun;				//0：本机没有运行 1：本机运行，2：另一台运行 3:另一台也没有运行
 	 int  nPosition;
 	 std::string strSPLUuid;
 

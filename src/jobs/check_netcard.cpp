@@ -85,7 +85,7 @@ int GetIFInfo(std::vector<std::string> &vecEth)
 
 		char cName[4]={0};
 		strncpy(cName,ifr->ifr_name,3);
-		if(strcmp(cName,"eth") != 0)
+		if(strcmp(cName,"eth") != 0 /*&& strcmp(cName,"bon") != 0*/)
 		{
 			ifr++;
 			continue;

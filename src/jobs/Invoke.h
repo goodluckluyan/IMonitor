@@ -31,16 +31,13 @@ public:
 
 	~CInvoke()
 	{
-		SAFE_DELETE(m_ptrLstHall);
-		SAFE_DELETE(m_ptrDisk);
-		SAFE_DELETE(m_ptrNet);
-		SAFE_DELETE(m_ptrDispatch);
-		SAFE_DELETE(m_ptrMonitor);
-		SAFE_DELETE(m_ptrTMS);
+	
 	}
 
 	// 初始化
 	int  Init();
+
+	void DeInit();
 	
 	// 添加任务
 	bool AddInitTask();
@@ -54,6 +51,8 @@ public:
 	bool SwitchTMS();
 
 	bool SwitchSMS(std::string strHallID);
+
+	bool SwitchAllSMS();
 
 private:
 	// 打印帮助信息

@@ -26,12 +26,25 @@ C_HallList* C_HallList::m_pInstance = NULL;
 
 C_HallList::~C_HallList()
 {
+	std::map<std::string,C_Hall*>::iterator it = m_mapHall.begin();
+	for(;it != m_mapHall.end();it++)
+	{
+		C_Hall* ptr = it->second;
+		if(ptr->IsLocal())
+		{
+			bool bRet = ptr->ShutDownSMS();
+		}
+
+		delete ptr;
+	}
+	
+	m_mapHall.clear();
 	return;   
 }
 
 
 
-int C_HallList::Init( )
+int C_HallList::Init(bool bRunOther )
 {
 	m_ptrDM = CDataManager::GetInstance();
 	C_Para *ptrPara = C_Para::GetInstance();
@@ -64,7 +77,14 @@ int C_HallList::Init( )
 		node.strIp = query.getStringField("ip");
 		node.nPort = atoi(query.getStringField("port"));
 		int nTmp = query.getIntField("role");
-		node.nRole = nTmp == 1 ? 1 : 2;
+		if(bRunOther)
+		{
+			node.nRole = nTmp == 1 ? 1 : 2;
+		}
+		else
+		{
+			node.nRole = ptrPara->m_bMain ? 1 : 2;
+		}
 		node.stStatus.hallid = node.strId;
 		node.strExepath = query.getStringField("exepath");
 		node.strConfpath = query.getStringField("confpath");
@@ -120,6 +140,20 @@ bool C_HallList::GetSMSWorkState()
 		
 	}
 	return true;
+}
+
+//切换本机的所有SMS
+bool C_HallList::SwitchAllSMS()
+{
+	std::map<std::string,C_Hall *>::iterator it = m_mapHall.begin();
+	for(;it != m_mapHall.end();it++)
+	{
+		C_Hall * ptr = it->second;
+		if(ptr->IsLocal())
+		{
+			SwitchSMS(ptr->GetHallID());
+		}
+	}
 }
 
 //切换SMS

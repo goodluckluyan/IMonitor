@@ -1,20 +1,108 @@
 #ifndef DISPATCH_INC
 #define DISPATCH_INC
+#include <map>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/util/XercesDefs.hpp>
+#include <xercesc/dom/DOM.hpp>
+#include <xercesc/dom/DOMNode.hpp>	
+#include <xercesc/dom/DOMDocument.hpp>
+#include <xercesc/dom/DOMDocumentType.hpp>
+#include <xercesc/dom/DOMElement.hpp>
+#include <xercesc/dom/DOMImplementation.hpp>
+#include <xercesc/dom/DOMImplementationLS.hpp>
+#include <xercesc/dom/DOMNodeIterator.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/dom/DOMText.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/util/XMLUni.hpp>
+#include <xercesc/util/XMLString.hpp>
+#include <pthread.h>
+#include <map>
+#include <list>
+#include <vector>
+#include <string>
+#include "threadManage/C_CS.h"
+#include "C_constDef.h"
 
-#include "DataManager.h"
+
+enum enDTriggerType{NULLTask=0,RAIDTask=1,ETHTask,SMSTask};
+enum enCMDType{NULLCMD=0,LOGCmd=1,SWITCHCmd =2};
+struct DispatchTask
+{
+	int nDTriggerType ;
+	std::vector<stError> vecErr;
+
+	DispatchTask()
+		:nDTriggerType(NULLTask)
+	{
+		
+	}
+
+	DispatchTask(const DispatchTask &obj)
+	{
+		nDTriggerType = obj.nDTriggerType;
+		vecErr.clear();
+		vecErr = obj.vecErr;
+	}
+
+	DispatchTask& operator =(const DispatchTask &obj)
+	{
+		if(this != &obj)
+		{
+			nDTriggerType = obj.nDTriggerType;
+			vecErr.clear();
+			vecErr = obj.vecErr;
+		}
+		return *this;
+	}
+};
+
+struct PolicyInfoEle
+{
+	std::string strErrName;
+	std::string strType;
+	int nPriority;
+	std::string strFault;
+	std::string strAct;
+
+	bool operator < (const PolicyInfoEle &obj) const 
+	{
+		return nPriority < obj.nPriority;
+	}
+};
+
+struct PolicyInfo
+{
+	int nPolicyDevType;
+	std::map<std::string,PolicyInfoEle> mapPInfo;
+};
 
 // 事务处理中心
 class CDispatch
 {
 public:
-	CDispatch();
+	CDispatch(void * ptrInvoker );
 	~CDispatch();
+public:
+	bool Init(std::string strPath);
+	bool RaidTriggerDispatch(std::vector<stError> &vecRE);
+	
+	bool ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map<int,std::string>& mapAction);
+	bool GetPolicyNode(xercesc::DOMDocument* ptrDoc,std::string strNodeName,
+		std::map<std::string,PolicyInfoEle> &mapPInfo);
+	bool ParsePolicy(std::string strPath);
 
-	bool Init();
-	bool AddTask();
-	bool routine();
+	void ExeCmd(std::map<int,std::string> &mapAction);
+	void ExeSwitch(std::string &strCmd);
+	bool Routine();
+
 private:
-	CDataManager * m_ptrDM;
+	std::list<DispatchTask> m_lstDTask;
+	C_CS m_csLDTask;
+	std::map<int,PolicyInfo> m_mapPolicy;
+	pthread_cond_t cond;
+	void  * m_ptrInvoker;
 };
 
 #endif

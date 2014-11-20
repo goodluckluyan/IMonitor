@@ -58,6 +58,12 @@ public:
 	std::string m_strOURI;
 
 	std::string m_strTMSPath;
+
+	//主目录
+	std::string m_strInipath;
+
+	//启动sms的方式，1为同一终端启动  2为新终端启动
+	int m_nStartSMSType ;
 private:
     static C_Para *m_pInstance;
 };

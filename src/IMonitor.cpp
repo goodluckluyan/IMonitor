@@ -205,30 +205,30 @@ int main(int argc, char** argv)
 		//每天2点至4点之间进行检测
 		++iCountTime;
 		iCountTime = iCountTime% 3000;
-		if(iMillisecond >2*3600*1000 && iMillisecond < 4*3600*1000  && iCountTime == 0)
-		{
-			pRunPara->GetCurDate(strTmpDate);
-
-			//判断当前时间是否和程序开始运行时间一致。
-			if(strTmpDate != strInitDate)
-			{
-				// 判断当前tms是否空闲。
-				if(iTmsWorkState == 0)
-				{
-					sprintf(strInfo,"2--4 clock process exist iMillisecond:%d strTmpDate:%s strInitDate%s iTmsWorkState%d\n",
-						iMillisecond, strTmpDate.c_str(),  strInitDate.c_str(),iTmsWorkState);
-					pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);       
-					//退出程序等待监控程序重新启动主程序。
-					return 0;
-				}
-				else
-				{
-					sprintf(strInfo,"2--4 clock process not exist because iTmsWorkState != 0 iMillisecond:%d strTmpDate:%s strInitDate%s iTmsWorkState%d\n",
-						iMillisecond, strTmpDate.c_str(),  strInitDate.c_str(),iTmsWorkState);
-					pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);   
-				}
-			}
-		}
+// 		if(iMillisecond >2*3600*1000 && iMillisecond < 4*3600*1000  && iCountTime == 0)
+// 		{
+// 			pRunPara->GetCurDate(strTmpDate);
+// 
+// 			//判断当前时间是否和程序开始运行时间一致。
+// 			if(strTmpDate != strInitDate)
+// 			{
+// 				// 判断当前tms是否空闲。
+// 				if(iTmsWorkState == 0)
+// 				{
+// 					sprintf(strInfo,"2--4 clock process exist iMillisecond:%d strTmpDate:%s strInitDate%s iTmsWorkState%d\n",
+// 						iMillisecond, strTmpDate.c_str(),  strInitDate.c_str(),iTmsWorkState);
+// 					pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);       
+// 					//退出程序等待监控程序重新启动主程序。
+// 					return 0;
+// 				}
+// 				else
+// 				{
+// 					sprintf(strInfo,"2--4 clock process not exist because iTmsWorkState != 0 iMillisecond:%d strTmpDate:%s strInitDate%s iTmsWorkState%d\n",
+// 						iMillisecond, strTmpDate.c_str(),  strInitDate.c_str(),iTmsWorkState);
+// 					pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);   
+// 				}
+// 			}
+// 		}
 
 		//每天0点开始更改日志文件的保存路径。
 		if(bDateSet != 0)
@@ -259,6 +259,7 @@ int main(int argc, char** argv)
 		} 
 	}
 
+	Invoker.DeInit();
 	C_TaskList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
 	C_LogManage::DestoryInstance();

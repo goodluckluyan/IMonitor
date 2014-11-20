@@ -24,7 +24,7 @@ History:
 #include "DataManager.h"
 
 #define COMM_FLAG		35		// '#'
-#define	KEYVALUE_FLAG	58		// ':'
+#define	KEYVALUE_FLAG		58		// ':'
 #define BLANK_FLAG1		32		// ' '
 #define BLANK_FLAG2		9		// '	'
 #define BLANK_FLAG3		13		// »»ÐÐ

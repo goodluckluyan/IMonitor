@@ -14,8 +14,10 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <time.h>
 #include "database/CppMySQL3DB.h"
-#include "para/C_RunPara.h"
+//#include "para/C_RunPara.h"
+#include "para/C_Para.h"
 #include "../C_ErrorDef.h"
 const int ERROR_PLAYER_AQ_BADHTTPRESPONSE = -1;
 const int ERROR_PLAYER_AQ_NEEDSOAPELEM = -2;
@@ -42,8 +44,8 @@ int C_Hall::Init(bool bRun)
 	 if(bRun)
 	 {
 		 // 本机运行
-		int pid;
-		 StartSMS(pid);
+		int nPid;
+		StartSMS(nPid);
 		 m_SMS.stStatus.nRun = 1;
 	 }
 	 else
@@ -58,12 +60,30 @@ int C_Hall::Init(bool bRun)
 SMSInfo& C_Hall::ChangeSMSHost(std::string strIP,bool bLocalRun)
 {
 	m_SMS.strIp = strIP;
-	m_SMS.stStatus.nRun = bLocalRun ? 1:2;
+	m_SMS.stStatus.nRun = bLocalRun ? 1:3;
+	m_SMS.nRole = bLocalRun ? 1:2;
 	return m_SMS;
 }
 
+
 // 启动SMS
 bool C_Hall::StartSMS(int &nPid)
+{
+	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
+	if(nStartType == 1)
+	{
+		StartSMS_CurTerminal(nPid);
+	}
+	else if(nStartType == 2)
+	{
+		StartSMS_NewTerminal(nPid);
+	}
+}
+
+
+
+// 在当前终端启动SMS
+bool C_Hall::StartSMS_CurTerminal(int &nPid)
 {
 	
 	if(m_SMS.strExepath.empty())
@@ -80,16 +100,16 @@ bool C_Hall::StartSMS(int &nPid)
 	else if(pid == 0)
 	{
 		printf("Fork Process(%d) Start SMS ... \n",getpid());
-		if(execl("/usr/bin/top","top",NULL) < 0)
+		int nPos = m_SMS.strExepath.rfind('/');
+		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	
+		std::string strDir = m_SMS.strExepath.substr(0,nPos);
+		chdir(strDir.c_str());
+		if(!strEXE.empty() && execl(m_SMS.strExepath.c_str(),strEXE.c_str(),
+		m_SMS.strConfpath.c_str(),NULL) < 0)
 		{
 			perror("execl error");
-			m_pid = 0;
 			exit(0);
 		}
-		//char buf[64]={'\0'};
-		//snprintf(buf,64,"gnome-terminal -e %s",m_SMS.strExepath.c_str());
-		//system(buf);
-		//exit(0);
 	}
 
 	//等待1秒
@@ -97,11 +117,121 @@ bool C_Hall::StartSMS(int &nPid)
 
 	if(pid > 0)
 	{	
-                m_pid = pid;
+        m_pid = pid;
 		nPid = pid;
 	}
 	
 	return true;
+}
+
+
+int C_Hall::Getpid(std::string strName,std::vector<int>& vecPID)
+{	
+	char acExe[64]={'\0'};
+	snprintf(acExe,64,"pidof %s",strName.c_str());
+	FILE *pp = popen(acExe,"r");
+	if(!pp)
+	{
+		printf("popen fail\n");
+		return -1;
+	}
+	char tmpbuf[128]={'\0'};
+	std::vector<std::string> vecBuf;
+	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+	{
+		vecBuf.push_back(tmpbuf);
+	}
+
+	int nLen = vecBuf.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		std::string &strtmp=vecBuf[i];
+		int nStart = 0;
+		int nPos = strtmp.find(' ',nStart);
+		while(nPos != std::string::npos)
+		{
+			vecPID.push_back(atoi(strtmp.substr(nStart,nPos-nStart).c_str()));
+			nStart = nPos+1;
+			nPos = strtmp.find(' ',nStart);
+		}
+		vecPID.push_back(atoi(strtmp.substr(nStart).c_str()));
+	}
+
+	pclose(pp);
+	return 0;
+}
+
+// 打开新终端启动SMS
+bool C_Hall::StartSMS_NewTerminal(int &nPid)
+{
+
+	if(m_SMS.strExepath.empty())
+	{
+		return false;
+	}
+	int nPos = m_SMS.strExepath.rfind('/');
+	std::string strEXE = m_SMS.strExepath.substr(nPos+1);
+	std::string strDir = m_SMS.strExepath.substr(0,nPos);
+	std::vector<int> vecCurPID;
+	if(Getpid(strEXE,vecCurPID) < 0)
+	{
+		return false;
+	}
+	
+	char buf[256]={'\0'};
+ 	snprintf(buf,256,"gnome-terminal --working-directory=%s -e \"%s %s\"",strDir.c_str(),m_SMS.strExepath.c_str(),
+ 		m_SMS.strConfpath.c_str());
+//	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
+	printf("%s\n",buf);
+	system(buf);
+	
+	//等待3秒
+	bool bRun = false;
+	int exepid = 0;
+	time_t tm1;
+	time(&tm1);
+	while(!bRun)
+	{
+		sleep(1);
+		std::vector<int> vecNowPID;
+		if(Getpid(strEXE,vecNowPID) < 0)
+		//if(Getpid("top",vecNowPID) < 0)
+		{
+			return false;
+		}
+
+		std::vector<int>::iterator fit;
+		for(int i = 0 ;i <vecNowPID.size();i++)
+		{
+			fit = std::find(vecCurPID.begin(),vecCurPID.end(),vecNowPID[i]);
+			if(fit == vecCurPID.end())
+			{
+				exepid = vecNowPID[i];
+				bRun = true;
+				printf("Fork Process(%d) Start SMS ... \n",exepid);
+				break;
+			}
+		}
+
+		time_t tm2;
+		time(&tm2);
+		if( tm2-tm1 > 5)
+		{
+			printf("waiting 5 sec ,but SMS not run..\n");
+			break;
+		}
+	}
+	
+	if(exepid > 0)
+	{	
+		m_pid = exepid;
+		nPid = exepid;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 // 关闭SMS
@@ -124,26 +254,6 @@ bool C_Hall::ShutDownSMS()
 }
 
 
-int C_Hall::SmsWebInvokerInit( )
-// const string &strUserName, const string &strPassword)
-{
-	m_xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
-	m_xmlnsXsi = "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
-	m_xmlnsXsd = "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
-	m_xmlnsSoap = "xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
-	m_envelopeBgn = "<soap:Envelope " + m_xmlnsXsi + m_xmlnsXsd + m_xmlnsSoap + ">";
-	m_envelopeEnd = "</soap:Envelope>";
-	m_bodyBgn = "<soap:Body>";
-	m_bodyEnd = "</soap:Body>";
-
-	//refer to wsdl file.
-	m_usherLocation = "/oristar/services/Usher";
-
-	m_usherNs = "http://webservices.oristar.com/XP/Usher/2009-09-29/";
-
-	return 0;
-}
-
 //获取SMS 运行状态
 int C_Hall::GetSMSWorkState( int &state, string &info)
 {
@@ -152,25 +262,43 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	{
 		return -1;
 	}
-	SmsWebInvokerInit();
+
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns1:GetWorkState_CS></ns1:GetWorkState_CS>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+	
+	//refer to wsdl file.
+	std::string strUsherLocation = "/oristar/services/Usher";
+	std::string strUsherNs = "http://webservices.oristar.com/XP/Usher/2009-09-29/GetWorkState_CS";
 
 	int iResult;
 	string response_c;
 	string content_c;
-
-	string cmd = GetSMSWorkState_Xml();
-	string http = UsherHttp(m_SMS.strIp, cmd, "GetWorkState_CS");
-
-	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 30);
+	string http;
+	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
+	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 10);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP
 	}
 
 	iResult = GetHttpContent( response_c, content_c);
-	if (iResult != 0)
+	if (iResult < 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_HTTP
+	}
+	//java定义为,如果sms连接异常, 返回的xml, http抛出500。定义状态为102
+	else if (iResult == 500)
+	{
+		state = 102;
+		info = "error";
+		return 0;
 	}
 
 	iResult = Parser_GetSMSWorkState( content_c, state, info);
@@ -202,7 +330,8 @@ int  C_Hall::CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int 
 	xml += "<ns2:ExeSwitchSMSToOther><strHallID>"+strHallID+"</strHallID></ns0:ExeSwitchSMSToOther>";
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
-	string http = UsherHttp(strURI,strOtherIP,xml);
+	string http ;
+	UsherHttp(strURI,strOtherIP,xml,"",http);
 
 	iResult = TcpOperator(strOtherIP,nPort, http, response_c, 30);
 	if (iResult != 0)
@@ -260,26 +389,25 @@ int C_Hall::Parser_SwitchSMS(std::string &content,int &nRet)
 	return result;
 }
 
-string C_Hall::GetSMSWorkState_Xml()
+int C_Hall::UsherHttp(std::string& strURI,std::string& strIP,std::string &xml,std::string action,std::string &strRequest)
 {
-	string temp;
-	temp = m_xmlHeader + m_envelopeBgn + m_bodyBgn
-		+ "<GetWorkState_CS xmlns=\"" + m_usherNs + "\" /"
-		+ m_bodyEnd + m_envelopeEnd;
-	return temp;
-}
-
-string &C_Hall::UsherHttp(std::string strURI,std::string strIP,const string &xml, const string &action)
-{
-	m_request.ClearHttp();
-	m_request.SetMethod("POST");
-	m_request.SetUri( strURI.c_str());
-	m_request.SetVersion("HTTP/1.0");
-	m_request.SetHost(strIP.c_str());
-	m_request.SetContentType("text/xml; charset=utf-8");
-	m_request.SetContent(xml);
-	m_request.SetSoapAction((m_usherNs + action).c_str());
-	return m_request.GetHttpRequest();
+	HttpRequestParser request;
+	request.SetMethod("POST");
+	request.SetUri( strURI.c_str());
+	request.SetVersion("HTTP/1.1");
+	request.SetHost(strIP.c_str());
+	request.SetContentType("text/xml; charset=utf-8");
+	request.SetContent(xml);
+	if(!action.empty())
+	{
+		request.SetSoapAction(action.c_str());
+	}
+	else
+	{
+		request.SetSoapAction("");
+	}
+	strRequest = request.GetHttpRequest();
+	return 0;
 }
 
 int C_Hall::GetHttpContent(const string &http, string &content)
@@ -299,7 +427,7 @@ int C_Hall::GetHttpContent(const string &http, string &content)
 }
 
 //解析SMS返回的XML
-int C_Hall :: Parser_GetSMSWorkState( const string &content, int &state, string &info)
+int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &info)
 {
 	XercesDOMParser *parser = new XercesDOMParser();
 	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
@@ -316,7 +444,7 @@ int C_Hall :: Parser_GetSMSWorkState( const string &content, int &state, string 
 	return result;
 }
 
-int C_Hall :: Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, string &info)
+int C_Hall::Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, string &info)
 {
 	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "GetWorkState_CSResponse");
 	if(child == NULL)
@@ -347,7 +475,7 @@ int C_Hall :: Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, i
 }
 
 //发送与接收 数据/////////////////////////////////////////////////////////////////
-int C_Hall :: TcpOperator(std::string strIp,int nPort ,const string &send, string &recv,int overtime)
+int C_Hall::TcpOperator(std::string strIp,int nPort ,const string &send, string &recv,int overtime)
 {
 	int result = m_tcp.TcpConnect(strIp.c_str(), nPort);
 	if(result < 0)
@@ -365,7 +493,7 @@ int C_Hall :: TcpOperator(std::string strIp,int nPort ,const string &send, strin
 
 
 //发送与接收 数据/////////////////////////////////////////////////////////////////
-int C_Hall :: SendAndRecvInfo(const string &send, string &recv, int overtime)
+int C_Hall::SendAndRecvInfo(const string &send, string &recv, int overtime)
 {
 	int result = m_tcp.BlockSend(send.c_str(), send.size());
 	if(result < 0)
@@ -436,7 +564,7 @@ int C_Hall :: SendAndRecvInfo(const string &send, string &recv, int overtime)
 	}
 }
 
-int C_Hall :: ReceiveCommand(string &recv, int waitTime)
+int C_Hall::ReceiveCommand(string &recv, int waitTime)
 {
 	recv.clear();
 	char buffer[BufferLength];
@@ -462,14 +590,13 @@ int C_Hall :: ReceiveCommand(string &recv, int waitTime)
 	}
 	if(result < 0)
 	{
-		//SetAq10Error(ERROR_PLAYER_AQ_TCPRECEIVE, "Player can not connect! 04");
 		return -1;//ERROR_PLAYER_AQ_TCPRECEIVE;
 	}
 	return 0;
 }//////////////////////////////////////
 
 
-int C_Hall :: GetRootChild( const std::string &xml,xercesc::XercesDOMParser *parser, 
+int C_Hall::GetRootChild( const std::string &xml,xercesc::XercesDOMParser *parser, 
 								  xercesc::ErrorHandler *errHandler, xercesc::DOMElement **rootChild)
 {
 	string compactXml = ExtractXml(xml);
@@ -498,7 +625,7 @@ int C_Hall :: GetRootChild( const std::string &xml,xercesc::XercesDOMParser *par
 }
 
 //GET NODE NAME
-xercesc::DOMElement *C_Hall :: GetElementByName( const xercesc::DOMNode *elem, const std::string &name)
+xercesc::DOMElement *C_Hall::GetElementByName( const xercesc::DOMNode *elem, const std::string &name)
 {
 	if(name.empty() || elem == NULL)
 		return NULL;
@@ -520,7 +647,7 @@ xercesc::DOMElement *C_Hall :: GetElementByName( const xercesc::DOMNode *elem, c
 	return NULL;
 }
 
-xercesc::DOMElement *C_Hall :: FindElementByName( const xercesc::DOMNode *elem, const std::string &name)
+xercesc::DOMElement *C_Hall::FindElementByName( const xercesc::DOMNode *elem, const std::string &name)
 {
 	if(name.empty() || elem == NULL)
 		return NULL;

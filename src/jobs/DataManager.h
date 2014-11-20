@@ -8,6 +8,7 @@
 
 #include "C_constDef.h"
 #include "threadManage/C_CS.h"
+#include "Dispatch.h"
 #include <map>
 // 负责对所有监控数据进行管理
 class CDataManager
@@ -25,6 +26,11 @@ public:
 	~CDataManager();
 	
 	bool Init(void *);
+
+	void SetDispatchPtr(CDispatch *ptr)
+	{
+		m_ptrDispatch = ptr;
+	}
 
 
 	// 设置网卡基本信息
@@ -48,6 +54,9 @@ public:
 	// 更新本机的各个监测数据
 	// 更新磁盘陈列的监测数据
 	bool UpdateDevStat(DiskInfo &df);
+
+	// 检测磁盘陈列是否有错误
+	bool CheckRaidError(std::vector<stError> &vecErr);
 
 	// 更新网卡监测数据
 	bool UpdateNetStat(std::vector<EthStatus> &vecEthStatus);
@@ -87,6 +96,7 @@ private:
 
 	std::map<std::string,EthStatus> m_mapEthStatus;
 	std::map<std::string,SMSInfo> m_mapSmsStatus;
+	std::map<std::string,SMSInfo> m_mapOtherSMSStatus;
 	int m_nTMSState;
 
 	C_CS m_csDisk;
@@ -94,6 +104,7 @@ private:
 	C_CS m_csSMS;
 	C_CS m_csTMS;
 	static CDataManager * m_pinstance;
+	CDispatch * m_ptrDispatch;
 	void * m_ptrInvoker;
 
 };

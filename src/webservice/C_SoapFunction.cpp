@@ -33,7 +33,7 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 	{
 		mons__SMSState node;
 		node.HallId = vecSMSState[i].hallid;
-		node.bRun = vecSMSState[i].nRun != 0 ? true:false;
+		node.bRun = vecSMSState[i].nRun == 1 ? true:false;
 		node.state = 1;//vecSMSState[i].nStatus;
 		node.position = 25;//vecSMSState[i].nPosition;
 		node.strSplUuid = "C80CF8FC-D6F5-26F8-3927-E30B0AE06C56";//vecSMSState[i].strSPLUuid;
@@ -52,39 +52,50 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	DiskInfo df;
+	pDM->GetDevStat(df);
+	
 	//pDM->GetDevStat(df);
-	df.diskState = "1" ;
-	df.diskSize = "8000000000";
-	df.diskNumOfDrives = "8" ;
-	for(int i = 0 ;i < 8 ;i++)
-	{
-		DiskDriveInfo node;
-		node.driveErrorCount = "0";
-		node.driveFirmwareState = "1";
-		char buf[16]={'\0'};
-		snprintf(buf,16,"%d",i);
-		node.driveID = buf;
-		node.driveSize = "1000000000";
-		node.driveSlotNum = buf;
-		node.driveSpeed = "1000000";
-		df.diskDrives.push_back(node);
-	}
+// 	df.diskState = "1" ;
+// 	df.diskSize = "8000000000";
+// 	df.diskNumOfDrives = "8" ;
+// 	for(int i = 0 ;i < 8 ;i++)
+// 	{
+// 		DiskDriveInfo node;
+// 		node.driveErrorCount = "0";
+// 		node.driveFirmwareState = ;
+// 		char buf[16]={'\0'};
+// 		snprintf(buf,16,"%d",i);
+// 		node.driveID = buf;
+// 		node.driveSize = "1000000000";
+// 		node.driveSlotNum = buf;
+// 		node.driveSpeed = "1000000";
+// 		df.diskDrives.push_back(node);
+// 	}
 
 	int nLen = df.diskDrives.size();
 	int nSpeed = 0;
 	for(int i = 0 ;i < nLen ; i++)
 	{
 		// 取最小值.
-// 		int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
-// 		if(nSpeed == 0 || nSpeed > nDriveSpeed )
-// 		{
-// 			nSpeed = nDriveSpeed;
-// 		}
-		ret.diskState.push_back(atoi(df.diskDrives[i].driveFirmwareState.c_str()));
+ 		int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
+ 		if(nSpeed == 0 || nSpeed > nDriveSpeed )
+ 		{
+ 			nSpeed = nDriveSpeed;
+ 		}
+		int nPos = df.diskDrives[i].driveFirmwareState.find("online");
+		if(nPos != std::string::npos)
+		{
+			ret.diskState.push_back(0);
+		}
+		else
+		{
+			ret.diskState.push_back(1);
+		}
+		
  	}
 
-	ret.ReadSpeed = 1000000;
-	ret.WriteSpeed = 1000000;
+	ret.ReadSpeed = nSpeed;
+	ret.WriteSpeed = nSpeed;
 	ret.state =atoi( df.diskState.c_str());
 
 	return 0;

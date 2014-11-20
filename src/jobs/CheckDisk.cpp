@@ -27,7 +27,7 @@ const int MAX_BUFF_LEN = 128;
 
 
 
-CheckDisk :: CheckDisk()
+CheckDisk::CheckDisk()
 {
 	DiskSize = "";
 	DiskState = "";
@@ -120,7 +120,7 @@ int CheckDisk::ReadMegaSASInfo()
 	return 0;
 }
 
-int CheckDisk :: GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
+int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
 {
 	int iResult;
 	string strline;

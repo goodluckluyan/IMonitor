@@ -124,4 +124,7 @@ c_u_int ERROR_SIGCATCH_FUN = 0x0001;
 c_u_int ERROR_PLAYER_AQ_TCPCONNECT = -5;
 
 
+// 线程已经超时。
+c_u_int ERROR_DEVSTATUS = 0x0011;
+
 #endif  //_TMS20_ERROR_DEFINE

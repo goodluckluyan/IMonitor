@@ -19,19 +19,20 @@ int  CInvoke::Init()
 		return -1;
 	}
 
+
 	// 磁盘监测模块初始化
 	if(m_ptrDisk == NULL)
 	{
 		m_ptrDisk = new CheckDisk();
-// 		if(!m_ptrDisk->InitAndCheck())
-// 		{
-// 			printf("Initial Fail! Check Raid Status Fail!\n");
-// 			return -1;
-// 		}
-// 		else
-// 		{
-// 			printf("Raid Check Done.\n");
-// 		}
+		if(!m_ptrDisk->InitAndCheck())
+		{
+			printf("Initial Fail! Check Raid Status Fail!\n");
+			return -1;
+		}
+		else
+		{
+			printf("Raid Check Done.\n");
+		}
 	}
 	
 
@@ -51,20 +52,42 @@ int  CInvoke::Init()
 	}
 	
 
-	// 监测SMS模块
-	if(m_ptrLstHall == NULL)
-	{
-		m_ptrLstHall = new C_HallList();
-		m_ptrLstHall->Init();
-	}
-	
 
-	C_Para *pPara = C_Para::GetInstance();
+	
 	// 监测对端高度软件
+	bool bRunOther = false;
+	C_Para * pPara = C_Para::GetInstance();
 	if(m_ptrMonitor == NULL)
 	{
 		m_ptrMonitor = new  CMonitorSensor();
 		m_ptrMonitor->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort);
+		time_t tm1;
+		time(&tm1);
+		while(1)
+		{
+			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS))
+			{
+				bRunOther = true;
+				break;
+			}
+
+			sleep(2);
+			time_t tm2;
+			time(&tm2);
+			if(tm2-tm1 >= 300)
+			{
+				break;
+			}
+		}
+
+
+	}
+
+	// 监测SMS模块
+	if(m_ptrLstHall == NULL)
+	{
+		m_ptrLstHall = new C_HallList();
+		m_ptrLstHall->Init(bRunOther);
 	}
 
 	if(m_ptrTMS == NULL)
@@ -76,8 +99,43 @@ int  CInvoke::Init()
 	// 调度模块
 	if(m_ptrDispatch == NULL)
 	{
-		m_ptrDispatch = new CDispatch();
-		m_ptrDispatch->Init();
+		m_ptrDispatch = new CDispatch(this);
+		std::string strPolicyPath = pPara->m_strInipath+"/policy.xml";
+		m_ptrDispatch->Init(strPolicyPath);
+		pDM->SetDispatchPtr(m_ptrDispatch);
+	}
+}
+
+void CInvoke::DeInit()
+{
+	if(m_ptrDisk != NULL)
+	{
+		delete m_ptrDisk;
+	}
+
+	if(m_ptrNet != NULL)
+	{
+		delete m_ptrNet;
+	}
+
+	if(m_ptrLstHall != NULL)
+	{
+		delete m_ptrLstHall;
+	}
+
+	if(m_ptrMonitor != NULL)
+	{
+		delete m_ptrMonitor;
+	}
+
+	if(m_ptrTMS != NULL)
+	{
+		delete m_ptrTMS;
+	}
+
+	if(m_ptrDispatch != NULL)
+	{
+		delete m_ptrDispatch;
 	}
 }
 
@@ -88,7 +146,7 @@ bool CInvoke::AddInitTask()
 	m_nEthCheckDelay = 10;
 	m_nOtherMonitorCheckDelay = 10;
 	m_nOtherTMSCheckDelay = 10;
-	m_nOtherSMSCheckDelay = 5;
+	m_nOtherSMSCheckDelay = 6;
 	m_nOtherRAIDCheckDelay = 5;
 	m_nOtherEthCheckDelay = 5;
 	m_nOtherSwitchCheckDelay = 5;
@@ -106,7 +164,10 @@ bool CInvoke::AddInitTask()
 	ptrTaskList->AddTask(TASK_NUMBER_GET_NET_STATUS,NULL,ptrRunPara->GetCurTime()+m_nEthCheckDelay);
 
 	ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+m_nTMSCheckDelay);
-	
+
+
+	//ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+m_nOtherSMSCheckDelay);
+
 	
 	// 添加对对端调度程序的检测的定时任务
 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
@@ -194,7 +255,7 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 	switch(iCmd)
 	{
 	case TASK_NUMBER_DISPATCH_ROUTINE:
-		m_ptrDispatch->routine();
+		m_ptrDispatch->Routine();
 		nResult = 0;
 		break;
 	case TASK_NUMBER_GET_DISK_STATUS:
@@ -396,6 +457,19 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 	if(m_ptrLstHall != NULL)
 	{
 		return m_ptrLstHall->SwitchSMS(strHallID);
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// 切换本机上的所有SMS
+bool CInvoke::SwitchAllSMS()
+{
+	if(m_ptrLstHall != NULL)
+	{
+		return m_ptrLstHall->SwitchAllSMS();
 	}
 	else
 	{
