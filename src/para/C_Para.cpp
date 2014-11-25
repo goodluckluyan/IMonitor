@@ -14,6 +14,7 @@ C_Para *C_Para::m_pInstance = NULL;
 C_Para::C_Para()
 {
 	m_nStartSMSType = 1;
+	m_nTimeOutWaitOtherIMonitor = 300;
 }
 C_Para::~C_Para()
 {
@@ -194,6 +195,13 @@ int C_Para::ReadPara()
 	}
 	m_nStartSMSType = atoi(a);
 
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","TimeOutWaitOtherIMonitor",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_nTimeOutWaitOtherIMonitor = atoi(a);
 
 	return 0;
 

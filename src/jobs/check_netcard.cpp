@@ -12,6 +12,9 @@
 #include <errno.h>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include "para/C_Para.h"
+#include"database/CppMySQL3DB.h"
 
 #ifndef WIN32
 #define O_BINARY       0x8000  
@@ -85,7 +88,7 @@ int GetIFInfo(std::vector<std::string> &vecEth)
 
 		char cName[4]={0};
 		strncpy(cName,ifr->ifr_name,3);
-		if(strcmp(cName,"eth") != 0 /*&& strcmp(cName,"bon") != 0*/)
+		if(strcmp(cName,"eth") != 0 && strcmp(cName,"bon") != 0)
 		{
 			ifr++;
 			continue;
@@ -117,7 +120,7 @@ int Test_NetCard::Check_EthLinkStatus(const char* eth_name , int& rLinkStatus )
 	
 	strcpy( hw_name , eth_name );
 
-	//方法一：查看一个文件文件，相对来说比较简单
+	//方法一：查看一个文件，相对来说比较简单
 #if 0
 	char carrier_path[512] = {'\0'};
 
@@ -237,17 +240,43 @@ Test_NetCard::~Test_NetCard()
 
 }
 
+
 //初始化函数，必须先被调用
 int Test_NetCard::Init()
 {
 	m_ptrDM = CDataManager::GetInstance();
-	int ret = 0;
-	int nEth = GetIFInfo(m_vecEth);
+	std::map<std::string,int> mapEthBaseInfo;
+	if(!ReadEthinfoTable(mapEthBaseInfo))
+	{
+		return -1;
+	}
+	m_ptrDM->SetEthBaseInfo(mapEthBaseInfo);
+	std::map<std::string,int>::iterator it = mapEthBaseInfo.begin();
+	for(;it != mapEthBaseInfo.end();it++)
+	{
+		m_vecEth.push_back(it->first);
+	}
+
+	// 获取所有拥有ip的eth
+	std::vector<std::string> vecEth;
+	int nEth = GetIFInfo(vecEth);
 	if(nEth <= 1)
 	{
 		return -1;
 	}
 
+	// 找出bond0
+	std::vector<std::string>::iterator fit;
+	for(int i = 0 ;i < vecEth.size();i++)
+	{
+		fit = std::find(m_vecEth.begin(),m_vecEth.end(),vecEth[i]) ;
+		if(fit == m_vecEth.end())
+		{
+			m_vecEth.push_back(vecEth[i]);
+		}
+	}
+	
+	int ret = 0;
 	for ( int nIndex = 0; nIndex < m_vecEth.size() ; nIndex++ )
 	{
 		//初始化 m_old_CheckTime，每个网卡1个时间值
@@ -279,14 +308,47 @@ int Test_NetCard::Init()
 			printf( "Init Error:eth=%s ,Send nInitTx_bytes\n" , m_vecEth[nIndex].c_str() );
 			//return -11;
 		}
-
 	}
 	m_bInit = true;
 
 	return 0;
 }
 
+bool Test_NetCard::ReadEthinfoTable(std::map<std::string,int>& mapEthBaseInfo)
+{
+	C_Para *ptrPara = C_Para::GetInstance();
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),"tms"/*ptrPara->m_strDBName.c_str()*/) == -1)
+	{
+		printf("mysql open failed!\n");
+		return false;
+	}
 
+	// 读取ethinfo ,初始化网卡信息
+	int nResult;
+	//CppMySQLQuery query = mysql.querySQL("select * from ethInfo",nResult);
+	char strSQL[256];
+	snprintf(strSQL,256,"select * from eth_set where position=%d",ptrPara->m_bMain ? 0:1);
+	CppMySQLQuery query = mysql.querySQL(strSQL,nResult);
+	int nRows = 0 ;
+	if((nRows = query.numRow()) == 0)
+	{
+		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
+		return false;
+	}
+
+	query.seekRow(0);
+	for(int i = 0 ;i < nRows ; i++)
+	{
+		std::string strName = query.getStringField("eth_name");//"eth"
+		int nType = atoi(query.getStringField("type"));
+		mapEthBaseInfo[strName] = nType;
+		query.nextRow();
+	}
+	return true;
+	
+}
 
 //网络带宽测量 eth_name=网卡名称必须为"eth0,eth1,eth2,eth3,eth4,eth5"中1个;TranBPS=表示每秒发送字节数，RecvBPS=表示每秒接收字节数
 int Test_NetCard::Check_NewWork_Flow( std::string eth_name , unsigned long long& TranBPS ,
@@ -480,13 +542,10 @@ bool Test_NetCard::InitAndCheck()
 		{
 			if(nConnStatus != 1)
 			{
-				bRet = false;
 				printf("%s Connect Status Down!\n",m_vecEth[i].c_str());
 				break;
 			}
 		}
-		
-		
 	}
 	return bRet;
 

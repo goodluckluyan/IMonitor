@@ -36,7 +36,7 @@ enum TASK_TYPE
 	ALWAYS_TASK// 固定任务
 };
 
- // 任务状态；
+// 任务状态；
 enum TASK_STATE
 {
 	//空闲
@@ -112,119 +112,122 @@ enum TMS_WORK_STATE
 //默认的日志级别。
 const int DEFAULT_LOG_LEVEL = 0;
 
- // 线程池中线程的个数。
- const int THREAD_COUNT_IN_POOL = 10;
+// 线程池中线程的个数。
+const int THREAD_COUNT_IN_POOL = 20;
 
 // RAID状态
- typedef struct DiskInfo
- {
-	 std::string diskSize;
-	 std::string diskState;
-	 std::string diskNumOfDrives;
-	 std::vector<struct DiskDriveInfo> diskDrives;
- }DiskInfo;
+typedef struct DiskInfo
+{
+	std::string diskSize;
+	std::string diskState;
+	std::string diskNumOfDrives;
+	std::vector<struct DiskDriveInfo> diskDrives;
+}DiskInfo;
 
- typedef struct DiskDriveInfo
- {
-	 std::string driveID;
-	 std::string driveSlotNum;
-	 std::string driveErrorCount;
-	 std::string driveSize;
-	 std::string driveFirmwareState;
-	 std::string driveSpeed;
- }DiskDriveInfo;
-
-
- // 故障
- struct stError
- {
-	 int nOrdinal;
-	 std::string ErrorName;
-	 std::string ErrorVal;
- };
+typedef struct DiskDriveInfo
+{
+	std::string driveID;
+	std::string driveSlotNum;
+	std::string driveErrorCount;
+	std::string driveSize;
+	std::string driveFirmwareState;
+	std::string driveSpeed;
+}DiskDriveInfo;
 
 
- // 网卡状态
- struct EthStatus
- {
-	 std::string strName;
-	 int nTaskType;
-	 int nConnStatue;
-	 unsigned long long  nRxSpeed;
-	 unsigned long long nTxSpeed;
-
-	 EthStatus():
-	 nConnStatue(0),
-	 nRxSpeed(0),
-	 nTxSpeed(0),
-	 nTaskType(-1)
-	 {
-	 }
- };
+// 故障
+struct stError
+{
+	stError():
+		nOrdinal(-1)
+	{}
+	int nOrdinal;
+	std::string ErrorName;
+	std::string ErrorVal;
+};
 
 
+// 网卡状态
+struct EthStatus
+{
+	std::string strName;
+	int nTaskType;
+	int nConnStatue;
+	unsigned long long  nRxSpeed;
+	unsigned long long nTxSpeed;
 
- // SMS状态
- struct SMSStatus
- {
-	 std::string hallid;
-	 int nStatus;
-	 int nRun;				//0：本机没有运行 1：本机运行，2：另一台运行 3:另一台也没有运行
-	 int  nPosition;
-	 std::string strSPLUuid;
-
-	 SMSStatus():
-		 nStatus(-1)
-		 ,nRun(0)
-		 ,nPosition(-1)
-	 {
-
-	 }
-	
-         SMSStatus(const SMSStatus &obj)
+	EthStatus():
+	nConnStatue(0),
+		nRxSpeed(0),
+		nTxSpeed(0),
+		nTaskType(-1)
 	{
-	   hallid = obj.hallid;
-	   nStatus = obj.nStatus;
-	   nRun = obj.nRun;
-           nPosition = obj.nPosition;
-	   strSPLUuid = obj.strSPLUuid;
+	}
+};
+
+
+
+// SMS状态
+struct SMSStatus
+{
+	std::string hallid;
+	int nStatus;
+	int nRun;				//0：本机没有运行 1：本机运行，2：另一台运行 3:另一台也没有运行
+	int nPosition;
+	std::string strSPLUuid;
+
+	SMSStatus():
+	nStatus(-1)
+		,nRun(0)
+		,nPosition(-1)
+	{
+
 	}
 
-        SMSStatus& operator=(const SMSStatus &obj)
+	SMSStatus(const SMSStatus &obj)
 	{
-	   if(this != &obj)
-	   {   
-	   	hallid = obj.hallid;
-	        nStatus = obj.nStatus;
-	   	nRun = obj.nRun;
-	        nPosition = obj.nPosition;
-	 	strSPLUuid = obj.strSPLUuid;
-	   }
+		hallid = obj.hallid;
+		nStatus = obj.nStatus;
+		nRun = obj.nRun;
+		nPosition = obj.nPosition;
+		strSPLUuid = obj.strSPLUuid;
+	}
+
+	SMSStatus& operator=(const SMSStatus &obj)
+	{
+		if(this != &obj)
+		{   
+			hallid = obj.hallid;
+			nStatus = obj.nStatus;
+			nRun = obj.nRun;
+			nPosition = obj.nPosition;
+			strSPLUuid = obj.strSPLUuid;
+		}
 		return *this;
 	}
 
- };
+};
 
 
 // SMS参数
- struct SMSInfo
- {
-	 std::string strId;		// 标识id或序列号
-	 std::string strIp;		// 通信的ip地址
-	 int nPort ;			// 通信的端口
-	 int nRole;				// 角色，是主要运行角色还是候选角色 1:为主角，2:为候选 
-	 std::string strExepath;// sms执行文件路径
-	 std::string strConfpath;// 配置文件路径
-	 SMSStatus stStatus;
-	
+struct SMSInfo
+{
+	std::string strId;		// 标识id或序列号
+	std::string strIp;		// 通信的ip地址
+	int nPort ;			// 通信的端口
+	int nRole;				// 角色，是主要运行角色还是候选角色 1:为主角，2:为候选 
+	std::string strExepath;// sms执行文件路径
+	std::string strConfpath;// 配置文件路径
+	SMSStatus stStatus;
 
-	 SMSInfo():
-	 nPort(-1)
-	,nRole(-1)
-	 {}
 
-	 SMSInfo(const SMSInfo &obj)
-	 {
+	SMSInfo():
+	nPort(-1)
+		,nRole(-1)
+	{}
+
+	SMSInfo(const SMSInfo &obj)
+	{
 		strId = obj.strId;
 		strIp = obj.strIp;
 		nPort = obj.nPort;
@@ -232,23 +235,23 @@ const int DEFAULT_LOG_LEVEL = 0;
 		strExepath = obj.strExepath;
 		strConfpath = obj.strConfpath;
 		stStatus = obj.stStatus;
-	 }
+	}
 
-	 SMSInfo& operator =(const SMSInfo &obj)
-	 {
-		 if(this != &obj)
-		 {
-			 strId = obj.strId;
-			 strIp = obj.strIp;
-			 nPort = obj.nPort;
-			 nRole = obj.nRole;
-			 strExepath = obj.strExepath;
-			 strConfpath = obj.strConfpath;
-			 stStatus = obj.stStatus;
-		 }
-		 return *this;
-	 }
- };
+	SMSInfo& operator =(const SMSInfo &obj)
+	{
+		if(this != &obj)
+		{
+			strId = obj.strId;
+			strIp = obj.strIp;
+			nPort = obj.nPort;
+			nRole = obj.nRole;
+			strExepath = obj.strExepath;
+			strConfpath = obj.strConfpath;
+			stStatus = obj.stStatus;
+		}
+		return *this;
+	}
+};
 
 
 
@@ -259,7 +262,7 @@ typedef struct HallPara
 	std::string hallId;
 	std::string name;
 
-	
+
 }HALL_PARA, *PHALL_PARA;
 
 

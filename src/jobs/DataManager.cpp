@@ -1,7 +1,6 @@
 #include "DataManager.h"
 #include<stdio.h>
 #include<stdlib.h>
-#include"database/CppMySQL3DB.h"
 #include"para/C_Para.h"
 #include <algorithm>
 CDataManager *CDataManager::m_pinstance=NULL;
@@ -21,36 +20,6 @@ bool CDataManager::Init(void * vptr)
 	{
 		m_ptrInvoker = vptr;
 	}
-
-	C_Para *ptrPara = C_Para::GetInstance();
-	CppMySQL3DB mysql;
-	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
-		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
-	{
-		printf("mysql open failed!\n");
-		return false;
-	}
-
-	// 读取ethinfo ,初始化网卡信息
-	int nResult;
-	CppMySQLQuery query = mysql.querySQL("select * from EthInfo",nResult);
-	int nRows = 0 ;
-	if((nRows = query.numRow()) == 0)
-	{
-		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
-		return false;
-	}
-
-	std::map<std::string,int> mapEthBaseInfo;
-	query.seekRow(0);
-	for(int i = 0 ;i < nRows ; i++)
-	{
-		std::string strName = query.getStringField("eth");
-		int nType = atoi(query.getStringField("type"));
-		mapEthBaseInfo[strName] = nType;
-		query.nextRow();
-	}
-	SetEthBaseInfo(mapEthBaseInfo);
 
 	return true;
 }
@@ -115,7 +84,7 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	{
 		if(m_ptrDispatch)
 		{
-			m_ptrDispatch->RaidTriggerDispatch(vecRE);
+			m_ptrDispatch->TriggerDispatch(RAIDTask,vecRE);
 		}
 	}
 
@@ -173,9 +142,13 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 	int nLen = vecEthStatus.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
-		m_mapEthStatus[vecEthStatus[i].strName] = vecEthStatus[i];
-		printf("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu\n",vecEthStatus[i].strName.c_str(),
-			vecEthStatus[i].nConnStatue,vecEthStatus[i].nRxSpeed,vecEthStatus[i].nTxSpeed);
+		std::map<std::string,EthStatus>::iterator fit = m_mapEthStatus.find(vecEthStatus[i].strName);
+		if(fit != m_mapEthStatus.end())
+		{
+			fit->second = vecEthStatus[i];
+			printf("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu\n",vecEthStatus[i].strName.c_str(),
+				vecEthStatus[i].nConnStatue,vecEthStatus[i].nRxSpeed,vecEthStatus[i].nTxSpeed);
+		}
 	}
 	
 	m_csNet.LeaveCS();
@@ -186,6 +159,7 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 //更新SMS的状态
 bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string strInfo)
 {
+	printf("SMS:%s Status:%d  (%s)\n",strHallID.c_str(),nState,strInfo.c_str());
 	m_csSMS.EnterCS();
 	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
 	if(it != m_mapSmsStatus.end())
@@ -219,6 +193,21 @@ bool CDataManager::UpdateTMSStat(int state)
 	m_csTMS.EnterCS();
 	m_nTMSState = state;
 	m_csTMS.LeaveCS();
+
+	std::vector<stError> vecRE;
+	if(state == -1 && C_Para::GetInstance()->m_bMain)
+	{
+		stError er;
+		er.ErrorName = "state";
+		er.ErrorVal = "norun";
+		vecRE.push_back(er);
+
+		if(m_ptrDispatch)
+		{
+			m_ptrDispatch->TriggerDispatch(TMSTask,vecRE);
+		}
+	}
+
 	return true;
 }
 
@@ -228,6 +217,8 @@ bool CDataManager::GetDevStat(DiskInfo &df)
 	m_csDisk.EnterCS();
 	df = m_df; 
 	m_csDisk.LeaveCS();   
+
+	
 }
 
 // 获取网卡状态
@@ -279,6 +270,31 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	printf("Other Monitor State:bMain:%d,nState:%d\n",bMain,nState);
+	if(C_Para::GetInstance()->m_bMain == bMain && bMain )
+	{
+		stError er;
+		std::vector<stError> vecRE;
+		er.ErrorName="brotherhood";
+		er.ErrorVal="nostandby";
+		vecRE.push_back(er);
+		if(m_ptrDispatch)
+		{
+			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+		}
+	}
+	else if(C_Para::GetInstance()->m_bMain == bMain && !bMain )
+	{
+		stError er;
+		std::vector<stError> vecRE;
+		er.ErrorName="brotherhood";
+		er.ErrorVal="nomain";
+		vecRE.push_back(er);
+		if(m_ptrDispatch)
+		{
+			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+		}
+	}
+	
 	return true;
 }
 

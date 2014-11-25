@@ -65,7 +65,9 @@ bool CDispatch::ParsePolicy(std::string strPath)
 		mapTmp[RAIDTask] = "Raid";
 		mapTmp[ETHTask] = "Eth";
 		mapTmp[SMSTask] = "SMS";
-
+		mapTmp[TMSTask] = "TMS";
+		mapTmp[IMonitorTask] = "IMonitor";
+ 
 		std::map<int,std::string>::iterator it = mapTmp.begin();
 		for(;it != mapTmp.end();it++)
 		{
@@ -186,10 +188,10 @@ bool CDispatch::GetPolicyNode(DOMDocument* ptrDoc,std::string strNodeName,std::m
 }
 
 // 添加raid触发调度任务
-bool CDispatch::RaidTriggerDispatch(std::vector<stError> &vecErr)
+bool CDispatch::TriggerDispatch(int nTaskType,std::vector<stError> &vecErr)
 {
 	struct DispatchTask nodeTask;
-	nodeTask.nDTriggerType = (int)RAIDTask;
+	nodeTask.nDTriggerType = (enDTriggerType)nTaskType;
 	nodeTask.vecErr = vecErr;
 	m_csLDTask.EnterCS();
 	m_lstDTask.push_back(nodeTask);
@@ -198,6 +200,8 @@ bool CDispatch::RaidTriggerDispatch(std::vector<stError> &vecErr)
 
 	return true;
 }
+
+
 
 // 执行调度任务
 bool CDispatch::Routine()
@@ -222,52 +226,73 @@ bool CDispatch::Routine()
 	switch(nodeTask.nDTriggerType)
 	{
 	case RAIDTask:
+	case ETHTask:	
+	case SMSTask:	
+	case TMSTask:
+	case IMonitorTask:
 		{
-			std::map<int,std::string> mapAction;
-			ApplyPolicy(RAIDTask,nodeTask,mapAction);
+			std::map<int,std::vector<std::string> > mapAction;
+			ApplyPolicy(nodeTask.nDTriggerType,nodeTask,mapAction);
 			ExeCmd(mapAction);
 		}
-		
-		break;
-	case ETHTask:
-		break;
-	case SMSTask:
 		break;
 	}
 }
 
 // 执行动作
-void CDispatch::ExeCmd(std::map<int,std::string> &mapAction)
+void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 {
-	std::map<int,std::string>::iterator it = mapAction.begin();
+	std::map<int,std::vector<std::string> >::iterator it = mapAction.begin();
 	for(;it != mapAction.end();it++)
 	{
-		if(it->first == LOGCmd )
+		switch(it->first)
 		{
-			C_LogManage *pLogManage = C_LogManage::GetInstance();
-			pLogManage->WriteLog(3,17,0,ERROR_DEVSTATUS,it->second);
+		case LOGCmd:
+			{
+				std::vector<std::string> &vecStr = it->second;
+				for(int i = 0;i < vecStr.size();i++)
+				{
+					C_LogManage *pLogManage = C_LogManage::GetInstance();
+					pLogManage->WriteLog(3,17,0,ERROR_DEVSTATUS,vecStr[i]);
+					printf(vecStr[i].c_str());
+				}
+			}
+			break;
+		case POLICYCmd:
+			{
+				std::vector<std::string> &vecStr = it->second;
+				vecStr.erase(std::unique(vecStr.begin(),vecStr.end()),vecStr.end());
+				for(int i = 0;i < vecStr.size();i++)
+				{
+					TrimSpace(vecStr[i]);
+					if(vecStr[i] == "SwitchAllSMS" && m_ptrInvoker)	
+					{
+						((CInvoke*)m_ptrInvoker)->SwitchAllSMS();	
+					}
+					else if(vecStr[i] == "StartTMS" && m_ptrInvoker)
+					{
+						((CInvoke*)m_ptrInvoker)->StartTMS();
+					}
+					else if(vecStr[i] == "Exit" && m_ptrInvoker)
+					{
+						((CInvoke*)m_ptrInvoker)->Exit();
+					}
+				}
+			}
+			break;
 		}
-		else if(it->first == SWITCHCmd)
-		{
-			ExeSwitch(it->second);
-		}
+
 	}
 }
 
-// 执行切换
-void CDispatch::ExeSwitch(std::string &strCmd)
+void CDispatch::TrimSpace(std::string &str)
 {
-	if(strCmd == "SwitchAllSMS")	
-	{
-		if(m_ptrInvoker)
-		{
-			((CInvoke*)m_ptrInvoker)->SwitchAllSMS();
-		}
-	}
+	std::string tmp=str;
+	str = tmp.assign(tmp.begin()+tmp.find_first_not_of(' '),tmp.begin()+tmp.find_last_not_of(' ')+1);
 }
 
 // 按策略进行调度
-bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map<int,std::string>& mapAction)
+bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map<int,std::vector<std::string> >& mapAction)
 {	
 	if(nodeTask.nDTriggerType != nTaskType)
 	{
@@ -298,13 +323,13 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 			char buf[128];
 			snprintf(buf,128,"LOG:%s%d value: %s = Policy:%s\n",err.ErrorName.c_str(),err.nOrdinal,
 				err.ErrorVal.c_str(),stPE.strFault.c_str());
-			mapAction[LOGCmd] +=std::string(buf);
+			mapAction[LOGCmd].push_back(std::string(buf));
 		
 			//获取动作
 			vecAct.push_back(stPE);
 		}
 
-		if(stPE.strType == "range")
+		if(stPE.strType == "exrange")
 		{
 			int nPos = stPE.strFault.find(',');
 			if(nPos != std::string::npos)
@@ -312,16 +337,30 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 				int nMin = atoi(stPE.strFault.substr(0,nPos).c_str());
 				int nMax = atoi(stPE.strFault.substr(nPos+1).c_str());
 				int errvalue = atoi(err.ErrorVal.c_str());
-				if(errvalue > nMin && errvalue < nMax)
+				if(errvalue < nMin && errvalue > nMax)
 				{
 					char buf[128];
-					snprintf(buf,128,"LOG:%s value = %s  = Policy:%s\n",err.ErrorName.c_str(),
-						err.ErrorVal.c_str(),stPE.strFault.c_str());
-					mapAction[LOGCmd] += std::string(buf);
+					snprintf(buf,128,"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
+						err.ErrorVal.c_str(),stPE.strFault.c_str(),stPE.strAct.c_str());
+					mapAction[LOGCmd].push_back(std::string(buf));
 
 					//获取动作
 					vecAct.push_back(stPE);
 				}
+			}
+		}
+
+		if(stPE.strType == "asis")
+		{
+			if(stPE.strFault.find(err.ErrorVal) != std::string::npos)
+			{
+				char buf[128];
+				snprintf(buf,128,"LOG:%s value = %s  = Policy:%s\n",err.ErrorName.c_str(),
+					err.ErrorVal.c_str(),stPE.strFault.c_str());
+				mapAction[LOGCmd].push_back(std::string(buf));
+
+				//获取动作
+				vecAct.push_back(stPE);
 			}
 		}
 	}
@@ -329,12 +368,10 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 	if(vecAct.size()>0)
 	{
 		std::sort(vecAct.begin(),vecAct.end());
-		if(vecAct.begin()->strAct == "SwitchALLSMS")
+		for(int i = 0;i < vecAct.size() ;i++)
 		{
-			mapAction[SWITCHCmd] = "SwitchALLSMS";
+			mapAction[POLICYCmd].push_back(vecAct[i].strAct);
 		}
 	}
-	
-
 	return true;
 }

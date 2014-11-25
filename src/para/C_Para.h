@@ -64,6 +64,9 @@ public:
 
 	//启动sms的方式，1为同一终端启动  2为新终端启动
 	int m_nStartSMSType ;
+
+	//等待对端调度软件启动检测超时时间,单位秒
+	int m_nTimeOutWaitOtherIMonitor;
 private:
     static C_Para *m_pInstance;
 };

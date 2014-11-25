@@ -265,7 +265,7 @@ int main(int argc, char** argv)
 	C_LogManage::DestoryInstance();
 	C_RunPara::DestoryInstance();
 	C_Para::DestoryInstance();
-	printf("IMonitor exit!\n");
+	printf("IMonitor Exit!\n");
 	return 0;
 }
 

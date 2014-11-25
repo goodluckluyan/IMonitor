@@ -36,6 +36,8 @@ public:
 	bool GetAllEthStatus();
 private:
 
+	bool ReadEthinfoTable(std::map<std::string,int>& mapEthBaseInfo);
+
 	//检测网卡的连接状态，rLinkStatus = 1,连接正常，rLinkStatus = 0,连接不正常 
 	int Check_EthLinkStatus(const char* eth_name , int& rLinkStatus );
 

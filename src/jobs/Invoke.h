@@ -54,6 +54,10 @@ public:
 
 	bool SwitchAllSMS();
 
+	void StartTMS();
+
+	void Exit();
+
 private:
 	// ¥Ú”°∞Ô÷˙–≈œ¢
 	void PrintProductInfo();

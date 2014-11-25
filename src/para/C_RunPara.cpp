@@ -1042,14 +1042,14 @@ int C_RunPara::GetColorSpace(int &iColorSpace)
 
 void C_RunPara::CreateUuid(std::string &strUuid)
 {
-  uuid_t uuid;
-  uuid_generate_random(uuid);
-  char tmp[40];
-  sprintf(tmp,"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-         uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5],
-         uuid[6], uuid[7], uuid[8], uuid[9], uuid[10], uuid[11],
-         uuid[12], uuid[13], uuid[14], uuid[15]);
-  strUuid = tmp;
+//   uuid_t uuid;
+//   uuid_generate_random(uuid);
+//   char tmp[40];
+//   sprintf(tmp,"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+//          uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5],
+//          uuid[6], uuid[7], uuid[8], uuid[9], uuid[10], uuid[11],
+//          uuid[12], uuid[13], uuid[14], uuid[15]);
+//   strUuid = tmp;
 }
 //M0001
 char* C_RunPara::ConvertTime(int iTime, char *strTime)

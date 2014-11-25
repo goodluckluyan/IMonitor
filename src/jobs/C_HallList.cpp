@@ -77,6 +77,8 @@ int C_HallList::Init(bool bRunOther )
 		node.strIp = query.getStringField("ip");
 		node.nPort = atoi(query.getStringField("port"));
 		int nTmp = query.getIntField("role");
+
+		// 如查对方调度软件没有启动，则在本机启动所有sms
 		if(bRunOther)
 		{
 			node.nRole = nTmp == 1 ? 1 : 2;
@@ -91,7 +93,8 @@ int C_HallList::Init(bool bRunOther )
 		query.nextRow();
 		vecSMSInfo.push_back(node);
 	}
-	
+	//std::vector<int> vecPID;
+	//Getpid("sms",vecPID);
 	int nLen = vecSMSInfo.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
@@ -119,6 +122,42 @@ int C_HallList::Init(bool bRunOther )
 	return 0;
 }
 
+
+// int C_HallList::Getpid(std::string strName,std::vector<int>& vecPID)
+// {	
+// 	char acExe[64]={'\0'};
+// 	snprintf(acExe,64,"pidof %s",strName.c_str());
+// 	FILE *pp = popen(acExe,"r");
+// 	if(!pp)
+// 	{
+// 		printf("popen fail\n");
+// 		return -1;
+// 	}
+// 	char tmpbuf[128]={'\0'};
+// 	std::vector<std::string> vecBuf;
+// 	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+// 	{
+// 		vecBuf.push_back(tmpbuf);
+// 	}
+// 
+// 	int nLen = vecBuf.size();
+// 	for(int i = 0 ;i < nLen ;i++)
+// 	{
+// 		std::string &strtmp=vecBuf[i];
+// 		int nStart = 0;
+// 		int nPos = strtmp.find(' ',nStart);
+// 		while(nPos != std::string::npos)
+// 		{
+// 			vecPID.push_back(atoi(strtmp.substr(nStart,nPos-nStart).c_str()));
+// 			nStart = nPos+1;
+// 			nPos = strtmp.find(' ',nStart);
+// 		}
+// 		vecPID.push_back(atoi(strtmp.substr(nStart).c_str()));
+// 	}
+// 
+// 	pclose(pp);
+// 	return 0;
+// }
 
 // 获取SMS工作状态
 bool C_HallList::GetSMSWorkState()

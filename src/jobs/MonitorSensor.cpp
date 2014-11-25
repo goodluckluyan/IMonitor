@@ -291,12 +291,13 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 		{
 
 			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_name =  XMLString::transcode(ptrNode->getNodeName()); //可以用来取节点名称
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pmain = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pmain;
 			if(!str_state.empty())
 			{
 				bMain = atoi(str_state.c_str()) == 1 ?true : false;
 			}
+			XMLString::release(&pmain);
 			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 
@@ -312,12 +313,13 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 		{
 
 			 DOMNode* ptrNode = ptrStateNodeList->item(0);
-			std::string str_name =  XMLString::transcode(ptrNode->getNodeName()); //可以用来取节点名称
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char *pstate =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				nState = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 
@@ -369,12 +371,13 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 		{
 
 			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_name =  XMLString::transcode(ptrNode->getNodeName()); //可以用来取节点名称
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char *prun = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  prun;
 			if(!str_state.empty())
 			{
 				bRun = atoi(str_state.c_str()) == 1 ?true : false;
 			}
+			XMLString::release(&prun);
 		}
 
 
@@ -390,12 +393,13 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 		{
 
 			DOMNode* ptrNode = ptrWorkStateNodeList->item(0);
-			std::string str_name =  XMLString::transcode(ptrNode->getNodeName()); //可以用来取节点名称
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				nWorkState = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		}
 
 		// 读取iState节点
@@ -410,12 +414,13 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 		{
 
 			DOMNode* ptrNode = ptrStateNodeList->item(0);
-			std::string str_name =  XMLString::transcode(ptrNode->getNodeName()); //可以用来取节点名称
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state = pstate ;
 			if(!str_state.empty())
 			{
 				nState = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		}
 
 	}
@@ -462,35 +467,45 @@ bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<S
 
 			//HallId
 			DOMNode* ptrHallIdNode = ptrCL->item(0);
-			node.hallid =  XMLString::transcode(ptrHallIdNode->getFirstChild()->getNodeValue());
+			char * pid = XMLString::transcode(ptrHallIdNode->getFirstChild()->getNodeValue());
+			node.hallid =  pid;
+			XMLString::release(&pid);
 	
 			// bRun
 			DOMNode* ptrRunNode = ptrCL->item(1);
-			std::string str_run =  XMLString::transcode(ptrRunNode->getFirstChild()->getNodeValue());
+			char* prun = XMLString::transcode(ptrRunNode->getFirstChild()->getNodeValue());
+			std::string str_run = prun ;
 			if(!str_run.empty())
 			{
 				node.nRun = atoi(str_run.c_str()) ;
 			}
+			XMLString::release(&prun);
 
 			// 读取state节点
 			DOMNode* ptrStatNode = ptrCL->item(2);
-			std::string str_state =  XMLString::transcode(ptrStatNode->getFirstChild()->getNodeValue());
+			char * pstate = XMLString::transcode(ptrStatNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				node.nStatus = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		
 			// 读取position节点
 			DOMNode* ptrPosNode = ptrCL->item(3);
-			std::string str_pos =  XMLString::transcode(ptrPosNode->getFirstChild()->getNodeValue());
+			char *ppos = XMLString::transcode(ptrPosNode->getFirstChild()->getNodeValue());
+			std::string str_pos =  ppos;
 			if(!str_pos.empty())
 			{
 				node.nPosition = atoi(str_pos.c_str());
 			}
+			XMLString::release(&ppos);
 
 			// 读取strsqluuid节点
 			DOMNode* ptrUUIDNode = ptrCL->item(4);
-			node.strSPLUuid =  XMLString::transcode(ptrUUIDNode->getFirstChild()->getNodeValue());
+			char *puuid = XMLString::transcode(ptrUUIDNode->getFirstChild()->getNodeValue());
+			node.strSPLUuid =  puuid;
+			XMLString::release(&puuid);
 
 			vecSMSStatus.push_back(node);
 		}
@@ -541,11 +556,13 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		else
 		{
 			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				nState = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		}
 
 		// 读取nReadSpeed节点
@@ -559,11 +576,13 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		else
 		{
 			DOMNode* ptrNode = ptrReadNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-			if(!str_state.empty())
+			char *pspeed = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_speed = pspeed ;
+			if(!str_speed.empty())
 			{
-				nReadSpeed = atoi(str_state.c_str()) ;
+				nReadSpeed = atoi(str_speed.c_str()) ;
 			}
+			XMLString::release(&pspeed);
 		}
 
 		// 读取nWriteSpeed节点
@@ -577,11 +596,13 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		else
 		{
 			DOMNode* ptrNode = ptrWriteNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
-			if(!str_state.empty())
+			char * pwspeed =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_wspeed = pwspeed;
+			if(!str_wspeed.empty())
 			{
-				nWriteSpeed = atoi(str_state.c_str());
+				nWriteSpeed = atoi(str_wspeed.c_str());
 			}
+			XMLString::release(&pwspeed);
 		}
 
 		// 读取diskstate节点
@@ -597,11 +618,13 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 			for(int i = 0 ;i < ptrDiskNodeList->getLength();i++)
 			{
 				DOMNode* ptrNode = ptrDiskNodeList->item(i);
-				std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+				char * pdiskstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+				std::string str_state =  pdiskstate;
 				if(!str_state.empty())
 				{
 					vecDiskState.push_back(atoi(str_state.c_str()));
 				}
+				XMLString::release(&pdiskstate);
 			}
 		}
 
@@ -652,35 +675,43 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 
 			//index
 			DOMNode* ptrEthNode = ptrCL->item(0);
-			std::string strEth =  XMLString::transcode(ptrEthNode->getFirstChild()->getNodeValue());
+			char * peth =  XMLString::transcode(ptrEthNode->getFirstChild()->getNodeValue());
+			std::string strEth = peth;
 			if(!strEth.empty())
 			{
 				EthNode.strName = "eth"+strEth;
 			}
+			XMLString::release(&peth);
 
 			//tasktype
 			DOMNode* ptrTypeNode = ptrCL->item(1);
-			std::string strType =  XMLString::transcode(ptrTypeNode->getFirstChild()->getNodeValue());
+			char *ptype =  XMLString::transcode(ptrTypeNode->getFirstChild()->getNodeValue());
+			std::string strType  = ptype;
 			if(!strType.empty())
 			{
 				EthNode.nTaskType = atoi(strType.c_str());
 			}
+			XMLString::release(&ptype);
 
 			// connect state
 			DOMNode* ptrConnectStatusNode = ptrCL->item(2);
-			std::string strConnectStatus =  XMLString::transcode(ptrConnectStatusNode->getFirstChild()->getNodeValue());
+			char * pconnt = XMLString::transcode(ptrConnectStatusNode->getFirstChild()->getNodeValue());
+			std::string strConnectStatus = pconnt;
 			if(!strConnectStatus.empty())
 			{
 				EthNode.nConnStatue = atoi(strConnectStatus.c_str());
 			}
+			XMLString::release(&pconnt);
 
 			// speed
 			DOMNode* ptrSpeedNode = ptrCL->item(3);
-			std::string strSpeed =  XMLString::transcode(ptrSpeedNode->getFirstChild()->getNodeValue());
+			char *pspeed = XMLString::transcode(ptrSpeedNode->getFirstChild()->getNodeValue());
+			std::string strSpeed =  pspeed;
 			if(!strSpeed.empty())
 			{
 				EthNode.nRxSpeed = EthNode.nTxSpeed = atoi(strSpeed.c_str());
 			}
+			XMLString::release(&pspeed);
 
 			vecEthStatus.push_back(EthNode);
 		}
@@ -732,11 +763,13 @@ bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwi
 		else
 		{
 			DOMNode* ptrNode = ptrS1NodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char *pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				nSwitch1State = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		}
 
 		// 读取Swtch2State节点
@@ -750,11 +783,13 @@ bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwi
 		else
 		{
 			DOMNode* ptrNode = ptrS2NodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				nSwitch2State = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		}
 
 
@@ -805,11 +840,13 @@ bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &b
 		else
 		{
 			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pingest = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pingest;
 			if(!str_state.empty())
 			{
 				bEnableIngest = atoi(str_state.c_str()) == 1? true :false;
 			}
+			XMLString::release(&pingest);
 		}
 
         // 读取speedLimit节点
@@ -823,11 +860,13 @@ bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &b
 		else
 		{
 			DOMNode* ptrNode = ptrSLNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * pspeedlimit = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pspeedlimit;
 			if(!str_state.empty())
 			{
 				nSpeedLimit = atoi(str_state.c_str()) ;
 			}
+			XMLString::release(&pspeedlimit);
 		}
 
 
@@ -877,11 +916,13 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 		else
 		{
 			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char *pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
 				nState = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 		}
 
 		// 读取info节点
@@ -895,7 +936,9 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 		else
 		{
 			DOMNode* ptrNode = ptrInfoNodeList->item(0);
-			strInfo =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char *pinfo = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			strInfo =  pinfo;
+			XMLString::release(&pinfo);
 		}
 
 		// 读取hall节点
@@ -909,7 +952,9 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 		else
 		{
 			DOMNode* ptrNode = ptrHallNodeList->item(0);
-			strHall =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char * phall = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			strHall =  phall;
+			XMLString::release(&phall);
 		}
 	}
 	catch(  XMLException& e )

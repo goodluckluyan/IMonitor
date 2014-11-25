@@ -34,14 +34,9 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 		mons__SMSState node;
 		node.HallId = vecSMSState[i].hallid;
 		node.bRun = vecSMSState[i].nRun == 1 ? true:false;
-		node.state = 1;//vecSMSState[i].nStatus;
+		node.state = vecSMSState[i].nStatus;
 		node.position = 25;//vecSMSState[i].nPosition;
 		node.strSplUuid = "C80CF8FC-D6F5-26F8-3927-E30B0AE06C56";//vecSMSState[i].strSPLUuid;
-// 		node.bRun = 1;
-// 		node.HallId = "tms01";
-// 		node.position = 0x25;
-// 		node.state = 0x01;
-// 		node.strSplUuid = "asdfasdfasdfasdfasdfasdf";
 		vecret.push_back(node);
 	}
 	
@@ -82,7 +77,7 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
  		{
  			nSpeed = nDriveSpeed;
  		}
-		int nPos = df.diskDrives[i].driveFirmwareState.find("online");
+		int nPos = df.diskDrives[i].driveFirmwareState.find("Online");
 		if(nPos != std::string::npos)
 		{
 			ret.diskState.push_back(0);

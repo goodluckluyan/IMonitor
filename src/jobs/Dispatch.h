@@ -26,8 +26,8 @@
 #include "C_constDef.h"
 
 
-enum enDTriggerType{NULLTask=0,RAIDTask=1,ETHTask,SMSTask};
-enum enCMDType{NULLCMD=0,LOGCmd=1,SWITCHCmd =2};
+enum enDTriggerType{NULLTask=0,RAIDTask=1,ETHTask=2,SMSTask=3,TMSTask=4,IMonitorTask=5};
+enum enCMDType{NULLCMD=0,LOGCmd=1,POLICYCmd =2};
 struct DispatchTask
 {
 	int nDTriggerType ;
@@ -85,18 +85,19 @@ public:
 	CDispatch(void * ptrInvoker );
 	~CDispatch();
 public:
+
 	bool Init(std::string strPath);
-	bool RaidTriggerDispatch(std::vector<stError> &vecRE);
-	
-	bool ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map<int,std::string>& mapAction);
+	bool TriggerDispatch(int nTaskType,std::vector<stError> &vecRE);
+	bool Routine();
+
+private:
+	void TrimSpace(std::string &str);
+	bool ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,
+		std::map<int,std::vector<std::string> >& mapAction);
 	bool GetPolicyNode(xercesc::DOMDocument* ptrDoc,std::string strNodeName,
 		std::map<std::string,PolicyInfoEle> &mapPInfo);
 	bool ParsePolicy(std::string strPath);
-
-	void ExeCmd(std::map<int,std::string> &mapAction);
-	void ExeSwitch(std::string &strCmd);
-	bool Routine();
-
+	void ExeCmd(std::map<int,std::vector<std::string> > &mapAction);
 private:
 	std::list<DispatchTask> m_lstDTask;
 	C_CS m_csLDTask;

@@ -19,7 +19,6 @@ int  CInvoke::Init()
 		return -1;
 	}
 
-
 	// 磁盘监测模块初始化
 	if(m_ptrDisk == NULL)
 	{
@@ -34,7 +33,6 @@ int  CInvoke::Init()
 			printf("Raid Check Done.\n");
 		}
 	}
-	
 
 	// 网卡监测模块初始化
 	if(m_ptrNet == NULL)
@@ -51,9 +49,6 @@ int  CInvoke::Init()
 		}
 	}
 	
-
-
-	
 	// 监测对端高度软件
 	bool bRunOther = false;
 	C_Para * pPara = C_Para::GetInstance();
@@ -61,6 +56,8 @@ int  CInvoke::Init()
 	{
 		m_ptrMonitor = new  CMonitorSensor();
 		m_ptrMonitor->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort);
+
+		// 等待对端IMonitor启动
 		time_t tm1;
 		time(&tm1);
 		while(1)
@@ -72,6 +69,8 @@ int  CInvoke::Init()
 			}
 
 			sleep(2);
+
+			// 如果超时
 			time_t tm2;
 			time(&tm2);
 			if(tm2-tm1 >= 300)
@@ -79,8 +78,6 @@ int  CInvoke::Init()
 				break;
 			}
 		}
-
-
 	}
 
 	// 监测SMS模块
@@ -90,6 +87,7 @@ int  CInvoke::Init()
 		m_ptrLstHall->Init(bRunOther);
 	}
 
+	// 启动TMS
 	if(m_ptrTMS == NULL)
 	{
 		m_ptrTMS  = new CTMSSensor();
@@ -108,35 +106,12 @@ int  CInvoke::Init()
 
 void CInvoke::DeInit()
 {
-	if(m_ptrDisk != NULL)
-	{
-		delete m_ptrDisk;
-	}
-
-	if(m_ptrNet != NULL)
-	{
-		delete m_ptrNet;
-	}
-
-	if(m_ptrLstHall != NULL)
-	{
-		delete m_ptrLstHall;
-	}
-
-	if(m_ptrMonitor != NULL)
-	{
-		delete m_ptrMonitor;
-	}
-
-	if(m_ptrTMS != NULL)
-	{
-		delete m_ptrTMS;
-	}
-
-	if(m_ptrDispatch != NULL)
-	{
-		delete m_ptrDispatch;
-	}
+	SAFE_DELETE(m_ptrDisk);
+	SAFE_DELETE(m_ptrNet);
+	SAFE_DELETE(m_ptrLstHall);
+	SAFE_DELETE(m_ptrMonitor);
+	SAFE_DELETE(m_ptrTMS);
+	SAFE_DELETE(m_ptrDispatch);
 }
 
 bool CInvoke::AddInitTask()
@@ -166,7 +141,7 @@ bool CInvoke::AddInitTask()
 	ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+m_nTMSCheckDelay);
 
 
-	//ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+m_nOtherSMSCheckDelay);
+	ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+m_nOtherSMSCheckDelay);
 
 	
 	// 添加对对端调度程序的检测的定时任务
@@ -372,6 +347,11 @@ int CInvoke::Controller ()
 	while (true)
 	{
 
+		if(g_bQuit )
+		{
+			break;
+		}
+
 		int nSize = read(fdStdin, c, 50);
 		if(nSize <= 0) 
 		{
@@ -469,10 +449,32 @@ bool CInvoke::SwitchAllSMS()
 {
 	if(m_ptrLstHall != NULL)
 	{
+		printf("Fault Of Policys Trigger SwitchAllSMS!\n");
 		return m_ptrLstHall->SwitchAllSMS();
 	}
 	else
 	{
 		return false;
 	}
+}
+
+
+// 退出系统
+void CInvoke::Exit()
+{
+	printf("Fault Of Policys Trigger Exit! 5 Sec Waiting \n");
+	for(int i = 5;i > 0 ;i--)
+	{
+		sleep(1);
+		printf("%d sec ....\n",i);
+	}
+	
+	g_bQuit = true;
+}
+
+// 开始TMS
+void CInvoke::StartTMS()
+{
+	printf("Fault Of Policys Trigger StartTMS!\n");
+	m_ptrTMS->StartTMS();
 }

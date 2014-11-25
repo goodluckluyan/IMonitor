@@ -66,10 +66,7 @@ bool CTMSSensor ::Init(std::string strURI,std::string strIP,int nPort)
 		xercesc::XMLString::release( &message );
 	}
 
-	if(C_Para::GetInstance()->m_bMain)
-	{
-		StartTMS();
-	}
+	StartTMS();
 	return true;
 }
 
@@ -153,6 +150,8 @@ bool CTMSSensor::SwitchTMS()
 	return bRet;
 }
 
+
+// 关闭tms
 bool CTMSSensor::ShutDownTMS()
 {
 	if(m_nPid > 0)
@@ -169,19 +168,48 @@ bool CTMSSensor::ShutDownTMS()
 		return false;
 	}
 }
+
+// 启动tms
 bool CTMSSensor::StartTMS()
 {
-	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
-	if(nStartType == 1)
+	if(!C_Para::GetInstance()->m_bMain)
 	{
-		StartTMS_CurTerminal();
+		printf("Standby host can't start TMS!\n");
+		return false;
 	}
-	else if(nStartType == 2)
+
+	std::string strTMSPath = C_Para::GetInstance()->m_strTMSPath;
+	if(strTMSPath.empty())
 	{
-		StartTMS_NewTerminal();
+		return false;
 	}
+
+	int nPos = strTMSPath.rfind('/');
+	std::string strEXE = strTMSPath.substr(nPos+1);
+	std::vector<int> vecPID;
+	Getpid(strEXE,vecPID);
+
+	if(vecPID.size() == 1)
+	{
+		m_nPid = vecPID[0];
+	}
+	else
+	{
+		int nStartType = C_Para::GetInstance()->m_nStartSMSType;
+		if(nStartType == 1)
+		{
+			StartTMS_CurTerminal(strTMSPath);
+		}
+		else if(nStartType == 2)
+		{
+			StartTMS_NewTerminal(strTMSPath);
+		}
+	}
+
 }
 
+
+// 获取指定进程的pid
 int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
 {	
 	char acExe[64]={'\0'};
@@ -219,15 +247,8 @@ int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
 }
 
 // 打开新终端启动SMS
-bool CTMSSensor::StartTMS_NewTerminal()
+bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 {
-
-	std::string strTMSPath = C_Para::GetInstance()->m_strTMSPath;
-	if(strTMSPath.empty())
-	{
-		return false;
-	}
-
 	int nPos = strTMSPath.rfind('/');
 	std::string strEXE = strTMSPath.substr(nPos+1);
 	std::string strDir = strTMSPath.substr(0,nPos);
@@ -238,7 +259,7 @@ bool CTMSSensor::StartTMS_NewTerminal()
 	}
 
 	char buf[256]={'\0'};
-	snprintf(buf,256,"gnome-terminal --working-directory=%s -e \"%s\"",strDir.c_str(),strTMSPath.c_str());
+	snprintf(buf,256,"gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"","TMS",strDir.c_str(),strTMSPath.c_str());
 	//	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
 	printf("%s\n",buf);
 	system(buf);
@@ -291,14 +312,10 @@ bool CTMSSensor::StartTMS_NewTerminal()
 	}
 }
 
-bool CTMSSensor::StartTMS_CurTerminal()
-{
-	std::string strTMSPath = C_Para::GetInstance()->m_strTMSPath;
-	if(strTMSPath.empty())
-	{
-		return false;
-	}
 
+// 启动tms在当前终端
+bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
+{
 	pid_t pid;
 	if((pid = fork()) < 0)
 	{
@@ -320,6 +337,7 @@ bool CTMSSensor::StartTMS_CurTerminal()
 }
 
 
+// 通过webservice调用对端的切换tms接口
 bool CTMSSensor::CallStandbySwitchTMS()
 {
 	
@@ -362,9 +380,9 @@ bool CTMSSensor::CallStandbySwitchTMS()
 	{
 		return false;
 	}
-
 }
 
+// 解析对端调度软件Webservice返回xml
 bool  CTMSSensor::ParseXml(std::string &retXml,int &nRet)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
@@ -417,6 +435,7 @@ bool  CTMSSensor::ParseXml(std::string &retXml,int &nRet)
 	return true;
 }
 
+// 发送webservice调用消息
 int CTMSSensor::SendAndRecvResponse(const std::string &request, std::string &response, int delayTime)
 {
 	if(m_strIP.empty())
@@ -462,6 +481,7 @@ int CTMSSensor::SendAndRecvResponse(const std::string &request, std::string &res
 
 }
 
+// 获取对端调度软件webservcie接口返回的实际内容
 int CTMSSensor::GetHttpContent(const std::string &http, std::string &response)
 {
 	HttpResponseParser httpResponse;
@@ -475,6 +495,8 @@ int CTMSSensor::GetHttpContent(const std::string &http, std::string &response)
 	return httpResponse.GetStatus();
 }
 
+
+// 调用对端webservice的接口
 int CTMSSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 {
 	HttpRequestParser request;

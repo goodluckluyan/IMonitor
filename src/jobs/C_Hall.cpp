@@ -179,8 +179,8 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 	}
 	
 	char buf[256]={'\0'};
- 	snprintf(buf,256,"gnome-terminal --working-directory=%s -e \"%s %s\"",strDir.c_str(),m_SMS.strExepath.c_str(),
- 		m_SMS.strConfpath.c_str());
+ 	snprintf(buf,256,"gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
+		,m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());
 //	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
 	printf("%s\n",buf);
 	system(buf);
@@ -208,7 +208,7 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 			{
 				exepid = vecNowPID[i];
 				bRun = true;
-				printf("Fork Process(%d) Start SMS ... \n",exepid);
+				printf("Fork Process(%d) Start SMS_%s ... \n",exepid,m_SMS.strId.c_str());
 				break;
 			}
 		}
@@ -300,8 +300,10 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 		info = "error";
 		return 0;
 	}
-
-	iResult = Parser_GetSMSWorkState( content_c, state, info);
+	
+	int nPos = content_c.find("<?");
+	std::string strContent = content_c.substr(nPos,content_c.size()-nPos);
+	iResult = Parser_GetSMSWorkState( strContent, state, info);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_XMLPARSER
@@ -407,72 +409,95 @@ int C_Hall::UsherHttp(std::string& strURI,std::string& strIP,std::string &xml,st
 		request.SetSoapAction("");
 	}
 	strRequest = request.GetHttpRequest();
+
 	return 0;
 }
 
 int C_Hall::GetHttpContent(const string &http, string &content)
 {
-	m_response.ClearHttp();
-
-	int result = m_response.SetHttpResponse(http);
+	//http protocol
+	HttpResponseParser response;
+	int result = response.SetHttpResponse(http);
 	if(result < 0)
 	{
-		//SetAq10Error(ERROR_PLAYER_AQ_BADHTTPRESPONSE, "bad http response! 03");
 		return ERROR_PLAYER_AQ_BADHTTPRESPONSE;//
 	}
 
-	content = m_response.GetContent();
-	int status = m_response.GetStatus();
+	content = response.GetContent();
+	int status = response.GetStatus();
+
 	return status;
 }
 
 //解析SMS返回的XML
 int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &info)
 {
-	XercesDOMParser *parser = new XercesDOMParser();
-	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
-	DOMElement *rootChild = NULL;
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)content.c_str(), content.size(), "bufId");
 
-	int result = GetRootChild( content, parser, errHandler, &rootChild);
-	if (result < 0 || rootChild == NULL)
-		;
-	else
-		result = Parser_GetSMSWorkState_Response( rootChild, state, info);
 
-	delete errHandler;
-	delete parser;
-	return result;
+	try
+	{
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();
+			
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("state"));
+		if ( ptrNodeList == NULL)
+		{
+			return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+		}
+		else
+		{
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			char *pstate =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state = pstate;
+			if(!str_state.empty())
+			{
+				state = atoi(str_state.c_str());
+			}
+
+			XMLString::release( &pstate);
+		}
+
+		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("info"));
+		if ( ptrNodeList == NULL)
+		{
+			return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+		}
+		else
+		{
+			DOMNode* ptrNode = ptrInfoNodeList->item(0);
+			char * pinfo =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string strInfo = pinfo;
+			if(!strInfo.empty())
+			{
+				info = strInfo;
+			}
+			XMLString::release( &pinfo);
+		}
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		delete ptrInputsource;
+		
+	}
+
+	delete ptrParser;
+	delete ptrInputsource;
+	
+
+	return true;
 }
 
-int C_Hall::Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, string &info)
-{
-	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "GetWorkState_CSResponse");
-	if(child == NULL)
-	{
-		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
-	}
 
-	char *p;
-	DOMElement *root = GetElementByName(child->getFirstChild(), "state");
-	if ( child == NULL || child->getFirstChild() == NULL || child->getFirstChild()->getNodeValue() == NULL)
-	{
-		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
-	}
-	p = (char *)XMLString::transcode(root->getFirstChild()->getNodeValue());
-	state = atoi(p);
-	XMLString::release( &p);
-
-	root = GetElementByName( child->getFirstChild(), "info");
-	if ( child == NULL || child->getFirstChild() == NULL || child->getFirstChild()->getNodeValue() == NULL)
-	{
-		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
-	}
-	p = (char*)XMLString::transcode(root->getFirstChild()->getNodeValue());
-	info = p;
-	XMLString::release( &p);
-
-	return 0;
-}
 
 //发送与接收 数据/////////////////////////////////////////////////////////////////
 int C_Hall::TcpOperator(std::string strIp,int nPort ,const string &send, string &recv,int overtime)
@@ -633,8 +658,7 @@ xercesc::DOMElement *C_Hall::GetElementByName( const xercesc::DOMNode *elem, con
 	string source = name;
 	for_each(source.begin(), source.end(), ToLower);
 
-	for(DOMElement *child = (DOMElement*)elem; child != NULL;
-		child = (DOMElement *)child->getNextSibling())
+	for(DOMElement *child = (DOMElement*)elem; child != NULL;)
 	{
 		char *p = (char *)XMLString::transcode(child->getNodeName());
 		string dest = p;
@@ -642,7 +666,11 @@ xercesc::DOMElement *C_Hall::GetElementByName( const xercesc::DOMNode *elem, con
 
 		for_each(dest.begin(), dest.end(), ToLower);
 		if(source == dest)
+		{
 			return child;
+		}
+
+		child = (DOMElement *)child->getNextSibling();
 	}
 	return NULL;
 }

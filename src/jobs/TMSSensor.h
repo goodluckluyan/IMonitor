@@ -43,6 +43,8 @@ public:
 	
 	~CTMSSensor();
 
+	bool StartTMS();
+
 	bool SwitchTMS();
 		
 	//获取TMS 工作状态
@@ -51,9 +53,9 @@ public:
 	bool Init(std::string strURI,std::string strIP,int nPort);
 private:
 	bool ShutDownTMS();
-	bool StartTMS();
-	bool StartTMS_CurTerminal();
-	bool StartTMS_NewTerminal();
+	
+	bool StartTMS_CurTerminal(std::string strTMSPath);
+	bool StartTMS_NewTerminal(std::string strTMSPath);
 	int Getpid(std::string strName,std::vector<int>& vecPID);
 	int InvokerWebServer(std::string &xml,std::string &strResponse);
 	int GetHttpContent(const std::string &http, std::string &response);

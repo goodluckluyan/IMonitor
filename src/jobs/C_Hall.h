@@ -13,7 +13,10 @@
 #include <iostream>
 #include <string>
 
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/util/XercesDefs.hpp>
 #include <xercesc/dom/DOM.hpp>
+#include <xercesc/dom/DOMNode.hpp>	
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMDocumentType.hpp>
 #include <xercesc/dom/DOMElement.hpp>
@@ -23,11 +26,12 @@
 #include <xercesc/dom/DOMNodeList.hpp>
 #include <xercesc/dom/DOMText.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
-#include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/util/XMLString.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
+#include <xercesc/util/XMLString.hpp>
+#include <xercesc/sax/HandlerBase.hpp>
+
+
 
 #include "utility/C_HttpParser.h"
 #include "utility/C_TcpTransport.h"
@@ -83,7 +87,7 @@ private:
 
 	int Parser_GetSMSWorkState( const std::string &content, int &state, std::string &info);
 
-	int Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, std::string &info);
+//	int Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, std::string &info);
 
 	int Parser_SwitchSMS(std::string &content,int &nRet);
 
@@ -95,12 +99,12 @@ private:
 
 	 std::string ExtractXml(const std::string &response);
 
-	int GetRootChild( const std::string &xml,xercesc::XercesDOMParser *parser,
-		xercesc::ErrorHandler *errHandler, xercesc::DOMElement **rootChild);
-
-	xercesc::DOMElement *GetElementByName( const xercesc::DOMNode *elem, const std::string &name);
-
-	xercesc::DOMElement *FindElementByName( const xercesc::DOMNode *elem, const std::string &name);
+ 	int GetRootChild( const std::string &xml,xercesc::XercesDOMParser *parser,
+ 		xercesc::ErrorHandler *errHandler, xercesc::DOMElement **rootChild);
+ 
+ 	xercesc::DOMElement *GetElementByName( const xercesc::DOMNode *elem, const std::string &name);
+ 
+ 	xercesc::DOMElement *FindElementByName( const xercesc::DOMNode *elem, const std::string &name);
 
 
 	int Getpid(std::string strName,std::vector<int>& vecPID);
@@ -122,9 +126,6 @@ private:
 	std::string m_envelopeEnd;
 	std::string m_bodyBgn;
 	std::string m_bodyEnd;
-
-	//http protocol
-	HttpResponseParser m_response;
 
 	//tcp protocol
 	TcpTransport m_tcp;
