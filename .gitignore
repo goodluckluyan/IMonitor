@@ -38,3 +38,6 @@ bin/
 
 #tags
 tags
+
+#webservice
+soapObject.h
