@@ -1,3 +1,7 @@
+//@file:Dispatch.h
+//@brief: 调用策略实现。
+//@author:luyan@oristartech.com
+//date:2014-09-17
 #ifndef DISPATCH_INC
 #define DISPATCH_INC
 #include <map>

@@ -1,8 +1,8 @@
+#include <fcntl.h>
 #include "Invoke.h"
 #include "timeTask/C_TaskList.h"
 #include "para/C_RunPara.h"
 #include "para/C_Para.h"
-#include "fcntl.h"
 #include "check_netcard.h"
 
 bool g_bQuit = false;
@@ -17,6 +17,60 @@ int  CInvoke::Init()
 	if(!pDM->Init((void *)this))
 	{
 		return -1;
+	}
+
+	// 监测对端高度软件
+	bool bRunOther = false;
+	C_Para * pPara = C_Para::GetInstance();
+	if(m_ptrMonitor == NULL)
+	{
+		m_ptrMonitor = new  CMonitorSensor();
+		m_ptrMonitor->Init(pPara->m_strOIP,pPara->m_nOPort);
+
+		// 等待对端IMonitor启动
+		time_t tm1;
+		time(&tm1);
+		while(1)
+		{
+			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS))
+			{
+				bRunOther = true;
+				break;
+			}
+
+			sleep(2);
+
+			// 如果超时
+			time_t tm2;
+			time(&tm2);
+			if(tm2-tm1 >= 300)
+			{
+				break;
+			}
+		}
+	}
+
+	// 启动TMS
+	if(m_ptrTMS == NULL)
+	{
+		m_ptrTMS  = new CTMSSensor();
+		m_ptrTMS->Init(pPara->m_strOIP,pPara->m_nOPort,pPara->m_nTMSWSPort);
+	}
+
+	// 监测SMS模块
+	if(m_ptrLstHall == NULL)
+	{
+		m_ptrLstHall = new C_HallList();
+		m_ptrLstHall->Init(bRunOther);
+	}
+
+	// 调度模块
+	if(m_ptrDispatch == NULL)
+	{
+		m_ptrDispatch = new CDispatch(this);
+		std::string strPolicyPath = pPara->m_strInipath+"/policy.xml";
+		m_ptrDispatch->Init(strPolicyPath);
+		pDM->SetDispatchPtr(m_ptrDispatch);
 	}
 
 	// 磁盘监测模块初始化
@@ -47,60 +101,6 @@ int  CInvoke::Init()
 		{
 			printf("Eth Check Done.\n");
 		}
-	}
-	
-	// 监测对端高度软件
-	bool bRunOther = false;
-	C_Para * pPara = C_Para::GetInstance();
-	if(m_ptrMonitor == NULL)
-	{
-		m_ptrMonitor = new  CMonitorSensor();
-		m_ptrMonitor->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort);
-
-		// 等待对端IMonitor启动
-		time_t tm1;
-		time(&tm1);
-		while(1)
-		{
-			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS))
-			{
-				bRunOther = true;
-				break;
-			}
-
-			sleep(2);
-
-			// 如果超时
-			time_t tm2;
-			time(&tm2);
-			if(tm2-tm1 >= 300)
-			{
-				break;
-			}
-		}
-	}
-
-	// 监测SMS模块
-	if(m_ptrLstHall == NULL)
-	{
-		m_ptrLstHall = new C_HallList();
-		m_ptrLstHall->Init(bRunOther);
-	}
-
-	// 启动TMS
-	if(m_ptrTMS == NULL)
-	{
-		m_ptrTMS  = new CTMSSensor();
-		m_ptrTMS->Init(pPara->m_strOURI,pPara->m_strOIP,pPara->m_nOPort);
-	}
-
-	// 调度模块
-	if(m_ptrDispatch == NULL)
-	{
-		m_ptrDispatch = new CDispatch(this);
-		std::string strPolicyPath = pPara->m_strInipath+"/policy.xml";
-		m_ptrDispatch->Init(strPolicyPath);
-		pDM->SetDispatchPtr(m_ptrDispatch);
 	}
 }
 
@@ -136,13 +136,14 @@ bool CInvoke::AddInitTask()
 	// 添加磁盘检测定时任务
 	ptrTaskList->AddTask(TASK_NUMBER_GET_DISK_STATUS,NULL,ptrRunPara->GetCurTime()+m_nDiskCheckDelay);
 
+	// 添加网络检测定时任务
 	ptrTaskList->AddTask(TASK_NUMBER_GET_NET_STATUS,NULL,ptrRunPara->GetCurTime()+m_nEthCheckDelay);
 
+	// 添加tms检测定时任务
 	ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+m_nTMSCheckDelay);
 
-
+	// 添加sms检测定时任务
 	ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+m_nOtherSMSCheckDelay);
-
 	
 	// 添加对对端调度程序的检测的定时任务
 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
@@ -167,7 +168,6 @@ bool CInvoke::AddInitTask()
 
 	// 添加处理用户输入命令
 	ptrTaskList->AddTask(TASK_NUMBER_PROCESS_USERINPUT,NULL,0);
-
 
 }
 
@@ -436,7 +436,16 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 {
 	if(m_ptrLstHall != NULL)
 	{
-		return m_ptrLstHall->SwitchSMS(strHallID);
+		 if(m_ptrLstHall->SwitchSMS(strHallID))
+		 {
+			 std::string strIP;
+			 int nPort = 0;
+			 m_ptrLstHall->GetSMSRunHost(strHallID,strIP,nPort);
+			 if(strIP.empty() && nPort > 0)
+			 {
+				 m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strIP,nPort);
+			 }
+		 }
 	}
 	else
 	{

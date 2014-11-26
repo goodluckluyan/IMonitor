@@ -54,10 +54,17 @@ public:
 	//对端的调度程序的端口
 	int m_nOPort ;
 
+	//TMS的Webservice端口
+	int m_nTMSWSPort;
+
 	//对端的调度程序wsdl的URI
 	std::string m_strOURI;
 
+	//tms启动目录
 	std::string m_strTMSPath;
+
+	//tomcat启动目录
+	std::string m_strTOMCATPath;
 
 	//主目录
 	std::string m_strInipath;

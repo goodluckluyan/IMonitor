@@ -22,11 +22,20 @@ CMonitorSensor::~CMonitorSensor()
 	xercesc::XMLPlatformUtils::Terminate();
 }
 
-bool CMonitorSensor::Init(std::string strURI,std::string strIP,int nPort)
+// 初始化
+bool CMonitorSensor::Init(std::string strIP,int nPort)
 {
-	m_strURI =strURI;
+	if( strIP.empty() || nPort <= 0)
+	{
+		return false;
+	}
+
 	m_strIP = strIP;
 	m_nPort = nPort;
+
+// 	char buff[64]={'\0'};
+// 	snprintf(buff,128,"http://%s:%d/?wsdl",strIP.c_str(),nPort);
+	m_strURI ="/";//buff;
 	
 	m_ptrDM = CDataManager::GetInstance();
 
@@ -41,6 +50,7 @@ bool CMonitorSensor::Init(std::string strURI,std::string strIP,int nPort)
 	}
 }
 
+// 把调用xml串以http方式发送到服务端并接收返回xml
 int CMonitorSensor::SendAndRecvResponse(const std::string &request, std::string &response, int delayTime)
 {
 	if(m_strIP.empty())
@@ -86,6 +96,7 @@ int CMonitorSensor::SendAndRecvResponse(const std::string &request, std::string 
 	
 }
 
+// 获取http中的xml 
 int CMonitorSensor::GetHttpContent(const std::string &http, std::string &response)
 {
 	HttpResponseParser httpResponse;
@@ -99,6 +110,7 @@ int CMonitorSensor::GetHttpContent(const std::string &http, std::string &respons
 	return httpResponse.GetStatus();
 }
 
+// 调用webservice接口
 int CMonitorSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 {
 	HttpRequestParser request;
@@ -117,6 +129,7 @@ int CMonitorSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 	
 }
 
+// 获取另一台主机的调度程序的状态
 bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 {
 	//printf("GetOtherMonitorState Called!\n");
@@ -264,6 +277,8 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 	return bRet;
 }
 
+
+// 解析Monitor状态
 using namespace xercesc;
 bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int &nState)
 {
@@ -343,7 +358,7 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 	return true;
 }
 
-
+// 解析TMS状态
 bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,int &nWorkState,int &nState)
 {
 
@@ -443,6 +458,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 	return true;
 }
 
+// 解析SMS状态
 bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<SMSStatus> vecSMSStatus)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
@@ -529,7 +545,7 @@ bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<S
 	return true;
 }
 
-
+// 解析磁盘陈列状态
 bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,int &nReadSpeed,int &nWriteSpeed,
 								std::vector<int> &vecDiskState)
 {
@@ -649,7 +665,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 	return true;
 }
 
-
+// 解析网卡状态
 bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<EthStatus> &vecEthStatus)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
@@ -737,7 +753,7 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 }
 
 
-
+// 解析交换机状态
 bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwitch1State,int & nSwitch2State)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
@@ -814,7 +830,7 @@ bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwi
 }
 
 
-
+// 解析速度限制状态
 bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &bEnableIngest,int &nSpeedLimit)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
@@ -890,6 +906,7 @@ bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &b
 	return true;
 }
 
+// 解析SMS工作异常状态
 bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nState,
 												  std::string & strInfo, std::string &strHall)
 {

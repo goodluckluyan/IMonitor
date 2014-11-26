@@ -1,8 +1,8 @@
-#include "DataManager.h"
+#include<algorithm>
 #include<stdio.h>
 #include<stdlib.h>
 #include"para/C_Para.h"
-#include <algorithm>
+#include"DataManager.h"
 CDataManager *CDataManager::m_pinstance=NULL;
 CDataManager::CDataManager()
 {
@@ -91,6 +91,7 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	return true;
 }
 
+// 检测磁盘陈列是否有错误
 bool CDataManager::CheckRaidError(std::vector<stError> &vecErr)
 {
 	bool bRet = true;
@@ -217,8 +218,6 @@ bool CDataManager::GetDevStat(DiskInfo &df)
 	m_csDisk.EnterCS();
 	df = m_df; 
 	m_csDisk.LeaveCS();   
-
-	
 }
 
 // 获取网卡状态
@@ -262,11 +261,14 @@ int CDataManager::GetTMSStat()
 	return m_nTMSState;
 }
 
+// 获取Invoker指针
 void * CDataManager::GetInvokerPtr()
 {
 	return m_ptrInvoker;
 }
 
+
+//更新对端调度软件状态
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	printf("Other Monitor State:bMain:%d,nState:%d\n",bMain,nState);
@@ -298,12 +300,16 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 	return true;
 }
 
+
+//更新对端tms状态
 bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 {
 	printf("Other TMS State:bRun:%d,nWorkState:%d,nState:%d\n",bRun,nWorkState,nState);
 	return true;
 }
 
+
+//更新对端sms状态
 bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
 // 	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
@@ -343,11 +349,10 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			m_csSMS.LeaveCS();
 		}
 	}
-
-
 	return true;
 }
 
+//更新对端raid状态
 bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 										int nWriteSpeed,std::vector<int> &vecDiskState)
 {
@@ -361,6 +366,7 @@ bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 	return true;
 }
 
+//更新对端eth状态
 bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 {
 	int nlen = vecEthStatus.size();
@@ -372,6 +378,58 @@ bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 	}
 	return true;
 }
+
+
+//帮助信息打印tms状态
+void CDataManager::PrintTMSState()
+{
+	printf("TMS Current State:\n");
+	printf("bRun:%d\n",m_nTMSState);
+}
+
+
+//帮助信息打印raid状态
+void CDataManager::PrintDiskState()
+{
+	printf("Number of RAID Disk :%s\n",m_df.diskNumOfDrives.c_str());
+	printf("RAID Disk State :%s\n",m_df.diskState.c_str());
+	printf("RAID Disk State: %s\n",m_df.diskSize.c_str());
+}
+
+//帮助信息打印sms状态
+void CDataManager::PrintSMSState()
+{
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>maptmp = m_mapSmsStatus;
+	m_csSMS.LeaveCS();
+
+	std::map<std::string,SMSInfo>::iterator it = maptmp.begin();
+	for(;it != maptmp.end(); it++)
+	{
+		SMSInfo &info = it->second;
+		printf("hallid:%s\n",info.strId.c_str());
+		printf("SMS state:%d\n",info.stStatus.nStatus);
+	}
+}
+
+//帮助信息打印eth状态
+void CDataManager::PrintEthState()
+{
+	m_csNet.EnterCS();
+	std::map<std::string,EthStatus> mapTmp = m_mapEthStatus;
+	m_csNet.LeaveCS();
+
+	std::map<std::string,EthStatus>::iterator it = mapTmp.begin();
+	for(;it != mapTmp.end(); it++)
+	{
+		EthStatus &node = it->second;
+		printf("EthName:%s\n",node.strName.c_str());
+		printf("TaskType:%d\n",node.nTaskType);
+		printf("ConnState:%d\n",node.nConnStatue);
+		printf("Speed:%d\n",node.nRxSpeed);
+	}
+}
+
 
 bool  CDataManager::UpdateOtherSwitchState(int nSwitch1State,int nSwitch2State)
 {
@@ -391,48 +449,6 @@ bool  CDataManager::UpdateOtherSMSEWState(int nState,std::string  strInfo,std::s
 	return true;
 }
 
-void CDataManager::PrintTMSState()
-{
-	printf("TMS Current State:\n");
-	printf("bRun:%d\n",m_nTMSState);
-}
 
-void CDataManager::PrintDiskState()
-{
-	printf("Number of RAID Disk :%s\n",m_df.diskNumOfDrives.c_str());
-	printf("RAID Disk State :%s\n",m_df.diskState.c_str());
-	printf("RAID Disk State: %s\n",m_df.diskSize.c_str());
-}
 
-void CDataManager::PrintSMSState()
-{
-	m_csSMS.EnterCS();
-	std::map<std::string,SMSInfo>maptmp = m_mapSmsStatus;
-	m_csSMS.LeaveCS();
-
-	std::map<std::string,SMSInfo>::iterator it = maptmp.begin();
-	for(;it != maptmp.end(); it++)
-	{
-		SMSInfo &info = it->second;
-		printf("hallid:%s\n",info.strId.c_str());
-		printf("SMS state:%d\n",info.stStatus.nStatus);
-	}
-}
-
-void CDataManager::PrintEthState()
-{
-	m_csNet.EnterCS();
-	std::map<std::string,EthStatus> mapTmp = m_mapEthStatus;
-	m_csNet.LeaveCS();
-
-	std::map<std::string,EthStatus>::iterator it = mapTmp.begin();
-	for(;it != mapTmp.end(); it++)
-	{
-		EthStatus &node = it->second;
-		printf("EthName:%s\n",node.strName.c_str());
-		printf("TaskType:%d\n",node.nTaskType);
-		printf("ConnState:%d\n",node.nConnStatue);
-		printf("Speed:%d\n",node.nRxSpeed);
-	}
-}
 

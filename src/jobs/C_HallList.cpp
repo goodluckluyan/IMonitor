@@ -1,9 +1,3 @@
-//@file:C_HallList.cpp
-//@brief: 包含了对C_HallList 所有方法的实现。
-//@author:wangzhongping@oristartech.com
-//dade:2012-07-12
-
-
 
 #include "database/CppMySQL3DB.h"
 #include "database/CppMySQLQuery.h"
@@ -26,6 +20,7 @@ C_HallList* C_HallList::m_pInstance = NULL;
 
 C_HallList::~C_HallList()
 {
+	//ShutdownTOMCAT(C_Para::GetInstance()->m_strTOMCATPath);
 	std::map<std::string,C_Hall*>::iterator it = m_mapHall.begin();
 	for(;it != m_mapHall.end();it++)
 	{
@@ -119,9 +114,52 @@ int C_HallList::Init(bool bRunOther )
 	{
 		m_ptrDM->SetSMSInfo(vecSMSInfo);
 	}
+
+	// 启动tomcat
+	StartTOMCAT(ptrPara->m_strTOMCATPath);
+
 	return 0;
 }
 
+//启动tomcat
+bool C_HallList::StartTOMCAT(std::string strPath)
+{
+	if(strPath.empty())
+	{
+		return false;
+	}
+	
+	if(strPath.at(strPath.size()-1) != '/')
+	{
+		strPath +="/";
+	}
+
+	char buf[128]={'\0'};
+	snprintf(buf,sizeof(buf),"/bin/bash %sstartup.sh",strPath.c_str());
+	printf("%s\n",buf);
+	system(buf);
+	return true;
+}
+
+//关闭tomcat
+bool C_HallList::ShutdownTOMCAT(std::string strPath)
+{
+	if(strPath.empty())
+	{
+		return false;
+	}
+
+	if(strPath.at(strPath.size()-1) != '/')
+	{
+		strPath +="/";
+	}
+
+	char buf[128]={'\0'};
+	snprintf(buf,sizeof(buf),"/bin/bash %sshutdown.sh",strPath.c_str());
+	printf("%s\n",buf);
+	system(buf);
+	return true;
+}
 
 // int C_HallList::Getpid(std::string strName,std::vector<int>& vecPID)
 // {	
@@ -209,6 +247,7 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 	}
 
 	C_Hall * ptr = fit->second;
+	// 如果在本机运行
 	if(ptr->IsLocal())
 	{
 		bool bRet = ptr->ShutDownSMS();
@@ -216,7 +255,7 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 		{
 			// 调用备机的切换Sms
  			C_Para *ptrPara = C_Para::GetInstance();
- 			ptr->CallStandbySwitchSMS(ptrPara->m_strOURI,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+ 			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 		}
 		if(bRet)
 		{
@@ -225,13 +264,13 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 			
 		}
 	}
-	else
+	else//在对端运行
 	{
 		if(C_Para::GetInstance()->m_bMain)
 		{
 			// 调用备机的切换Sms
  			C_Para *ptrPara = C_Para::GetInstance();
- 			ptr->CallStandbySwitchSMS(ptrPara->m_strOURI,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+ 			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 		}
 		int nPid = 0;
 		ptr->StartSMS(nPid);
@@ -240,8 +279,9 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 			return false;
 		}
 
-		char buf[64]={'\0'};
-		snprintf(buf,64,"/proc/%d",nPid);
+		// 验证启动是否成功
+		char buf[32]={'\0'};
+		snprintf(buf,sizeof(buf),"/proc/%d",nPid);
 		struct stat dstat;
 		if(stat(buf,&dstat) == 0)
 		{
@@ -250,8 +290,30 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
 			}
+			else
+			{
+				return false;
+			}
 		}
 
 	}
 	return true;
 }	
+
+// 获取运行主机及webservice端口
+bool C_HallList::GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPort)
+{
+	if(strHallID.empty())
+	{
+		return false;
+	}
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	C_Hall * ptr = fit->second;
+	ptr->GetRunHost(strIP,nPort);
+	return true;
+}

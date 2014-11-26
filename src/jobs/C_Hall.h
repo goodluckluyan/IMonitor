@@ -44,7 +44,7 @@ class C_Hall
 	 ~C_Hall();
 
 public:
-	
+	// 初始化
 	int Init(bool bRun);
 
 	 // 获取SMS工作状态
@@ -67,12 +67,17 @@ public:
 		return m_SMS.strId;
 	}
 
+	// 是否为本地运行
 	bool IsLocal()
 	{
 		return m_SMS.stStatus.nRun == 1;
 	}
 
-	int CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int nPort,std::string strHallID);
+	// 调用对端调度软件的切换接口
+	int CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string strHallID);
+
+	// 获取运行主机及webservice端口
+	void GetRunHost(std::string &strIP,int &nPort);
 private:
 
 	// 在当前终端启动SMS
@@ -86,8 +91,6 @@ private:
 	int GetHttpContent(const std::string &http, std::string &content);
 
 	int Parser_GetSMSWorkState( const std::string &content, int &state, std::string &info);
-
-//	int Parser_GetSMSWorkState_Response( xercesc::DOMElement *rootChild, int &state, std::string &info);
 
 	int Parser_SwitchSMS(std::string &content,int &nRet);
 
@@ -106,7 +109,7 @@ private:
  
  	xercesc::DOMElement *FindElementByName( const xercesc::DOMNode *elem, const std::string &name);
 
-
+	// 获取指定命令的pid
 	int Getpid(std::string strName,std::vector<int>& vecPID);
 
 private:

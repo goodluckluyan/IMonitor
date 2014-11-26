@@ -108,18 +108,18 @@ int C_Para::ReadPara()
 
 
 
-	memset(a,0,64);
-	iResult = config.readvalue("PARA","ThreadCount",a,strInipath.c_str());
-	if(iResult != 0)
-	{
-		return iResult;
-	}
-	iTmp  =  atoi(a); 
-	if(iTmp <= 0)
-	{
-		return -1;
-	}
-	m_uiThreadCount = (unsigned int)iTmp;  
+// 	memset(a,0,64);
+// 	iResult = config.readvalue("PARA","ThreadCount",a,strInipath.c_str());
+// 	if(iResult != 0)
+// 	{
+// 		return iResult;
+// 	}
+// 	iTmp  =  atoi(a); 
+// 	if(iTmp <= 0)
+// 	{
+// 		return -1;
+// 	}
+// 	m_uiThreadCount = (unsigned int)iTmp;  
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","LogPath",a,strInipath.c_str());
@@ -171,13 +171,13 @@ int C_Para::ReadPara()
 	}
 	m_nOPort = atoi(a);
 
-	memset(a,0,64);
-	iResult = config.readvalue("PARA","OtherMonitorURI",a,strInipath.c_str());
-	if(iResult != 0)
-	{
-		return iResult;
-	}
-	m_strOURI = a;
+// 	memset(a,0,64);
+// 	iResult = config.readvalue("PARA","OtherMonitorURI",a,strInipath.c_str());
+// 	if(iResult != 0)
+// 	{
+// 		return iResult;
+// 	}
+// 	m_strOURI = a;
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","TMSPath",a,strInipath.c_str());
@@ -186,6 +186,14 @@ int C_Para::ReadPara()
 		return iResult;
 	}
 	m_strTMSPath = a;
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","TMSWSPort",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_nTMSWSPort = atoi(a);
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","StartTMSSMSType",a,strInipath.c_str());
@@ -202,6 +210,14 @@ int C_Para::ReadPara()
 		return iResult;
 	}
 	m_nTimeOutWaitOtherIMonitor = atoi(a);
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","TOMCATPath",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strTOMCATPath = a;
 
 	return 0;
 

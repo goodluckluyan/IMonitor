@@ -1,17 +1,4 @@
-/***********************************************************
-Copyright (C), 2010-2020, DADI MEDIA Co.,Ltd.
-ModuleName: SoftwareState.h
-FileName: SoftwareState.h
-Author: chengyu
-Date: 14/09/19
-Version:
-Description: 获取SMS,TMS 状态信息
-Others:
-History:
-		<Author>		<Date>		<Modification>
-		chengyu			14/09/19
-***********************************************************/
-#include "TMSSensor.h"
+
 
 #include <string>
 #include <cstdlib>
@@ -24,6 +11,8 @@ History:
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <algorithm>
+#include <sstream>
+#include "TMSSensor.h"
 #include "para/C_Para.h"
 #include "utility/C_TcpTransport.h"
 #include "utility/C_HttpParser.h"
@@ -46,15 +35,16 @@ CTMSSensor::~CTMSSensor()
 }
 
 // 设置对端主机信息
-bool CTMSSensor ::Init(std::string strURI,std::string strIP,int nPort)
+bool CTMSSensor ::Init(std::string strIP,int nPort,int nTMSWSPort)
 {
-	if(strURI.empty() || strIP.empty() || nPort <= 0)
+	if( strIP.empty() || nPort <= 0 || nTMSWSPort <=0)
 	{
 		return false;
 	}
-	m_strURI = strURI;
+	
 	m_strIP = strIP;
 	m_nPort = nPort;
+	m_nTMSWBPort = nTMSWSPort;
 
 	try
 	{
@@ -88,7 +78,7 @@ int CTMSSensor::GetTMSWorkState()
 		return 0;//////////////return -1;
 	}
 	
-	if(fgets(buf,19,fp)!=NULL)
+	if(fgets(buf,sizeof(buf)-1,fp)!=NULL)
 	{
 		printf("[ Tms20_DeviceService ] Pid = %s\n",buf);
 		int result(0);
@@ -213,7 +203,7 @@ bool CTMSSensor::StartTMS()
 int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
 {	
 	char acExe[64]={'\0'};
-	snprintf(acExe,64,"pidof %s",strName.c_str());
+	snprintf(acExe,sizeof(acExe),"pidof %s",strName.c_str());
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
@@ -259,8 +249,8 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 	}
 
 	char buf[256]={'\0'};
-	snprintf(buf,256,"gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"","TMS",strDir.c_str(),strTMSPath.c_str());
-	//	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
+	snprintf(buf,sizeof(buf),"gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"",
+		"TMS",strDir.c_str(),strTMSPath.c_str());
 	printf("%s\n",buf);
 	system(buf);
 
@@ -352,8 +342,12 @@ bool CTMSSensor::CallStandbySwitchTMS()
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
 	// 通过http方式调用另一个调度软件的WebService服务
+
+// 	char buff[64]={'\0'};
+// 	snprintf(buff,128,"http://%s:%d/?wsdl",strIP.c_str(),nPort);
+// 	std::string strURI =buff;
 	std::string strResponse;
-	int nInvokeRes = InvokerWebServer(xml,strResponse);
+	int nInvokeRes = InvokerWebServer(false,"/",xml,strResponse);
 	if( nInvokeRes == ERROR_SENSOR_TCP_RECV || nInvokeRes == ERROR_SENSOR_TCP_CONNECT 
 		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
 	{
@@ -372,7 +366,7 @@ bool CTMSSensor::CallStandbySwitchTMS()
 	}
 
 	int nRet ;
-	if(ParseXml(retXml,nRet))
+	if(ParseXmlFromOtherMonitor(retXml,nRet))
 	{
 		return nRet == 0 ? true:false;
 	}
@@ -382,8 +376,109 @@ bool CTMSSensor::CallStandbySwitchTMS()
 	}
 }
 
+// 通过webservice调用对端的切换tms接口
+bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,unsigned short port)
+{
+
+	std::ostringstream os;
+	os<<port;
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns1:SwitchSMS><strHallId>"+strHallId+"</strHallId><strNewIp>"+strNewIp+"</strNewIp><port>"+os.str()+"</port></ns1:SwitchSMS>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	// 通过http方式调用另一个调度软件的WebService服务
+	std::string strResponse;
+	std::string strURI = "/";
+	int nInvokeRes = InvokerWebServer(true,strURI,xml,strResponse);
+	if( nInvokeRes == ERROR_SENSOR_TCP_RECV || nInvokeRes == ERROR_SENSOR_TCP_CONNECT 
+		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
+	{
+		// 写错误日志
+		return false;
+	}
+
+	// 提取xml
+	std::string retXml;
+	int result = GetHttpContent(strResponse, retXml);
+
+	if(retXml.empty())
+	{
+		printf("GetOtherMonitorState:Parse Fail! xml is empty!\n");
+		return false;
+	}
+
+	int nRet ;
+	if(ParseXmlFromTMS(retXml,nRet))
+	{
+		return nRet == 0 ? true:false;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// 解析TMS返回xml
+bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
+{
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)retXml.c_str(), retXml.size(), "bufId");
+
+	try
+	{
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();	
+
+		// 读取ret节点
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
+		if(ptrNodeList == NULL)
+		{
+			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
+			return false;
+		}
+		else
+		{
+
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			if(!str_state.empty())
+			{
+				nRet = atoi(str_state.c_str());
+			}
+			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
+		}
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		ptrInputsource = NULL;
+		delete ptrInputsource;
+		ptrParser = NULL;
+	}
+
+
+	delete ptrParser;
+	delete ptrInputsource;
+	ptrInputsource = NULL;
+	ptrParser = NULL;
+	return true;
+}
+
 // 解析对端调度软件Webservice返回xml
-bool  CTMSSensor::ParseXml(std::string &retXml,int &nRet)
+bool  CTMSSensor::ParseXmlFromOtherMonitor(std::string &retXml,int &nRet)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
 	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
@@ -436,7 +531,7 @@ bool  CTMSSensor::ParseXml(std::string &retXml,int &nRet)
 }
 
 // 发送webservice调用消息
-int CTMSSensor::SendAndRecvResponse(const std::string &request, std::string &response, int delayTime)
+int CTMSSensor::SendAndRecvResponse(bool bTMSWS,const std::string &request, std::string &response, int delayTime)
 {
 	if(m_strIP.empty())
 	{
@@ -444,7 +539,17 @@ int CTMSSensor::SendAndRecvResponse(const std::string &request, std::string &res
 	}
 
 	TcpTransport tcp;
-	int result = tcp.TcpConnect(m_strIP.c_str(), m_nPort);
+	int result= -1;
+	if(bTMSWS)
+	{
+		result = tcp.TcpConnect("127.0.0.1", m_nTMSWBPort,delayTime);
+
+	}
+	else
+	{
+		result = tcp.TcpConnect(m_strIP.c_str(), m_nPort,delayTime);
+	}
+
 	if(result < 0)
 	{	
 		printf("CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
@@ -497,11 +602,11 @@ int CTMSSensor::GetHttpContent(const std::string &http, std::string &response)
 
 
 // 调用对端webservice的接口
-int CTMSSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
+int CTMSSensor::InvokerWebServer(bool bTMSWS,std::string strURI,std::string &xml,std::string &strResponse)
 {
 	HttpRequestParser request;
 	request.SetMethod("POST");
-	request.SetUri(m_strURI.c_str());
+	request.SetUri(strURI.c_str());
 	request.SetVersion("HTTP/1.1");
 	request.SetHost(m_strIP.c_str());
 	request.SetContentType("text/xml; charset=utf-8");
@@ -509,7 +614,7 @@ int CTMSSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 	request.SetSoapAction("");
 	std::string strHttp = request.GetHttpRequest();
 
-	int result = SendAndRecvResponse(strHttp, strResponse);
+	int result = SendAndRecvResponse(bTMSWS,strHttp, strResponse);
 
 	return result;
 

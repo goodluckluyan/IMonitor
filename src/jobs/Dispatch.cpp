@@ -285,6 +285,7 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 	}
 }
 
+// É¾³ýÁ½²à¿Õ¸ñ
 void CDispatch::TrimSpace(std::string &str)
 {
 	std::string tmp=str;
@@ -321,7 +322,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 		if(stPE.strType == "value" && stPE.strFault == err.ErrorVal)
 		{
 			char buf[128];
-			snprintf(buf,128,"LOG:%s%d value: %s = Policy:%s\n",err.ErrorName.c_str(),err.nOrdinal,
+			snprintf(buf,sizeof(buf),"LOG:%s%d value: %s = Policy:%s\n",err.ErrorName.c_str(),err.nOrdinal,
 				err.ErrorVal.c_str(),stPE.strFault.c_str());
 			mapAction[LOGCmd].push_back(std::string(buf));
 		
@@ -340,7 +341,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 				if(errvalue < nMin && errvalue > nMax)
 				{
 					char buf[128];
-					snprintf(buf,128,"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
+					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
 						err.ErrorVal.c_str(),stPE.strFault.c_str(),stPE.strAct.c_str());
 					mapAction[LOGCmd].push_back(std::string(buf));
 
@@ -355,7 +356,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 			if(stPE.strFault.find(err.ErrorVal) != std::string::npos)
 			{
 				char buf[128];
-				snprintf(buf,128,"LOG:%s value = %s  = Policy:%s\n",err.ErrorName.c_str(),
+				snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s\n",err.ErrorName.c_str(),
 					err.ErrorVal.c_str(),stPE.strFault.c_str());
 				mapAction[LOGCmd].push_back(std::string(buf));
 

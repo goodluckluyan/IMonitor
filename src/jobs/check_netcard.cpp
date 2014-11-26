@@ -1,13 +1,5 @@
 
 #include "check_netcard.h"
-//#include <linux/sockios.h>
-//#include <sys/socket.h>
-//#include <sys/ioctl.h>
-//#include <net/if.h>
-//#include <string.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <unistd.h>
 #include <time.h>
 #include <errno.h>
 #include <string>

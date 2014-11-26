@@ -35,9 +35,23 @@ public:
 	// 获取SMS工作状态
 	bool GetSMSWorkState();
 
+	// 切换sms
 	bool SwitchSMS(std::string strHallID);
 
+	// 切换所有的sms
 	bool SwitchAllSMS();
+
+
+	// 获取运行主机及webservice端口
+	bool GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPort);
+
+private:
+
+	//启动tomcat
+	bool StartTOMCAT(std::string strPath);
+
+	//关闭tomcat
+	bool ShutdownTOMCAT(std::string strPath);
 	 
     C_CS m_CS;
 	std::map<std::string,C_Hall *> m_mapHall;

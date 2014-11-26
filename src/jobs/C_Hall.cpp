@@ -1,7 +1,3 @@
-//@file:C_Hall.cpp
-//@brief: 实现C_Hall 所有的方法。
-//@author:wangzhongping@oristartech.com
-//dade:2012-07-12
 
 #include "C_Hall.h"
 #include <algorithm>
@@ -65,6 +61,12 @@ SMSInfo& C_Hall::ChangeSMSHost(std::string strIP,bool bLocalRun)
 	return m_SMS;
 }
 
+// 获取运行主机及webservice端口
+void C_Hall::GetRunHost(std::string &strIP,int &nPort)
+{
+	strIP = m_SMS.strIp;
+	nPort = m_SMS.nPort;
+}
 
 // 启动SMS
 bool C_Hall::StartSMS(int &nPid)
@@ -124,11 +126,11 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 	return true;
 }
 
-
+// 获取指定命令的pid
 int C_Hall::Getpid(std::string strName,std::vector<int>& vecPID)
 {	
 	char acExe[64]={'\0'};
-	snprintf(acExe,64,"pidof %s",strName.c_str());
+	snprintf(acExe,sizeof(acExe),"pidof %s",strName.c_str());
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
@@ -179,7 +181,7 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 	}
 	
 	char buf[256]={'\0'};
- 	snprintf(buf,256,"gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
+ 	snprintf(buf,sizeof(buf),"gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
 		,m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());
 //	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
 	printf("%s\n",buf);
@@ -311,8 +313,8 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	return 0;
 }
 
-
-int  C_Hall::CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int nPort,std::string strHallID)
+// 调用对端调度软件的切换接口
+int  C_Hall::CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string strHallID)
 {
 	int iResult;
 	string response_c;
@@ -333,6 +335,9 @@ int  C_Hall::CallStandbySwitchSMS(std::string strURI,std::string strOtherIP,int 
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
 	string http ;
+// 	char buff[64]={'\0'};
+// 	snprintf(buff,128,"http://%s:%d/?wsdl",strOtherIP.c_str(),nPort);
+ 	string strURI = "/";//buff;
 	UsherHttp(strURI,strOtherIP,xml,"",http);
 
 	iResult = TcpOperator(strOtherIP,nPort, http, response_c, 30);
@@ -391,6 +396,7 @@ int C_Hall::Parser_SwitchSMS(std::string &content,int &nRet)
 	return result;
 }
 
+// 填充http头
 int C_Hall::UsherHttp(std::string& strURI,std::string& strIP,std::string &xml,std::string action,std::string &strRequest)
 {
 	HttpRequestParser request;
@@ -413,6 +419,7 @@ int C_Hall::UsherHttp(std::string& strURI,std::string& strIP,std::string &xml,st
 	return 0;
 }
 
+// 提取返回的xml
 int C_Hall::GetHttpContent(const string &http, string &content)
 {
 	//http protocol
@@ -492,8 +499,6 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 
 	delete ptrParser;
 	delete ptrInputsource;
-	
-
 	return true;
 }
 
@@ -589,6 +594,7 @@ int C_Hall::SendAndRecvInfo(const string &send, string &recv, int overtime)
 	}
 }
 
+// 接收webservice调用返回
 int C_Hall::ReceiveCommand(string &recv, int waitTime)
 {
 	recv.clear();
@@ -618,7 +624,7 @@ int C_Hall::ReceiveCommand(string &recv, int waitTime)
 		return -1;//ERROR_PLAYER_AQ_TCPRECEIVE;
 	}
 	return 0;
-}//////////////////////////////////////
+}
 
 
 int C_Hall::GetRootChild( const std::string &xml,xercesc::XercesDOMParser *parser, 

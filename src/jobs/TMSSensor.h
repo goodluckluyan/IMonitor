@@ -1,16 +1,9 @@
-/***********************************************************
-Copyright (C), 2010-2020, DADI MEDIA Co.,Ltd.
-ModuleName: SoftwareState.h
-FileName: SoftwareState.h
-Author: chengyu
-Date: 14/09/19
-Version:
-Description: 获取SMS,TMS 状态信息
-Others:
-History:
-		<Author>		<Date>		<Modification>
-		chengyu			14/09/19
-***********************************************************/
+
+//@file:TMSSensor.h
+//@brief:TMS相关操作。
+//@author:luyan@oristartech.com
+//date:2014-09-17
+
 
 #ifndef _H_SOFTWARESTATE_
 #define _H_SOFTWARESTATE_
@@ -50,17 +43,22 @@ public:
 	//获取TMS 工作状态
 	int GetTMSWorkState();
 
-	bool Init(std::string strURI,std::string strIP,int nPort);
+	bool Init(std::string strIP,int nPort,int nTMSWSPort);
+
+	bool NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,unsigned short port);
+
 private:
 	bool ShutDownTMS();
 	
 	bool StartTMS_CurTerminal(std::string strTMSPath);
 	bool StartTMS_NewTerminal(std::string strTMSPath);
 	int Getpid(std::string strName,std::vector<int>& vecPID);
-	int InvokerWebServer(std::string &xml,std::string &strResponse);
+	int InvokerWebServer(bool bTMSWS,std::string strURI,std::string &xml,std::string &strResponse);
 	int GetHttpContent(const std::string &http, std::string &response);
-	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime = 3);
-	bool ParseXml(std::string &retXml,int &nRet);
+	int SendAndRecvResponse(bool bTMSWS,const std::string &request, std::string &response, int delayTime = 3);
+	bool ParseXmlFromOtherMonitor(std::string &retXml,int &nRet);
+	bool ParseXmlFromTMS(std::string &retXml,int &nRet);
+
 	bool CallStandbySwitchTMS();
 	
 
@@ -71,7 +69,7 @@ private:
 	//对端主机信息
 	std::string m_strIP;
 	int m_nPort;
-	std::string m_strURI;
+	int m_nTMSWBPort;
 
 };
 

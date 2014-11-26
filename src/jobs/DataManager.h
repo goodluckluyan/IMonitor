@@ -10,7 +10,8 @@
 #include "threadManage/C_CS.h"
 #include "Dispatch.h"
 #include <map>
-// 负责对所有监控数据进行管理
+
+
 class CDataManager
 {
 public:
@@ -91,7 +92,6 @@ public:
 private:
 	CDataManager();
 
-	//DiskStatus;
 	DiskInfo m_df;
 
 	std::map<std::string,EthStatus> m_mapEthStatus;
