@@ -65,6 +65,7 @@ const int TASK_NUMBER_GET_HALL_STATUS = 0x0301;
 const int  TASK_NUMBER_GET_TMS_STATUS = 0x0401;
 
 
+
 const int  TASK_NUMBER_GET_OTHERMONITOR_STATUS = 0x0501;
 const int  TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS = 0x0502;
 const int  TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS = 0x0503;
@@ -75,7 +76,36 @@ const int  TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS = 0x0507;
 const int  TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS = 0x0508;
 
 const int TASK_NUMBER_PROCESS_USERINPUT = 0x0601;
+const int TASK_NUMBER_CONDSWITCH_ROUTINE = 0x0701;
 
+
+// sms 状态
+const int SMS_STATE_SUCCESS = 101 ;    // 连接正常
+const int SMS_STATE_ERROR = 102;       // 连接异常 / 连接超时
+const int SMS_STATE_SYSERROR =103 ;    // 系统异常
+
+// sms 播放状态：
+const int SMS_STATE_PLAYING = 201;     // 正在播放
+const int SMS_STATE_PAUSING = 202;     // 暂停播放	
+const int SMS_STATE_FINISHED = 203;    // 停止播放
+const int SMS_STATE_FINISHED_ABORT = 204; // 手动停止
+const int SMS_STATE_FINISHED_ERROR = 205; // 播放失败
+const int SMS_STATE_NOT_EXECUTED = 206;   // 不再执行
+
+// sms ingest job 状态
+const int SMS_STATE_INGEST_SCHEULED = 301;    // 等待导入
+const int SMS_STATE_INGEST_RUNNING = 302;     // 正在导入
+const int SMS_STATE_INGEST_PAUSING = 303;     // 暂停导入
+const int SMS_STATE_INGEST_CHECK = 304;       // 导入检查
+const int SMS_STATE_INGEST_FINISHED = 305;    // 导入成功
+const int SMS_STATE_INGEST_FINISHED_ERROR = 306;// 导入失败
+
+// sms cpl check状态
+const int SMS_STATE_CPL = 401; 			// 等待验证
+const int SMS_STATE_CPL_RUNNING = 402;	// 正在验证
+const int SMS_STATE_CPL_PAUSING = 403;	// 暂停验证
+const int SMS_STATE_CPL_FINISHED = 404; // 验证成功
+const int SMS_STATE_CPL_FINISHED_ERROR = 405; // 验证失败
 
 
 //影厅状态；

@@ -255,6 +255,20 @@ bool CDataManager::GetSMSStat(std::vector<SMSStatus>& vecSMSState)
 	return true;
 }
 
+// 获取SMS状态
+bool CDataManager::GetSMSStat(std::string strHallID,SMSInfo& smsinfo)
+{
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
+	if(it != m_mapSmsStatus.end())
+	{
+		smsinfo = it->second;
+	}
+	m_csSMS.LeaveCS();
+
+	return true;
+}
+
 // 获取TMS的状态
 int CDataManager::GetTMSStat()
 {

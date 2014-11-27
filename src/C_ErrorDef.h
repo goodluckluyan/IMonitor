@@ -127,4 +127,9 @@ c_u_int ERROR_PLAYER_AQ_TCPCONNECT = -5;
 // 线程已经超时。
 c_u_int ERROR_DEVSTATUS = 0x0011;
 
+// 故障策略被触发
+c_u_int ERROR_POLICY = 0x0012;
+
+c_u_int ERROR_OTHERMONITOR_NORUN  = 0x0013;
+
 #endif  //_TMS20_ERROR_DEFINE

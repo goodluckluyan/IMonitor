@@ -12,6 +12,8 @@ bool g_bQuit = false;
 
 int  CInvoke::Init()
 {
+	PrintProductInfo();
+
 	// 数据管理模块
 	CDataManager *pDM = CDataManager::GetInstance();
 	if(!pDM->Init((void *)this))
@@ -45,6 +47,9 @@ int  CInvoke::Init()
 			time(&tm2);
 			if(tm2-tm1 >= 300)
 			{
+				C_LogManage *pLogManage = C_LogManage::GetInstance();
+				pLogManage->WriteLog(3,17,0,ERROR_OTHERMONITOR_NORUN,"Other Monitor Not Run !");
+				printf("Other Monitor Not Run !\n");
 				break;
 			}
 		}
@@ -166,6 +171,9 @@ bool CInvoke::AddInitTask()
 	// 添加调度任务
 	ptrTaskList->AddTask(TASK_NUMBER_DISPATCH_ROUTINE,NULL,-1);
 
+	// 添加条件切换处理任务
+	ptrTaskList->AddTask(TASK_NUMBER_CONDSWITCH_ROUTINE,NULL,-1);
+
 	// 添加处理用户输入命令
 	ptrTaskList->AddTask(TASK_NUMBER_PROCESS_USERINPUT,NULL,0);
 
@@ -232,6 +240,9 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 	case TASK_NUMBER_DISPATCH_ROUTINE:
 		m_ptrDispatch->Routine();
 		nResult = 0;
+		break;
+	case TASK_NUMBER_CONDSWITCH_ROUTINE:
+		m_ptrLstHall->ProcessCondSwitchTask();
 		break;
 	case TASK_NUMBER_GET_DISK_STATUS:
 		m_ptrDisk->ReadMegaSASInfo();
@@ -315,14 +326,14 @@ void CInvoke::ParseCmd(std::string strCmd, std::vector<std::string> &vecParam)
 // 打印产品信息
 void CInvoke::PrintProductInfo()
 {
-	std::string strMORS = C_Para::GetInstance()->m_bMain ? "Main" :"standby";
+	std::string strMORS = C_Para::GetInstance()->m_bMain ? "MAIN" :"STDBY";
 	printf("#-----------------------------------------------------------------------------#\n");
-	printf("#                      <<<<<IMonitor1.0(%7s)>>>>                          #\n",strMORS.c_str());
+	printf("#                      <<<<<IMonitor1.0(%5s)>>>>                          #\n",strMORS.c_str());
 	printf("#                                                                             #\n");
 	printf("#-----------------------------------------------------------------------------#\n");
 	printf("# Command Usage:                                                              #\n");
 	printf("# help:print help info\n");
-	printf("# print -t:print tms status\n");
+	printf("# print -t:print TMS status\n");
 	printf("# print -d:print RAID status\n");
 	printf("# print -s:print SMS status\n");
 	printf("# print -e:print Eth status\n");
@@ -332,8 +343,6 @@ void CInvoke::PrintProductInfo()
 //接收用户输入控制的线程函数
 int CInvoke::Controller () 
 {
-	PrintProductInfo();
-
 	int nModule = 0;
 	int fdStdin;
 	if((fdStdin = open("/dev/stdin", O_RDWR | O_NONBLOCK)) <= 0)
@@ -434,16 +443,29 @@ bool CInvoke::SwitchTMS()
 // 切换SMS
 bool CInvoke::SwitchSMS(std::string strHallID)
 {
+	if(m_ptrLstHall->IsHaveCondSwitchTask(strHallID))
+	{
+		return false;
+	}
+
 	if(m_ptrLstHall != NULL)
 	{
-		 if(m_ptrLstHall->SwitchSMS(strHallID))
+		int nState;
+		 if(m_ptrLstHall->SwitchSMS(strHallID,nState))
 		 {
-			 std::string strIP;
-			 int nPort = 0;
-			 m_ptrLstHall->GetSMSRunHost(strHallID,strIP,nPort);
-			 if(strIP.empty() && nPort > 0)
+			 std::string strNewIP;
+			 int nNewPort = 0;
+			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
+			 if(strNewIP.empty() && nNewPort > 0)
 			 {
-				 m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strIP,nPort);
+				 //m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strIP,nPort);
+			 }
+		 }
+		 else
+		 {
+			 if(nState == 2 && C_Para::GetInstance()->m_bMain)// 因为sms busy切换失败
+			 {
+				 m_ptrLstHall->AddCondSwitchTask(strHallID,"state",101);
 			 }
 		 }
 	}
@@ -458,13 +480,19 @@ bool CInvoke::SwitchAllSMS()
 {
 	if(m_ptrLstHall != NULL)
 	{
-		printf("Fault Of Policys Trigger SwitchAllSMS!\n");
-		return m_ptrLstHall->SwitchAllSMS();
+		printf("Fault Of Policys Trigger SwitchAllSMS!\n");		
+		std::vector<std::string> vecHallID;
+		m_ptrLstHall->GetAllHallID(vecHallID);
+		for(int i = 0 ;i < vecHallID.size();i++)
+		{
+			SwitchSMS(vecHallID[i]);
+		}
 	}
 	else
 	{
 		return false;
 	}
+	return true;
 }
 
 
