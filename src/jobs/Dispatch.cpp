@@ -5,6 +5,8 @@
 #include "log/C_LogManage.h"
 #include "Invoke.h"
 
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+
 using namespace xercesc;
 CDispatch::CDispatch(void * ptrInvoker)
 :m_ptrInvoker(ptrInvoker)
@@ -83,7 +85,7 @@ bool CDispatch::ParsePolicy(std::string strPath)
 	{
 		char* message =  XMLString::transcode(e.getMessage());
 		XMLString::release( &message );
-		C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrParser = NULL;
 	}
@@ -252,8 +254,7 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 				std::vector<std::string> &vecStr = it->second;
 				for(int i = 0;i < vecStr.size();i++)
 				{
-					C_LogManage *pLogManage = C_LogManage::GetInstance();
-					pLogManage->WriteLog(3,17,0,ERROR_DEVSTATUS,vecStr[i]);
+					LOG(ERROR_DEVSTATUS_FAULT,vecStr[i]);
 					printf(vecStr[i].c_str());
 				}
 			}

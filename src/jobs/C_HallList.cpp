@@ -1,4 +1,11 @@
 
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/resource.h>
 #include "database/CppMySQL3DB.h"
 #include "database/CppMySQLQuery.h"
 #include "para/C_Para.h"
@@ -8,12 +15,8 @@
 #include "log/C_LogManage.h"
 #include "para/C_RunPara.h"
 #include "C_HallList.h"
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 
 // using namespace std;
 C_HallList* C_HallList::m_pInstance = NULL;
@@ -31,9 +34,14 @@ C_HallList::~C_HallList()
 		}
 
 		delete ptr;
-	}
-	
+	}	
 	m_mapHall.clear();
+
+	m_csCondTaskLst.EnterCS();
+	pthread_cond_signal(&cond);
+	m_csCondTaskLst.LeaveCS();
+
+	pthread_cond_destroy(&cond);
 	return;   
 }
 
@@ -134,10 +142,32 @@ bool C_HallList::StartTOMCAT(std::string strPath)
 		strPath +="/";
 	}
 
-	char buf[128]={'\0'};
-	snprintf(buf,sizeof(buf),"/bin/bash %sstartup.sh",strPath.c_str());
-	printf("%s\n",buf);
-	system(buf);
+	struct rlimit rl;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+	{
+		return false;
+	}
+	pid_t pid;
+	
+	if((pid = fork()) == 0)
+	{
+		// 关闭所有父进程打开的文件描述符
+		if(rl.rlim_max == RLIM_INFINITY)
+		{
+			rl.rlim_max = 1024;
+		}
+		for(int i = 0 ;i < rl.rlim_max;i++)
+		{
+			close(i);
+		}
+
+		char buf[128]={'\0'};
+		snprintf(buf,sizeof(buf),"/bin/bash %sstartup.sh",strPath.c_str());
+		printf("%s\n",buf);
+		system(buf);
+		exit(0);
+	}
+	
 	return true;
 }
 
@@ -213,28 +243,29 @@ bool C_HallList::GetSMSWorkState()
 			{
 				m_ptrDM->UpdateSMSStat(ptr->GetHallID(),nState,strInfo);
 			}
+			m_CS.EnterCS();
+			m_mapHallCurState[it->first] = nState;
+			m_CS.LeaveCS();
 		}
 		
 	}
 	return true;
 }
 
-//切换本机的所有SMS
-bool C_HallList::SwitchAllSMS()
+// 获取hallid
+void C_HallList::GetAllHallID(std::vector<std::string> &vecHallID)
 {
-	std::map<std::string,C_Hall *>::iterator it = m_mapHall.begin();
-	for(;it != m_mapHall.end();it++)
+	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
+	for( ;it != m_mapHall.end() ;it++)
 	{
-		C_Hall * ptr = it->second;
-		if(ptr->IsLocal())
-		{
-			SwitchSMS(ptr->GetHallID());
-		}
+		vecHallID.push_back(it->first);
+
 	}
 }
 
-//切换SMS
-bool C_HallList::SwitchSMS(std::string strHallID)
+
+//切换SMS nState 返回1:表示没有些hallid 2:表示sms busy 3:启动新sms失败
+bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 {
 	if(strHallID.empty())
 	{
@@ -243,25 +274,45 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
 	if(fit == m_mapHall.end())
 	{
+		nState = 1;
 		return false;
 	}
 
+	LOG(ERROR_SMSSWITCH_START,(std::string("SMS Switch Start!")+strHallID).c_str());
 	C_Hall * ptr = fit->second;
+	if(m_ptrDM != NULL && C_Para::GetInstance()->m_bMain)
+	{
+		SMSInfo smsinfo;
+		m_ptrDM->GetSMSStat(strHallID,smsinfo);
+		
+		// 正在播放、正在导入、正在验证都禁止切换
+		if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
+			||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
+		{
+			char buff[64];
+			snprintf(buff,sizeof(buff),"Sms(%s) is busy cann't switch!",strHallID.c_str());
+			LOG(ERROR_SMSBUSY_NOTSWITCH,buff);
+			printf("%s\n",buff);
+			nState = 2;
+			return false;
+		}
+	}
 	// 如果在本机运行
 	if(ptr->IsLocal())
 	{
 		bool bRet = ptr->ShutDownSMS();
+		LOG(ERROR_SMSSWITCH_LOCALSHUTDOWN,(std::string("SMS Switch:local run sms shutdown!")+strHallID).c_str());
 		if(C_Para::GetInstance()->m_bMain)
 		{
 			// 调用备机的切换Sms
  			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+			LOG(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
 		}
 		if(bRet)
 		{
 		     SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,false);
 		     m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-			
 		}
 	}
 	else//在对端运行
@@ -271,11 +322,14 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 			// 调用备机的切换Sms
  			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+			LOG(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
 		}
 		int nPid = 0;
 		ptr->StartSMS(nPid);
+		LOG(ERROR_SMSSWITCH_LOCALRUN,(std::string("SMS Switch:local run !")+strHallID).c_str());
 		if(nPid == 0)
 		{
+			nState = 3;
 			return false;
 		}
 
@@ -289,9 +343,12 @@ bool C_HallList::SwitchSMS(std::string strHallID)
 			{
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+				LOG(ERROR_SMSSWITCH_LOCALRUNOK,(std::string("SMS Switch:local run OK!")+strHallID).c_str());
 			}
 			else
 			{
+				nState = 3;
+				LOG(ERROR_SMSSWITCH_LOCALRUNFAIL,(std::string("SMS Switch:local run failed!")+strHallID).c_str());
 				return false;
 			}
 		}
@@ -315,5 +372,93 @@ bool C_HallList::GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPo
 
 	C_Hall * ptr = fit->second;
 	ptr->GetRunHost(strIP,nPort);
+	return true;
+}
+
+bool C_HallList::IsHaveCondSwitchTask(std::string strHallID)
+{
+	m_csCondTaskLst.EnterCS();
+	std::list<stConditionSwitch> tmpLst = m_lstCondSwitch;
+	m_csCondTaskLst.LeaveCS();
+
+	bool bFind = false;
+	std::list<stConditionSwitch>::iterator it = tmpLst.begin();
+	for(;it != tmpLst.end();it++)
+	{
+		if(it->strHallID == strHallID)
+		{
+			bFind = true;
+			break;
+		}
+	}
+	
+	return bFind;
+}
+
+// 添加条件等待切换任务
+bool C_HallList::AddCondSwitchTask(std::string strHallID,std::string strCond,int nVal)
+{
+	LOG(ERROR_SMSBUSY_DELAYSWITCH,(std::string("Switch SMS while SMS busy ,so delay switch SMS!")+strHallID).c_str());
+	if(IsHaveCondSwitchTask(strHallID))
+	{
+		printf("Delay switch SMS(%s) task has been!\n ",strHallID.c_str());
+		return false;
+	}
+
+	stConditionSwitch node;
+	node.strHallID = strHallID;
+	node.strCond = strCond;
+	node.nVal = nVal;
+
+	m_csCondTaskLst.EnterCS();
+	m_lstCondSwitch.push_back(node);
+	pthread_cond_signal(&cond);
+	m_csCondTaskLst.LeaveCS();
+}
+
+// 执行条件等待切换任务
+bool C_HallList::ProcessCondSwitchTask()
+{
+	m_CS.EnterCS();
+	std::map<std::string,int> mapTmp = m_mapHallCurState;
+	m_CS.LeaveCS();
+	
+	m_csCondTaskLst.EnterCS();
+	if(m_lstCondSwitch.size() == 0)
+	{
+		pthread_cond_wait(&cond,&(m_csCondTaskLst.m_CS));
+	}
+
+	if(m_lstCondSwitch.size() == 0)
+	{
+		m_csCondTaskLst.LeaveCS();
+		return false;
+	}
+	std::list<stConditionSwitch>::iterator it = m_lstCondSwitch.begin();
+	for(;it != m_lstCondSwitch.end();it++)
+	{
+		stConditionSwitch& node = *it;
+		std::map<std::string,int>::iterator fit = mapTmp.find(node.strHallID);
+		if(fit == mapTmp.end())
+		{
+			continue;
+		}
+		
+		bool bCond = false;
+		if(node.strCond == "state")
+		{
+			bCond = node.nVal == fit->second ? true :false;
+		}
+		
+		if(bCond)
+		{
+			printf("Condition Switch Task :Condition OK Swtich SMS(%s)",node.strHallID.c_str());
+			int nState;
+			SwitchSMS(node.strHallID,nState);
+			m_lstCondSwitch.erase(it++);
+		}
+	}
+	
+	m_csCondTaskLst.LeaveCS();
 	return true;
 }

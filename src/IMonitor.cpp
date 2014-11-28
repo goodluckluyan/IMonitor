@@ -3,6 +3,10 @@
 //@author:wangzhongping@oristartech.com
 //dade:2012-07-12
 
+#include <signal.h>
+#include <unistd.h>
+#include <fstream>
+#include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
 #include "threadManage/C_ThreadData.h"
@@ -14,10 +18,6 @@
 #include "log/C_LogManage.h"
 #include "database/CppMySQL3DB.h"
 #include "utility/C_TcpTransport.h"
-#include <signal.h>
-#include <unistd.h>
-#include <fstream>
-#include <algorithm>
 #include "execinfo.h"
 
 extern bool g_bQuit;
@@ -29,7 +29,7 @@ void sig_fun(int iSigNum)
 	C_LogManage *pLogManage = C_LogManage::GetInstance();
 	char strInfo[1024];
 	sprintf(strInfo, "revc a signal number:%d ", iSigNum);
-	pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);
+	pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,strInfo);
 
 	void *stack_p[20];
 	char **stack_info;
@@ -38,7 +38,7 @@ void sig_fun(int iSigNum)
 	stack_info = backtrace_symbols( stack_p, size);
 	for(int i=0; i<size; ++i)
 	{ 
-		pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,stack_info[i]); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,stack_info[i]); 
 	}
 	free(stack_info);
 	fflush(NULL);
@@ -51,67 +51,67 @@ void InitSigFun(C_LogManage *pLogManage)
 	// set signal; wzp
 	if(signal(SIGINT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGINT"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGINT"); 
 		printf("add signal Number:SIGINT\n");	
 	}
 	if(signal(SIGALRM,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
 		printf("add signal Number:SIGALRM\n");	
 	}
 	if(signal(SIGHUP,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
 		printf("add signal Number:SIGHUP\n");	
 	}  
 	if(signal(SIGPIPE,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 
 		printf("add signal Number:SIGPIPE\n");	
 	}  
 	if(signal(SIGPOLL,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPOLL"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPOLL"); 
 		printf("add signal Number:SIGPOLL\n");	
 	} 
 	if(signal(SIGPROF,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPROF"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPROF"); 
 		printf("add signal Number:SIGPROF\n");	
 	}
 	if(signal(SIGSTKFLT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGSTKFLT"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGSTKFLT"); 
 		printf("add signal Number:SIGSTKFLT\n");	
 	} 
 	/* if(signal(SIGTERM,sig_fun) == SIG_ERR)
 	{
-	pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGTERM"); 
+	pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGTERM"); 
 	printf("add signal Number:SIGTERM\n");	
 	}*/
 	if(signal(SIGUSR1,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR1"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR1"); 
 		printf("add signal Number:SIGUSR1\n");	
 	}
 	if(signal(SIGUSR2,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR2"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR2"); 
 		printf("add signal Number:SIGUSR2\n");	
 	} 
 	if(signal(SIGVTALRM,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGVTALRM"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGVTALRM"); 
 		printf("add signal Number:SIGVTALRM\n");	
 	}  
 	if(signal(SIGIO,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGIO"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGIO"); 
 		printf("add signal Number:SIGIO\n");	
 	} 
 	if(signal(SIGABRT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(3,17,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGABRT"); 
+		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGABRT"); 
 		printf("add signal Number:SIGABRT\n");	
 	}
 
@@ -124,14 +124,13 @@ int main(int argc, char** argv)
 {
 	int iResult = -1;
 
-	//system intialize;    
 	//读取配置文件
 	C_Para *pPara = C_Para::GetInstance();
 	iResult = pPara->ReadPara();
 	if(iResult != 0)
 	{
 		printf("read para error ,exit!\n");
-		return -1; //Add Log and Erorr Ctrl;s
+		return -1;
 	}
 
 	//初始化运行时参数设置---时间设置。
@@ -157,7 +156,7 @@ int main(int argc, char** argv)
 		printf("Init Log error ,exit!\n");
 		return -1; //Add Log and Erorr Ctrl;
 	}
-	pLogManage->WriteLog(0,16,0, INFO_IMonitor_START_RUN,"IMonitor system start run!!!");	
+	pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0, INFO_IMonitor_START_RUN,"IMonitor system start run!!!");	
 
 	// 初始化信号处理
 	InitSigFun(pLogManage);
@@ -202,33 +201,8 @@ int main(int argc, char** argv)
 	while(!g_bQuit)
 	{
 		iMillisecond = pRunPara->GetCurMillisecond(bDateSet);
-		//每天2点至4点之间进行检测
 		++iCountTime;
 		iCountTime = iCountTime% 3000;
-// 		if(iMillisecond >2*3600*1000 && iMillisecond < 4*3600*1000  && iCountTime == 0)
-// 		{
-// 			pRunPara->GetCurDate(strTmpDate);
-// 
-// 			//判断当前时间是否和程序开始运行时间一致。
-// 			if(strTmpDate != strInitDate)
-// 			{
-// 				// 判断当前tms是否空闲。
-// 				if(iTmsWorkState == 0)
-// 				{
-// 					sprintf(strInfo,"2--4 clock process exist iMillisecond:%d strTmpDate:%s strInitDate%s iTmsWorkState%d\n",
-// 						iMillisecond, strTmpDate.c_str(),  strInitDate.c_str(),iTmsWorkState);
-// 					pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);       
-// 					//退出程序等待监控程序重新启动主程序。
-// 					return 0;
-// 				}
-// 				else
-// 				{
-// 					sprintf(strInfo,"2--4 clock process not exist because iTmsWorkState != 0 iMillisecond:%d strTmpDate:%s strInitDate%s iTmsWorkState%d\n",
-// 						iMillisecond, strTmpDate.c_str(),  strInitDate.c_str(),iTmsWorkState);
-// 					pLogManage->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,strInfo);   
-// 				}
-// 			}
-// 		}
 
 		//每天0点开始更改日志文件的保存路径。
 		if(bDateSet != 0)

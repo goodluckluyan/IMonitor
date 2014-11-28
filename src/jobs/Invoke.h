@@ -62,6 +62,8 @@ private:
 	// 打印帮助信息
 	void PrintProductInfo();
 
+	void PrintLogLevel();
+
 	// 处理用户命令输入
 	int Controller();
 

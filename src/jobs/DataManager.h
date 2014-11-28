@@ -73,6 +73,7 @@ public:
 	bool GetDevStat(DiskInfo &df);
 	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
 	bool GetSMSStat(std::vector<SMSStatus>& vecSMSState);
+	bool GetSMSStat(std::string strHallID,SMSInfo& smsinfo);
 	int GetTMSStat();
 
 	// 其它方法

@@ -1,13 +1,84 @@
 //@file:C_constDef.h
 //@brief: 包含各种状态信息定义。
-//@author:wangzhongping@oristartech.com
-//dade:2012-07-12
+//@author:luyan@oristartech.com
+//dade:2014-09-12
 
-#ifndef TMS20_CONST_DEFINE
-#define TMS20_CONST_DEFINE
+#ifndef IMONITOR_CONST_DEFINE
+#define IMONITOR_CONST_DEFINE
 #include "threadManage/C_CS.h"
 #include <vector>
 #include <string>
+
+
+//const define
+
+// 线程池中线程的个数。
+const int THREAD_COUNT_IN_POOL = 20;
+
+//任务ID
+const int TASK_NUMBER_GET_DISK_STATUS = 0x0101;
+const int TASK_NUMBER_GET_NET_STATUS = 0x0102;
+const int TASK_NUMBER_DISPATCH_ROUTINE = 0x0201;
+const int TASK_NUMBER_GET_HALL_STATUS = 0x0301;
+const int TASK_NUMBER_GET_TMS_STATUS = 0x0401;
+
+const int TASK_NUMBER_GET_OTHERMONITOR_STATUS = 0x0501;
+const int TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS = 0x0502;
+const int TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS = 0x0503;
+const int TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS = 0x0504;
+const int TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS = 0x0505;
+const int TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS = 0x0506;
+const int TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS = 0x0507;
+const int TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS = 0x0508;
+
+const int TASK_NUMBER_PROCESS_USERINPUT = 0x0601;
+const int TASK_NUMBER_CONDSWITCH_ROUTINE = 0x0701;
+
+
+// sms 状态
+const int SMS_STATE_SUCCESS = 101 ;    // 连接正常
+const int SMS_STATE_ERROR = 102;       // 连接异常 / 连接超时
+const int SMS_STATE_SYSERROR =103 ;    // 系统异常
+
+// sms 播放状态：
+const int SMS_STATE_PLAYING = 201;     // 正在播放
+const int SMS_STATE_PAUSING = 202;     // 暂停播放	
+const int SMS_STATE_FINISHED = 203;    // 停止播放
+const int SMS_STATE_FINISHED_ABORT = 204; // 手动停止
+const int SMS_STATE_FINISHED_ERROR = 205; // 播放失败
+const int SMS_STATE_NOT_EXECUTED = 206;   // 不再执行
+
+// sms ingest job 状态
+const int SMS_STATE_INGEST_SCHEULED = 301;    // 等待导入
+const int SMS_STATE_INGEST_RUNNING = 302;     // 正在导入
+const int SMS_STATE_INGEST_PAUSING = 303;     // 暂停导入
+const int SMS_STATE_INGEST_CHECK = 304;       // 导入检查
+const int SMS_STATE_INGEST_FINISHED = 305;    // 导入成功
+const int SMS_STATE_INGEST_FINISHED_ERROR = 306;// 导入失败
+
+// sms cpl check状态
+const int SMS_STATE_CPL = 401; 			// 等待验证
+const int SMS_STATE_CPL_RUNNING = 402;	// 正在验证
+const int SMS_STATE_CPL_PAUSING = 403;	// 暂停验证
+const int SMS_STATE_CPL_FINISHED = 404; // 验证成功
+const int SMS_STATE_CPL_FINISHED_ERROR = 405; // 验证失败
+
+//日志级别。
+const int LOG_DEBUG	= 0;
+const int LOG_INFO	= 1;
+const int LOG_ERROR	= 2;
+const int LOG_FATAL	= 3;
+const int DEFAULT_LOG_LEVEL = 0;
+
+//日志所属模块
+const int LOG_MODEL_THREADMGR = 1;
+const int LOG_MODEL_TIMETASK = 2;
+const int LOG_MODEL_DB = 3;
+const int LOG_MODEL_WEBS = 4;
+const int LOG_MODEL_JOBS = 5;
+const int LOG_MODEL_OTHER = 6;
+const int LOG_MODEL_LOGMGR = 7;
+
 // 线程状态。
 enum Thread_State
 {
@@ -19,6 +90,7 @@ enum Thread_State
 	SUSPEND_LOCKED_STATE = 5 ,// 暂停时锁定。
 	QUIT_STATE =6	// 线程结束。
 };
+
 // 线程运行类型，用于区分线程执行操作的类型。
 enum Thread_Run_Type
 {
@@ -58,62 +130,6 @@ enum TASK_STATE
 	TASK_LOCKED_STATE  = 5
 };
 
-const int  TASK_NUMBER_GET_DISK_STATUS = 0x0101;
-const int TASK_NUMBER_GET_NET_STATUS = 0x0102;
-const int TASK_NUMBER_DISPATCH_ROUTINE = 0x0201;
-const int TASK_NUMBER_GET_HALL_STATUS = 0x0301;
-const int  TASK_NUMBER_GET_TMS_STATUS = 0x0401;
-
-
-const int  TASK_NUMBER_GET_OTHERMONITOR_STATUS = 0x0501;
-const int  TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS = 0x0502;
-const int  TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS = 0x0503;
-const int  TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS = 0x0504;
-const int  TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS = 0x0505;
-const int  TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS = 0x0506;
-const int  TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS = 0x0507;
-const int  TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS = 0x0508;
-
-const int TASK_NUMBER_PROCESS_USERINPUT = 0x0601;
-
-
-
-//影厅状态；
-enum HALL_STATE
-{
-	//影厅在禁用状态，允许启用、删除、更换设备。
-	HALL_STATE_UNENABLE = 0x0,
-
-	//影厅在启用状态，允许各种操作。
-	HALL_STATE_ENABLE = 0x1,
-
-	//影厅正在被删除，瞬间状态，不允许任何操作。
-	HALL_STATE_DELETING = 0x4,
-
-	//影厅正在正在初始化，瞬间状态，不允许任何操作。
-	HALL_STATE_INITING = 0x8
-};
-
-
-enum TMS_WORK_STATE
-{
-	TMS_WORK_STATE_NO_WORKING = 0,
-	//正在导入KDM
-	TMS_WORK_STATE_IMPORTING_KDM = 1,
-	//正在导入DCP
-	TMS_WORK_STATE_IMPORTING_DCP = 2,
-	//正在分发DCP
-	TMS_WORK_STATE_DISPATCHING_DCP = 3,
-	//播放影片cue正在执行，或者即将执行。
-	TMS_WORK_STATE_RUN_CUE = 4
-};
-
-//const define
-//默认的日志级别。
-const int DEFAULT_LOG_LEVEL = 0;
-
-// 线程池中线程的个数。
-const int THREAD_COUNT_IN_POOL = 20;
 
 // RAID状态
 typedef struct DiskInfo
@@ -255,17 +271,4 @@ struct SMSInfo
 
 
 
-
-
-typedef struct HallPara
-{
-	std::string hallId;
-	std::string name;
-
-
-}HALL_PARA, *PHALL_PARA;
-
-
-
-
-#endif //TMS20_CONST_DEFINE
+#endif 

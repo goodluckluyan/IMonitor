@@ -19,6 +19,8 @@
 #include "C_ErrorDef.h"
 #include "MonitorSensor.h"
 #include "log/C_LogManage.h"
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
 
 using namespace std;
 using namespace xercesc;
@@ -80,9 +82,9 @@ int CTMSSensor::GetTMSWorkState()
 	
 	if(fgets(buf,sizeof(buf)-1,fp)!=NULL)
 	{
-		printf("[ Tms20_DeviceService ] Pid = %s\n",buf);
+		LOGFMT("[ Tms20_DeviceService ] Pid = %s",buf);
 		int result(0);
-		result = sscanf( buf,"%d\n", &m_nPid );
+		result = sscanf( buf,"%d", &m_nPid );
 		if(result == 0)//sscanf失败，则返回0
 		{
 			string error = "Error:pidof -s  Tms20_DeviceService\n";
@@ -443,7 +445,7 @@ bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if(ptrNodeList == NULL)
 		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
+			LOG(ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
 			return false;
 		}
 		else
@@ -462,7 +464,7 @@ bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -496,7 +498,7 @@ bool  CTMSSensor::ParseXmlFromOtherMonitor(std::string &retXml,int &nRet)
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if(ptrNodeList == NULL)
 		{
-			C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
+			LOG(ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
 			return false;
 		}
 		else
@@ -515,7 +517,7 @@ bool  CTMSSensor::ParseXmlFromOtherMonitor(std::string &retXml,int &nRet)
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;

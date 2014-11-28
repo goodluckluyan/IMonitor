@@ -9,22 +9,32 @@
 
  #ifndef HALL_LIST
  #define HALL_LIST
-
+#include <string>
+#include <list>
+#include <pthread.h>
 #include "threadManage/C_CS.h"
 #include "C_constDef.h"
 #include "DataManager.h"
 #include "C_Hall.h"
-#include <string>
-#include <list>
+
+
 //using namespace std;
 
+struct stConditionSwitch
+{
+	std::string strHallID;
+	std::string strCond;
+	int nVal;
+};
 
 class C_HallList
 {
 public:
 	C_HallList()
 		:m_ptrDM(NULL)
-	{};
+	{
+		pthread_cond_init(&cond,NULL);
+	};
    
 	
     ~C_HallList();
@@ -36,14 +46,22 @@ public:
 	bool GetSMSWorkState();
 
 	// 切换sms
-	bool SwitchSMS(std::string strHallID);
+	bool SwitchSMS(std::string strHallID,int &nState);
 
-	// 切换所有的sms
-	bool SwitchAllSMS();
-
+	// 获取hallid
+	void GetAllHallID(std::vector<std::string>& vecHallID);
 
 	// 获取运行主机及webservice端口
 	bool GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPort);
+
+	// 添加条件等待切换任务
+	bool AddCondSwitchTask(std::string strHallID,std::string strCond,int nVal);
+
+	// 执行条件等待切换任务
+	bool ProcessCondSwitchTask();
+
+	// 判断切换sms任务已经在条件任务中存在
+	bool IsHaveCondSwitchTask(std::string strHallID);
 
 private:
 
@@ -54,11 +72,17 @@ private:
 	bool ShutdownTOMCAT(std::string strPath);
 	 
     C_CS m_CS;
+	std::map<std::string,int> m_mapHallCurState;
+
 	std::map<std::string,C_Hall *> m_mapHall;
     static C_HallList *m_pInstance; 
 	std::string m_WebServiceLocalIP;
 	std::string m_WebServiceOtherIP;
 	CDataManager *m_ptrDM;
+
+	std::list<stConditionSwitch>  m_lstCondSwitch;
+	C_CS m_csCondTaskLst;
+	pthread_cond_t cond; 
 
 };
 #endif //HALL_LIST;

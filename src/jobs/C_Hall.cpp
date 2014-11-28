@@ -15,10 +15,10 @@
 //#include "para/C_RunPara.h"
 #include "para/C_Para.h"
 #include "../C_ErrorDef.h"
-const int ERROR_PLAYER_AQ_BADHTTPRESPONSE = -1;
-const int ERROR_PLAYER_AQ_NEEDSOAPELEM = -2;
-const int BufferLength = 2048;
 
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+
+#define BUFFLEN  2048
 using namespace std;
 using namespace xercesc;
 C_Hall::C_Hall(SMSInfo &stSms)
@@ -30,8 +30,9 @@ C_Hall::C_Hall(SMSInfo &stSms)
 
 C_Hall::~C_Hall()
 {
-    
 }
+
+
 
 // ³õÊ¼»¯
 int C_Hall::Init(bool bRun)
@@ -491,7 +492,7 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		C_LogManage::GetInstance()->WriteLog(0,18,0,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		delete ptrInputsource;
 		
@@ -598,13 +599,13 @@ int C_Hall::SendAndRecvInfo(const string &send, string &recv, int overtime)
 int C_Hall::ReceiveCommand(string &recv, int waitTime)
 {
 	recv.clear();
-	char buffer[BufferLength];
+	char buffer[BUFFLEN];
 	timeval timeOut;
 	timeOut.tv_sec = waitTime;
 	timeOut.tv_usec = 0;
 
 	int result = 0;
-	while((result = m_tcp.SelectRecv(buffer, BufferLength-1, timeOut)) >= 0)
+	while((result = m_tcp.SelectRecv(buffer, BUFFLEN-1, timeOut)) >= 0)
 	{
 		if(result == 0)
 			break;

@@ -3,6 +3,13 @@
 #include<stdlib.h>
 #include"para/C_Para.h"
 #include"DataManager.h"
+#include"log/C_LogManage.h"
+
+#define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGINFO(msg)	  C_LogManage::GetInstance()->WriteLog(LOG_INFO,LOG_MODEL_JOBS,0,0,msg)
+#define  LOGFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+						
+
 CDataManager *CDataManager::m_pinstance=NULL;
 CDataManager::CDataManager()
 {
@@ -57,26 +64,27 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 {
 	m_csDisk.EnterCS();
 	m_df = df;
-    printf("*****************Raid State************\n");
-	printf("diskSize:%s\n",df.diskSize.c_str());
+	
+    LOGFMT("*****************Raid State************");
+	LOGFMT("diskSize:%s",df.diskSize.c_str());
 	std::transform(m_df.diskState.begin(),m_df.diskState.end(),m_df.diskState.begin(),::tolower);
-	printf("diskState:%s\n",df.diskState.c_str());
-	printf("diskNumberOfDrives:%s\n",df.diskNumOfDrives.c_str());
-	printf("-------------------Detail--------------\n");
+	LOGFMT("diskState:%s",df.diskState.c_str());
+	LOGFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
+	LOGFMT("-------------------Detail--------------");
 	int nLen = df.diskDrives.size();
 	for(int i = 0 ;i < nLen ;i ++)
 	{	
-	    printf("----------------%d----------------\n",i);
-	    printf("dirveID:%s\n",df.diskDrives[i].driveID.c_str());
-	    printf("dirveSlotNum:%s\n",df.diskDrives[i].driveSlotNum.c_str());
-	    printf("dirveErrorCount:%s\n",df.diskDrives[i].driveErrorCount.c_str());
-	    printf("dirveSize:%s\n",df.diskDrives[i].driveSize.c_str());
+	    LOGFMT("----------------%d----------------",i);
+	    LOGFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
+	    LOGFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
+	    LOGFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
+	    LOGFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
 		std::transform(df.diskDrives[i].driveFirmwareState.begin(),
 			df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
-	    printf("dirveFirmwareState:%s\n",df.diskDrives[i].driveFirmwareState.c_str());
-	    printf("dirveSpeed:%s\n",df.diskDrives[i].driveSpeed.c_str());
+	    LOGFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
+	    LOGFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
 	}
-	printf("---------------------------------------\n");
+	LOGFMT("---------------------------------------");
 	m_csDisk.LeaveCS();
 	
 	std::vector<stError> vecRE;
@@ -147,7 +155,7 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 		if(fit != m_mapEthStatus.end())
 		{
 			fit->second = vecEthStatus[i];
-			printf("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu\n",vecEthStatus[i].strName.c_str(),
+			LOGFMT("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu",vecEthStatus[i].strName.c_str(),
 				vecEthStatus[i].nConnStatue,vecEthStatus[i].nRxSpeed,vecEthStatus[i].nTxSpeed);
 		}
 	}
@@ -160,7 +168,7 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 //更新SMS的状态
 bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string strInfo)
 {
-	printf("SMS:%s Status:%d  (%s)\n",strHallID.c_str(),nState,strInfo.c_str());
+	LOGFMT("SMS:%s Status:%d  (%s)",strHallID.c_str(),nState,strInfo.c_str());
 	m_csSMS.EnterCS();
 	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
 	if(it != m_mapSmsStatus.end())
@@ -255,6 +263,20 @@ bool CDataManager::GetSMSStat(std::vector<SMSStatus>& vecSMSState)
 	return true;
 }
 
+// 获取SMS状态
+bool CDataManager::GetSMSStat(std::string strHallID,SMSInfo& smsinfo)
+{
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
+	if(it != m_mapSmsStatus.end())
+	{
+		smsinfo = it->second;
+	}
+	m_csSMS.LeaveCS();
+
+	return true;
+}
+
 // 获取TMS的状态
 int CDataManager::GetTMSStat()
 {
@@ -271,7 +293,7 @@ void * CDataManager::GetInvokerPtr()
 //更新对端调度软件状态
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
-	printf("Other Monitor State:bMain:%d,nState:%d\n",bMain,nState);
+	LOGFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
 	if(C_Para::GetInstance()->m_bMain == bMain && bMain )
 	{
 		stError er;
@@ -304,7 +326,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 //更新对端tms状态
 bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 {
-	printf("Other TMS State:bRun:%d,nWorkState:%d,nState:%d\n",bRun,nWorkState,nState);
+	LOGFMT("Other TMS State:bRun:%d,nWorkState:%d,nState:%d",bRun,nWorkState,nState);
 	return true;
 }
 
@@ -312,7 +334,7 @@ bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 //更新对端sms状态
 bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
-// 	printf("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s\n",strHallId.c_str(),
+// 	LOGFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s",strHallId.c_str(),
 // 		bRun,nState,nPosition,strSplUuid.c_str());
 
 	
@@ -356,10 +378,10 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 										int nWriteSpeed,std::vector<int> &vecDiskState)
 {
-	printf("Other Raid State:State:%d,RS:%d,WS:%d\n",nState,nReadSpeed,nWriteSpeed);
+	LOGFMT("Other Raid State:State:%d,RS:%d,WS:%d",nState,nReadSpeed,nWriteSpeed);
 	for(int i=0;i<vecDiskState.size();i++)
 	{
-		printf("Raid%d:%d\n",i,vecDiskState[i]);
+		LOGFMT("Raid%d:%d",i,vecDiskState[i]);
 	}
 
 
@@ -373,7 +395,7 @@ bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 	for(int i = 0 ;i < nlen ;i++)
 	{
 		EthStatus &node = vecEthStatus[i];
-		printf("Other %s State:nConnectState:%d,nSpeed:%d\n",node.strName.c_str(),
+		LOGFMT("Other %s State:nConnectState:%d,nSpeed:%d",node.strName.c_str(),
 			node.nConnStatue,node.nRxSpeed);
 	}
 	return true;
@@ -383,17 +405,17 @@ bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 //帮助信息打印tms状态
 void CDataManager::PrintTMSState()
 {
-	printf("TMS Current State:\n");
-	printf("bRun:%d\n",m_nTMSState);
+	LOGFMT("TMS Current State:");
+	LOGFMT("bRun:%d",m_nTMSState);
 }
 
 
 //帮助信息打印raid状态
 void CDataManager::PrintDiskState()
 {
-	printf("Number of RAID Disk :%s\n",m_df.diskNumOfDrives.c_str());
-	printf("RAID Disk State :%s\n",m_df.diskState.c_str());
-	printf("RAID Disk State: %s\n",m_df.diskSize.c_str());
+	LOGFMT("Number of RAID Disk :%s",m_df.diskNumOfDrives.c_str());
+	LOGFMT("RAID Disk State :%s",m_df.diskState.c_str());
+	LOGFMT("RAID Disk State: %s",m_df.diskSize.c_str());
 }
 
 //帮助信息打印sms状态
@@ -407,8 +429,8 @@ void CDataManager::PrintSMSState()
 	for(;it != maptmp.end(); it++)
 	{
 		SMSInfo &info = it->second;
-		printf("hallid:%s\n",info.strId.c_str());
-		printf("SMS state:%d\n",info.stStatus.nStatus);
+		LOGFMT("hallid:%s",info.strId.c_str());
+		LOGFMT("SMS state:%d",info.stStatus.nStatus);
 	}
 }
 
@@ -423,29 +445,29 @@ void CDataManager::PrintEthState()
 	for(;it != mapTmp.end(); it++)
 	{
 		EthStatus &node = it->second;
-		printf("EthName:%s\n",node.strName.c_str());
-		printf("TaskType:%d\n",node.nTaskType);
-		printf("ConnState:%d\n",node.nConnStatue);
-		printf("Speed:%d\n",node.nRxSpeed);
+		LOGFMT("EthName:%s",node.strName.c_str());
+		LOGFMT("TaskType:%d",node.nTaskType);
+		LOGFMT("ConnState:%d",node.nConnStatue);
+		LOGFMT("Speed:%d",node.nRxSpeed);
 	}
 }
 
 
 bool  CDataManager::UpdateOtherSwitchState(int nSwitch1State,int nSwitch2State)
 {
-	//printf("Other Switch nSwitch1State:%d,nSwitch2State:%d\n",nSwitch1State,nSwitch2State);
+	//LOGFMT("Other Switch nSwitch1State:%d,nSwitch2State:%d",nSwitch1State,nSwitch2State);
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSpeedLmtState(bool bEnableIngest,int nSpeedLimit)
 {
-	//printf("Other SpeedLmt bEnableIngest:%d,nSpeedLimit:%d\n",bEnableIngest,nSpeedLimit);
+	//LOGFMT("Other SpeedLmt bEnableIngest:%d,nSpeedLimit:%d",bEnableIngest,nSpeedLimit);
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSMSEWState(int nState,std::string  strInfo,std::string  strHall)
 {
-	//printf("Other SMSEW nState:%d,strInfo:%s,strHall:%s\n",nState,strInfo.c_str(),strHall.c_str());
+	//LOGFMT("Other SMSEW nState:%d,strInfo:%s,strHall:%s",nState,strInfo.c_str(),strHall.c_str());
 	return true;
 }
 

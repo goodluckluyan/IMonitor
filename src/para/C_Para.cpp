@@ -8,7 +8,7 @@
 #include "C_Para.h"
 #include "ec_config.h"
 
-
+extern int g_LogLevel;
 C_Para *C_Para::m_pInstance = NULL;
 
 C_Para::C_Para()
@@ -218,6 +218,14 @@ int C_Para::ReadPara()
 		return iResult;
 	}
 	m_strTOMCATPath = a;
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","WriteLogLevel",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_nWirteLogLevel = atoi(a);
 
 	return 0;
 
