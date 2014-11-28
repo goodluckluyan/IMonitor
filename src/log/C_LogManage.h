@@ -30,7 +30,9 @@ public:
 	static C_LogManage* GetInstance();
 	static void  DestoryInstance();
 	int WriteLog(int iLevel, int iModule, int iSubModule,c_u_int errorCode, std::string strError);
+	int WriteLogFmt(int iLevel, int iModule, int iSubModule,c_u_int errorCode, const char *fmt, ...);
 	int WriteLog(int iLogNumber, std::string strError);
+	char* ft_Printf(const char *fmt, ...);
 	
 	//iLevel：日志级别；
 	//iModule: 模块编号；

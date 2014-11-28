@@ -32,10 +32,10 @@
 #define LOG_FAIL	-1
 #define LOG_OK		0
 
-#define LOG_DEBUG	0
-#define LOG_INFO	1
-#define LOG_ERROR	2
-#define LOG_FATAL	3
+#define LOG_LDEBUG	0
+#define LOG_LINFO	1
+#define LOG_LERROR	2
+#define LOG_LFATAL	3
 
 
 class LogManage
@@ -104,6 +104,8 @@ private:
 	//Bool16	DoesFileExist(const char *inPath);
 	//char*	GetLogPath(char *extension);
 	int	ft_fPrintf(const char *fmt, ...);
+
+	char* ft_Printf(const char *fmt, ...);
 
 };
 

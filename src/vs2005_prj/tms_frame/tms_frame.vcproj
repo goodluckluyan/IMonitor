@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="tms_frame"
+	Name="IMonitor"
 	ProjectGUID="{1E01F33D-C5C2-4DCE-B72C-A1EDD85A2520}"
 	RootNamespace="tms_frame"
 	Keyword="Win32Proj"
@@ -190,10 +190,6 @@
 			</File>
 			<File
 				RelativePath="..\..\C_ErrorDef.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\IMonitor.h"
 				>
 			</File>
 		</Filter>

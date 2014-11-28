@@ -6,9 +6,9 @@
 #include "check_netcard.h"
 
 bool g_bQuit = false;
-
-#define Log LogN(1005)
-
+int g_LogLevel = 0;
+#define  LOG(errid,msg)  
+//C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 
 int  CInvoke::Init()
 {
@@ -21,7 +21,7 @@ int  CInvoke::Init()
 		return -1;
 	}
 
-	// 监测对端高度软件
+	// 监测对端调度软件
 	bool bRunOther = false;
 	C_Para * pPara = C_Para::GetInstance();
 	if(m_ptrMonitor == NULL)
@@ -47,8 +47,7 @@ int  CInvoke::Init()
 			time(&tm2);
 			if(tm2-tm1 >= 300)
 			{
-				C_LogManage *pLogManage = C_LogManage::GetInstance();
-				pLogManage->WriteLog(3,17,0,ERROR_OTHERMONITOR_NORUN,"Other Monitor Not Run !");
+				LOG(ERROR_OTHERMONITOR_NORUN,"Other Monitor Not Run !");
 				printf("Other Monitor Not Run !\n");
 				break;
 			}
@@ -337,8 +336,21 @@ void CInvoke::PrintProductInfo()
 	printf("# print -d:print RAID status\n");
 	printf("# print -s:print SMS status\n");
 	printf("# print -e:print Eth status\n");
+	printf("# log	-n:0-3 print log level\n");
 	printf("#-----------------------------------------------------------------------------#\n");
 }
+
+void CInvoke::PrintLogLevel()
+{
+	printf("#-----------------------------------------------------------------------------#\n");
+	printf("# log Usage:																  #\n");
+	printf("# log	-0:print log level LOG_DEBUG\n");
+	printf("# log	-1:print log level LOG_INFO\n");
+	printf("# log	-2:print log level LOG_ERROR\n");
+	printf("# log	-3:print log level LOG_FATAL\n");
+	printf("#-----------------------------------------------------------------------------#\n");
+}
+
 
 //接收用户输入控制的线程函数
 int CInvoke::Controller () 
@@ -420,6 +432,33 @@ int CInvoke::Controller ()
 			}
 	
 		}
+		if("log" == vecParam[0] && vecParam.size() >=2)
+		{
+			if(vecParam[1] == "0")
+			{
+				g_LogLevel = 0;
+				printf("Log Level Change To 0:LOG_DEBUG\n");
+			}
+			else if(vecParam[1] == "1")
+			{
+				g_LogLevel = 1;
+				printf("Log Level Change To 1:LOG_INFO\n");
+			}
+			else if(vecParam[1] == "2")
+			{
+				g_LogLevel = 2;
+				printf("Log Level Change To 2:LOG_ERROR\n");
+			}
+			else if(vecParam[1] == "3")
+			{
+				g_LogLevel = 3;
+				printf("Log Level Change To 3:LOG_FATAL\n");
+			}
+			else
+			{
+				PrintLogLevel();
+			}
+		}
 		
 	}
 	printf("Stop input! IMonitor will be exit!\n");
@@ -450,6 +489,7 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 
 	if(m_ptrLstHall != NULL)
 	{
+		LOG(ERROR_POLICYTRI_SMSSWITCH,(std::string("Fault Of Policys Trigger Switch SMS! ")+ strHallID).c_str());
 		int nState;
 		 if(m_ptrLstHall->SwitchSMS(strHallID,nState))
 		 {
@@ -479,7 +519,8 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 bool CInvoke::SwitchAllSMS()
 {
 	if(m_ptrLstHall != NULL)
-	{
+	{	
+		LOG(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");
 		printf("Fault Of Policys Trigger SwitchAllSMS!\n");		
 		std::vector<std::string> vecHallID;
 		m_ptrLstHall->GetAllHallID(vecHallID);
@@ -499,6 +540,7 @@ bool CInvoke::SwitchAllSMS()
 // 退出系统
 void CInvoke::Exit()
 {
+	LOG(ERROR_POLICYTRI_EXIT,"Fault Of Policys Trigger Exit!");
 	printf("Fault Of Policys Trigger Exit! 5 Sec Waiting \n");
 	for(int i = 5;i > 0 ;i--)
 	{
@@ -513,5 +555,6 @@ void CInvoke::Exit()
 void CInvoke::StartTMS()
 {
 	printf("Fault Of Policys Trigger StartTMS!\n");
+	LOG(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartTMS!");
 	m_ptrTMS->StartTMS();
 }

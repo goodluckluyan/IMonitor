@@ -10,18 +10,16 @@
  */
 
 #include "LogManage.h"
-#include "../para/C_RunPara.h" //by wangzhongping at 2102-7-29
 #include <string>
+#include "para/C_RunPara.h"
+extern int g_LogLevel ;
 using namespace std;
 
-char* LogManage::logLevelStr[] = {
-
+char* LogManage::logLevelStr[] = 
+{
 	"DEBUG",
-
-	" INFO",
-
+	"INFO",
 	"ERROR",
-
 	"FATAL"
 };
 
@@ -52,26 +50,19 @@ void LogManage::WriteLog(int logLevel, const char* inLogContent)
 {
 
 	char*		theTime;
-
 	//time_t		timeInSec;
-
 	char*		totalMsg;		
-
 	char*		msgData;
-
 	int			msgLen;
-
 	theTime		=	NULL;
-
 	msgData		=	NULL;
-
 	totalMsg	=	NULL;
 
 	//check the log level, if it is lower then the specified level, do not write the log
-	if(logLevel < m_logLevel)
-	{
-		return;
-	}
+// 	if(logLevel < m_logLevel)
+// 	{
+// 		return;
+// 	}
 
 	//check if the log file is open. Open the log file if it has already been closed
 	if (m_pFile == NULL)
@@ -113,34 +104,26 @@ void LogManage::WriteLog(int logLevel, const char* inLogContent)
 	memset(msgData, 0, msgLen);
 
 	strncpy(msgData, inLogContent, msgLen);
+	
 
-	switch(logLevel)
+	if(logLevel >= m_logLevel && logLevel >= 0 && logLevel <= 3)
 	{
-	case LOG_FATAL:
-		ft_fPrintf("%s %s: %s\n", logLevelStr[LOG_FATAL], theTime, msgData);
-		break;
-	case LOG_ERROR:
-		ft_fPrintf("%s %s: %s\r\n", logLevelStr[LOG_ERROR], theTime, msgData);
-		break;
-	case LOG_INFO:
-		ft_fPrintf("%s %s: %s\r\n", logLevelStr[LOG_INFO], theTime, msgData);
-		break;
-	case LOG_DEBUG:
-		ft_fPrintf("%s %s: %s\r\n", logLevelStr[LOG_DEBUG], theTime, msgData);
-		break;
-	default:
-		break;
+		ft_fPrintf("%s %s: %s\n", logLevelStr[logLevel], theTime, msgData);
+		::fflush(m_pFile);
 	}
-
-	::fflush(m_pFile);
-#if _DEBUG
-	//if(logLevel == LOG_DEBUG)
+	
+	if(logLevel >= g_LogLevel && logLevel >= 0 && logLevel <= 3)
 	{
-		printf("%s--%s\n",m_baseLogName, msgData);
+		char * ptrPntMsg = NULL;
+		ptrPntMsg = ft_Printf("%s%s:%s\n", logLevelStr[logLevel], theTime, msgData);
+		printf("%s",ptrPntMsg);
+		if(ptrPntMsg)
+		{
+			delete[] ptrPntMsg;
+			ptrPntMsg = NULL;
+		}
 	}
-#endif
-
-//fail:
+	
 	if(msgData)
 	{
 		delete []msgData;
@@ -194,17 +177,12 @@ int LogManage::RollLog()
 int LogManage::RenameLogFile(const char* inFileName)
 {
 	int	theErr;
-
 	char	newLogFullPath[MAX_LOGFILE_FULLPATH_LENGTH];
-
 	char	tempLogFullPath[MAX_LOGFILE_FULLPATH_LENGTH];	
-
 	theErr	=	0;
 
 	memset(newLogFullPath, 0, sizeof(newLogFullPath));
-
 	memset(tempLogFullPath, 0, sizeof(tempLogFullPath));
-
 	sprintf(tempLogFullPath, "%s%s%s", m_logDir, m_baseLogName, m_logCreateTime);
 
 	//loop until we find a unique name to rename this file
@@ -244,7 +222,6 @@ int LogManage::RenameLogFile(const char* inFileName)
 int LogManage::EnableLog()
 {
     char*	extension;
-
 	extension =".log";
 
 	//make the full path string
@@ -299,6 +276,21 @@ int LogManage::ft_fPrintf(const char *fmt, ...)
 	va_end(args);
 
 	return result;
+}
+
+char* LogManage::ft_Printf(const char *fmt, ...)
+{
+	va_list ptr;
+	va_start(ptr,fmt);
+	int nSize = ::vsnprintf(NULL,0,fmt,ptr);
+	va_end(ptr);
+
+	char * buff= new char[nSize+1];
+	va_start(ptr,fmt);
+	::vsnprintf(buff,nSize+1,fmt,ptr);
+	va_end(ptr);
+
+	return buff;
 }
 
 int LogManage::SetLogPath(const char *strLogPath)

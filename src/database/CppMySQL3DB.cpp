@@ -4,7 +4,8 @@
 //dade:2012-07-12
 
 #include "CppMySQL3DB.h"
-#include "../para/C_Para.h"
+#include "para/C_Para.h"
+#include "C_constDef.h"
 CppMySQL3DB::CppMySQL3DB()
 {
 	_db_ptr = NULL;
@@ -351,7 +352,7 @@ u_int CppMySQL3DB::lastRowId()
 int MySqlDB_WriteErrorLog( int& errorCode ,const std::string& strError )
 {
 	int ret = 0;
-	int iLevel=3, iModule=20, iSubModule=0;
+	int iLevel=LOG_FATAL, iModule=LOG_MODEL_DB, iSubModule=0;
 	//int errorCode = 0;
 	ret = C_LogManage::GetInstance()->WriteLog( iLevel,  iModule, iSubModule, errorCode, strError);
 	return ret;

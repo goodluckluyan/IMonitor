@@ -90,7 +90,7 @@ int C_TaskList::GetIdleTask(C_Task **ppTask)
 			return 0;
 		}			
 	}
-	C_LogManage::GetInstance()->WriteLog(3,18,0,ERROR_TASK_LIST_FULL,"任务对列已满，无空闲任务。");
+	C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_TIMETASK,0,ERROR_TASK_LIST_FULL,"任务对列已满，无空闲任务。");
 	return C_LogManage::GetInstance()->CreateLogNumber(3,18,0,ERROR_TASK_LIST_FULL); 
 	
 }

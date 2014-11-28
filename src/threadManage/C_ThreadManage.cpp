@@ -73,7 +73,7 @@ void * Threadfunc(void* pvPara)
 				memset(a, 0, 1024);
 				sprintf(a,"线程的任务编号没有找到位执行相关的处理函数 CommandNumber:%d", pThreadData->m_pTask->m_iCommandNumber); 
 				printf("%s\n",a);
-				iResult = pLogManage->CreateLogNumber(3,17,0,ERROR_THREAD_TASK_NUMBER_NO_FIND);
+				iResult = pLogManage->CreateLogNumber(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TASK_NUMBER_NO_FIND);
 				pLogManage->WriteLog(iResult,a);
 				pThreadData->m_pTask->ReInit();			
 				pThreadData->suspend(SUSPEND_IDL_STATE);
@@ -90,7 +90,7 @@ void * Threadfunc(void* pvPara)
 			memset(a, 0, 1024);
 			sprintf(a,"线程的任务类型错误。 CommandNumber:%d ", pThreadData->m_pTask->m_iCommandNumber); 
 			printf("%s\n",a);
-			iResult = pLogManage->CreateLogNumber(3,17,0,ERROR_THREAD_TASK_TYPE);
+			iResult = pLogManage->CreateLogNumber(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TASK_TYPE);
 			pLogManage->WriteLog(iResult,a);
 			pThreadData->m_pTask->ReInit();					
 			pThreadData->suspend(SUSPEND_IDL_STATE);
@@ -198,7 +198,7 @@ int C_ThreadManage::GetIdlThread(C_ThreadData **pThreadData)
 			m_itIdl ++;
 
 		}while(itTmp != m_itIdl);
-		C_LogManage::GetInstance()->WriteLog(3,17,0,ERROR_THREAD_LIST_FULL,
+		C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_LIST_FULL,
 			"线程对列已满，无空闲线程。");
 		m_cs.LeaveCS();
 
@@ -262,12 +262,12 @@ int C_ThreadManage::InitThreadData()
 	std::string strError; 
 	if(pthread_attr_init(&attr) != 0)
 	{
-		pLog->WriteLog(3,17,0,ERROR_INIT_THREAD_ATTRIB,"初试化线程属性数据错误。");
+		pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_INIT_THREAD_ATTRIB,"初试化线程属性数据错误。");
 		return ERROR_INIT_THREAD_ATTRIB;
 	}
 	if(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0)
 	{
-		pLog->WriteLog(3,17,0,ERROR_SET_THREAD_ATTRIB,"设置线程属性数据错误。");
+		pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_SET_THREAD_ATTRIB,"设置线程属性数据错误。");
 		return ERROR_SET_THREAD_ATTRIB;		
 	}
 	for(int i=0; i< THREAD_COUNT_IN_POOL; ++i)
@@ -275,7 +275,7 @@ int C_ThreadManage::InitThreadData()
 		pThreadData = new C_ThreadData;
 		if(pthread_create(&pThreadData->m_hThread, &attr, Threadfunc, (void*)pThreadData) != 0)
 		{
-			pLog->WriteLog(3,17,0,ERROR_CREATE_TRREAD,"创建线程错误。");
+			pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_CREATE_TRREAD,"创建线程错误。");
 			return ERROR_CREATE_TRREAD;		
 		}
 		m_ThreadDataList.push_back(pThreadData);
@@ -298,7 +298,7 @@ int C_ThreadManage::GetThreadData(pthread_t &threadId,C_ThreadData **pThreadData
 	}
 	*pThreadData = NULL;
 	C_LogManage *pLog = C_LogManage::GetInstance();
-	pLog->WriteLog(3,17,0,ERROR_NO_FIND_THREADDATA_OF_ID,"根据threadID没有找到对应的C_ThreadData。");
+	pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_NO_FIND_THREADDATA_OF_ID,"根据threadID没有找到对应的C_ThreadData。");
 	return ERROR_NO_FIND_THREADDATA_OF_ID;
 }
 
@@ -339,18 +339,18 @@ int C_ThreadManage::InitWebserviceThread()
 	std::string strError; 
 	if(pthread_attr_init(&attr) != 0)
 	{
-		pLog->WriteLog(3,17,0,ERROR_INIT_WEBSERVICE_THREAD_ATTRIB,"初试化webservice线程属性数据错误。");
+		pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_INIT_WEBSERVICE_THREAD_ATTRIB,"初试化webservice线程属性数据错误。");
 		return ERROR_INIT_WEBSERVICE_THREAD_ATTRIB;
 	}
 // 	if(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0)
 // 	{
-// 		pLog->WriteLog(3,17,0,ERROR_SET_WEBSERVICE_THREAD_ATTRIB,"设置webservice线程属性数据错误。");
+// 		pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_SET_WEBSERVICE_THREAD_ATTRIB,"设置webservice线程属性数据错误。");
 // 		return ERROR_SET_WEBSERVICE_THREAD_ATTRIB;		
 // 	}
 
 	if(pthread_create(&m_hWebserviceThread, &attr, WebServiceListneFunc, NULL) != 0)
 	{
-		pLog->WriteLog(3,17,0,ERROR_WEBSERVICE_CREATE_TRREAD,"创建webservice线程错误。");
+		pLog->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_WEBSERVICE_CREATE_TRREAD,"创建webservice线程错误。");
 		return ERROR_WEBSERVICE_CREATE_TRREAD;		
 	}		
 	return 0;

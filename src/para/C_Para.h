@@ -74,6 +74,9 @@ public:
 
 	//等待对端调度软件启动检测超时时间,单位秒
 	int m_nTimeOutWaitOtherIMonitor;
+
+	//写日志级别
+	int m_nWirteLogLevel;
 private:
     static C_Para *m_pInstance;
 };
