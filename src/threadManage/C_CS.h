@@ -30,4 +30,27 @@ public:
 		pthread_mutex_unlock(&m_CS);
 	}
 };
+
+class C_GuardCS
+{
+
+public:
+	C_CS *m_pCS;
+
+	C_GuardCS(C_CS *pCS)
+	{
+		if(pCS)
+		{
+			m_pCS = pCS;
+			m_pCS->EnterCS();
+		}
+	}
+	~C_GuardCS(void)
+	{
+		if(m_pCS)
+		{
+			m_pCS->LeaveCS();
+		}
+	}
+};
 #endif //_CS_MUTEX

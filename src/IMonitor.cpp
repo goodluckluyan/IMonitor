@@ -1,7 +1,7 @@
 //@file:Tms20_DeviceService.cpp
 //@brief: 程序入点，包含main函数
-//@author:wangzhongping@oristartech.com
-//dade:2012-07-12
+//@author:luyan@oristartech.com
+//date:2014-09-12
 
 #include <signal.h>
 #include <unistd.h>
@@ -48,7 +48,6 @@ void sig_fun(int iSigNum)
 
 void InitSigFun(C_LogManage *pLogManage)
 {
-	// set signal; wzp
 	if(signal(SIGINT,sig_fun) == SIG_ERR)
 	{
 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGINT"); 
@@ -84,11 +83,11 @@ void InitSigFun(C_LogManage *pLogManage)
 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGSTKFLT"); 
 		printf("add signal Number:SIGSTKFLT\n");	
 	} 
-	/* if(signal(SIGTERM,sig_fun) == SIG_ERR)
-	{
-	pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGTERM"); 
-	printf("add signal Number:SIGTERM\n");	
-	}*/
+// 	if(signal(SIGTERM,sig_fun) == SIG_ERR)
+// 	{
+// 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGTERM"); 
+// 		printf("add signal Number:SIGTERM\n");	
+// 	}
 	if(signal(SIGUSR1,sig_fun) == SIG_ERR)
 	{
 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR1"); 
@@ -115,6 +114,7 @@ void InitSigFun(C_LogManage *pLogManage)
 		printf("add signal Number:SIGABRT\n");	
 	}
 
+	// 忽略子进程结束时发送的SIGCLD信号 ，防止僵尸进程
 	signal(SIGCLD,SIG_IGN);
 }
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
 	if(iResult != 0)
 	{
 		printf("read para error ,exit!\n");
-		return -1;
+		return -1;	
 	}
 
 	//初始化运行时参数设置---时间设置。
@@ -166,13 +166,13 @@ int main(int argc, char** argv)
 	iResult = pThreadManage->InitThreadData();
 	if(iResult != 0)
 	{
-		return -1; //Add Log and Erorr Ctrl;
+		return -1; 
 	} 
 
 	iResult = pThreadManage->InitWebserviceThread();
 	if(iResult != 0)
 	{
-		return -1; //Add Log and Erorr Ctrl;
+		return -1; 
 	} 
 
 	// 创建执行体
@@ -218,7 +218,7 @@ int main(int argc, char** argv)
 		if(iSleepMillisecond <= 0)
 		{
 			iSleepMillisecond = 0;//Add ErrorCtrl and log;
-			printf("^^^^^^^^ main thread is busy!^^^^^^^^^^^^^^^^^^^^^^^^^^\n"); 
+			printf("^^^^^^^^^^^^^^^^^^^^^^main thread is busy!^^^^^^^^^^^^^^^^^^^^^^^^^^\n"); 
 			continue;
 		}
 		else

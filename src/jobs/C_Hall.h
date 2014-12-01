@@ -7,7 +7,7 @@
 #ifndef HALL_DEFINE
 #define HALL_DEFINE
 
-#include "C_constDef.h"
+
 //#include "timeTask/C_TaskList.h"
 #include <pthread.h>
 #include <iostream>
@@ -30,9 +30,7 @@
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
-
-
-
+#include "C_constDef.h"
 #include "utility/C_HttpParser.h"
 #include "utility/C_TcpTransport.h"
 
@@ -45,7 +43,7 @@ class C_Hall
 
 public:
 	// 初始化
-	int Init(bool bRun);
+	int Init(bool bRun,int nPID = 0);
 
 	 // 获取SMS工作状态
 	int  GetSMSWorkState( int &state, std::string &info);

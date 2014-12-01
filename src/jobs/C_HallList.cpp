@@ -7,16 +7,14 @@
 #include <unistd.h>
 #include <sys/resource.h>
 #include "database/CppMySQL3DB.h"
-#include "database/CppMySQLQuery.h"
 #include "para/C_Para.h"
 #include "log/C_LogManage.h"
-#include "timeTask/C_TaskList.h"
-#include "para/C_RunPara.h"
-#include "log/C_LogManage.h"
-#include "para/C_RunPara.h"
 #include "C_HallList.h"
 
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+const std::string smsname = "oristar_sms_server";
 
 // using namespace std;
 C_HallList* C_HallList::m_pInstance = NULL;
@@ -45,8 +43,7 @@ C_HallList::~C_HallList()
 	return;   
 }
 
-
-
+// 初始化
 int C_HallList::Init(bool bRunOther )
 {
 	m_ptrDM = CDataManager::GetInstance();
@@ -55,7 +52,7 @@ int C_HallList::Init(bool bRunOther )
 	// 打开数据库
 	CppMySQL3DB mysql;
 	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
-		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+		ptrPara->m_strDBPWD.c_str(),"tms") == -1)
 	{
 		printf("mysql open failed!\n");
 		return false;
@@ -63,11 +60,11 @@ int C_HallList::Init(bool bRunOther )
 
 	// 读取hallinfo表,初始化sms信息
 	int nResult;
-	CppMySQLQuery query = mysql.querySQL("select * from hallinfo",nResult);
+	CppMySQLQuery query = mysql.querySQL("select * from devices where device_type=3 and device_model=\"AQ33CS\"",nResult);
 	int nRows = 0 ;
 	if((nRows = query.numRow()) == 0)
 	{
-		printf("C_HallList Initial failed,hallinfo talbe no rows!\n");
+		LOGERRFMT(ERROR_READSMSTABLE_NOROW,"C_HallList Initial failed,hallinfo talbe no rows!\n");
 		return false;
 	}
 
@@ -76,19 +73,32 @@ int C_HallList::Init(bool bRunOther )
 	for(int i = 0 ;i < nRows ; i++)
 	{
 		SMSInfo node;
-		node.strId = query.getStringField("hallid");
-		node.strIp = query.getStringField("ip");
-		node.nPort = atoi(query.getStringField("port"));
-		int nTmp = query.getIntField("role");
+		node.strId = query.getStringField("hall_id");
+		std::string strIP = query.getStringField("ip");
+		int nPort = atoi(query.getStringField("port"));
+		std::string strIP2 = query.getStringField("ip2");
+		int nPort2 = atoi(query.getStringField("port"));
+		int nTmp = query.getIntField("default_position");
+		
 
 		// 如查对方调度软件没有启动，则在本机启动所有sms
 		if(bRunOther)
 		{
-			node.nRole = nTmp == 1 ? 1 : 2;
+			node.nRole = nTmp == 0 ? 1 : 2;
 		}
 		else
 		{
 			node.nRole = ptrPara->m_bMain ? 1 : 2;
+		}
+		if(nTmp == 1)
+		{
+			node.strIp = strIP;
+			node.nPort = nPort;
+		}
+		else
+		{
+			node.strIp = strIP2;
+			node.nPort = nPort2;
 		}
 		node.stStatus.hallid = node.strId;
 		node.strExepath = query.getStringField("exepath");
@@ -96,8 +106,22 @@ int C_HallList::Init(bool bRunOther )
 		query.nextRow();
 		vecSMSInfo.push_back(node);
 	}
-	//std::vector<int> vecPID;
-	//Getpid("sms",vecPID);
+
+	// 如果已有sms运行，则关联
+	std::vector<int> vecPID;
+	std::map<int,std::string> mapDir;
+	GetPID(smsname,vecPID);
+	for(int i = 0 ;i < vecPID.size();i++)
+	{
+		std::string strDir;
+		if(!GetPIDExeDir(vecPID[i],strDir))
+		{
+			continue;
+		}
+
+		mapDir[vecPID[i] ] = strDir;
+	}
+
 	int nLen = vecSMSInfo.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
@@ -105,9 +129,29 @@ int C_HallList::Init(bool bRunOther )
 	
 		bool bRun = ptrPara->m_bMain ? node.nRole == 1 : node.nRole == 2;
 		C_Hall * ptrHall = new C_Hall(node);
-		node.stStatus.nRun = ptrHall->Init(bRun);
-		m_mapHall[node.strId]= ptrHall;
+		
+		// 是否已经存在
+		std::map<int,std::string>::iterator it = mapDir.begin();
+		for(;it != mapDir.end();it++)
+		{
+			if(it->second == node.strExepath)
+			{
+				LOGINFFMT(0,"SMS %s(%d) has been ,To Associate!",it->second.c_str(),it->first);
+				break;
+			}
+		}
 
+		//关联已经存在的sms
+		if(it != mapDir.end())
+		{
+			node.stStatus.nRun = ptrHall->Init(bRun,it->first);
+		}
+		else//根据bRun标记是否新建运行sms
+		{
+			node.stStatus.nRun = ptrHall->Init(bRun);
+		}
+		
+		m_mapHall[node.strId]= ptrHall;
 		if(bRun)
 		{
 			m_WebServiceLocalIP = node.strIp;
@@ -151,7 +195,7 @@ bool C_HallList::StartTOMCAT(std::string strPath)
 	
 	if((pid = fork()) == 0)
 	{
-		// 关闭所有父进程打开的文件描述符
+		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
 		if(rl.rlim_max == RLIM_INFINITY)
 		{
 			rl.rlim_max = 1024;
@@ -191,50 +235,67 @@ bool C_HallList::ShutdownTOMCAT(std::string strPath)
 	return true;
 }
 
-// int C_HallList::Getpid(std::string strName,std::vector<int>& vecPID)
-// {	
-// 	char acExe[64]={'\0'};
-// 	snprintf(acExe,64,"pidof %s",strName.c_str());
-// 	FILE *pp = popen(acExe,"r");
-// 	if(!pp)
-// 	{
-// 		printf("popen fail\n");
-// 		return -1;
-// 	}
-// 	char tmpbuf[128]={'\0'};
-// 	std::vector<std::string> vecBuf;
-// 	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
-// 	{
-// 		vecBuf.push_back(tmpbuf);
-// 	}
-// 
-// 	int nLen = vecBuf.size();
-// 	for(int i = 0 ;i < nLen ;i++)
-// 	{
-// 		std::string &strtmp=vecBuf[i];
-// 		int nStart = 0;
-// 		int nPos = strtmp.find(' ',nStart);
-// 		while(nPos != std::string::npos)
-// 		{
-// 			vecPID.push_back(atoi(strtmp.substr(nStart,nPos-nStart).c_str()));
-// 			nStart = nPos+1;
-// 			nPos = strtmp.find(' ',nStart);
-// 		}
-// 		vecPID.push_back(atoi(strtmp.substr(nStart).c_str()));
-// 	}
-// 
-// 	pclose(pp);
-// 	return 0;
-// }
+int C_HallList::GetPID(std::string strName,std::vector<int>& vecPID)
+{	
+	char acExe[64]={'\0'};
+	snprintf(acExe,64,"pidof %s",strName.c_str());
+	FILE *pp = popen(acExe,"r");
+	if(!pp)
+	{
+		printf("popen fail\n");
+		return -1;
+	}
+	char tmpbuf[128]={'\0'};
+	std::vector<std::string> vecBuf;
+	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+	{
+		vecBuf.push_back(tmpbuf);
+	}
+
+	int nLen = vecBuf.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		std::string &strtmp=vecBuf[i];
+		int nStart = 0;
+		int nPos = strtmp.find(' ',nStart);
+		while(nPos != std::string::npos)
+		{
+			vecPID.push_back(atoi(strtmp.substr(nStart,nPos-nStart).c_str()));
+			nStart = nPos+1;
+			nPos = strtmp.find(' ',nStart);
+		}
+		vecPID.push_back(atoi(strtmp.substr(nStart).c_str()));
+	}
+
+	pclose(pp);
+	return 0;
+}
+
+
+// 获取进程执行的路径
+bool C_HallList::GetPIDExeDir(int nPID,std::string &strDir)
+{
+	char buff[256]={'\0'};
+	char dir[256]={'\0'};
+	snprintf(buff,sizeof(buff),"/proc/%d/exe",nPID);
+	if(readlink(buff,dir,256) <=0)
+	{
+		return false;
+	}
+
+	strDir = dir ;
+	return true;
+}
 
 // 获取SMS工作状态
 bool C_HallList::GetSMSWorkState()
 {
+	C_GuardCS guardcs(&m_csSwitching);
 	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
 	for( ;it != m_mapHall.end() ;it++)
 	{
 		C_Hall * ptr = it->second;
-		int nState;
+		int nState = 0;
 		std::string strInfo;
 		if( ptr->IsLocal())
 		{
@@ -267,6 +328,7 @@ void C_HallList::GetAllHallID(std::vector<std::string> &vecHallID)
 //切换SMS nState 返回1:表示没有些hallid 2:表示sms busy 3:启动新sms失败
 bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 {
+	C_GuardCS guardcs(&m_csSwitching);
 	if(strHallID.empty())
 	{
 		return false;
@@ -278,7 +340,8 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 		return false;
 	}
 
-	LOG(ERROR_SMSSWITCH_START,(std::string("SMS Switch Start!")+strHallID).c_str());
+//	LOG(ERROR_SMSSWITCH_START,(std::string("SMS Switch Start!")+strHallID).c_str());
+	LOGINFFMT(ERROR_SMSSWITCH_START,"SMS:%s Switch Start!",strHallID.c_str());
 	C_Hall * ptr = fit->second;
 	if(m_ptrDM != NULL && C_Para::GetInstance()->m_bMain)
 	{
@@ -289,10 +352,8 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 		if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
 			||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
 		{
-			char buff[64];
-			snprintf(buff,sizeof(buff),"Sms(%s) is busy cann't switch!",strHallID.c_str());
-			LOG(ERROR_SMSBUSY_NOTSWITCH,buff);
-			printf("%s\n",buff);
+			LOGERRFMT(ERROR_SMSSWITCH_START,"Sms(%s) is busy cann't switch!",strHallID.c_str());
+//			LOG(ERROR_SMSSWITCH_START,buff);
 			nState = 2;
 			return false;
 		}
@@ -301,13 +362,15 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 	if(ptr->IsLocal())
 	{
 		bool bRet = ptr->ShutDownSMS();
-		LOG(ERROR_SMSSWITCH_LOCALSHUTDOWN,(std::string("SMS Switch:local run sms shutdown!")+strHallID).c_str());
+//		LOG(ERROR_SMSSWITCH_LOCALSHUTDOWN,(std::string("SMS Switch:local run sms shutdown!")+strHallID).c_str());
+		LOGINFFMT(ERROR_SMSSWITCH_LOCALSHUTDOWN,"SMS:%s Switch local run sms shutdown!",strHallID.c_str());
 		if(C_Para::GetInstance()->m_bMain)
 		{
-			// 调用备机的切换Sms
+			// 调用备机的切换Sms`
  			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
-			LOG(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
+			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms!");
+//			LOG(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
 		}
 		if(bRet)
 		{
@@ -322,11 +385,14 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 			// 调用备机的切换Sms
  			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
-			LOG(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
+//			LOG(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
+			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
 		}
 		int nPid = 0;
 		ptr->StartSMS(nPid);
-		LOG(ERROR_SMSSWITCH_LOCALRUN,(std::string("SMS Switch:local run !")+strHallID).c_str());
+//		LOG(ERROR_SMSSWITCH_LOCALRUN,(std::string("SMS Switch:local run !")+strHallID).c_str());
+		LOGINFFMT(ERROR_SMSSWITCH_LOCALRUN,"SMS:%s Switch:local run !",strHallID.c_str());
+
 		if(nPid == 0)
 		{
 			nState = 3;
@@ -343,12 +409,14 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 			{
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-				LOG(ERROR_SMSSWITCH_LOCALRUNOK,(std::string("SMS Switch:local run OK!")+strHallID).c_str());
+//				LOG(ERROR_SMSSWITCH_LOCALRUNOK,(std::string("SMS Switch:local run OK!")+strHallID).c_str());
+				LOGINFFMT(ERROR_SMSSWITCH_LOCALRUNOK,"SMS:%s Switch local run OK!",strHallID.c_str());
 			}
 			else
 			{
 				nState = 3;
-				LOG(ERROR_SMSSWITCH_LOCALRUNFAIL,(std::string("SMS Switch:local run failed!")+strHallID).c_str());
+//				LOG(ERROR_SMSSWITCH_LOCALRUNFAIL,(std::string("SMS Switch:local run failed!")+strHallID).c_str());
+				LOGERRFMT(ERROR_SMSSWITCH_LOCALRUNFAIL,"SMS:%s Switch local run failed!",strHallID.c_str());
 				return false;
 			}
 		}
@@ -375,6 +443,7 @@ bool C_HallList::GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPo
 	return true;
 }
 
+// 是否已经存在于延时切换队列中
 bool C_HallList::IsHaveCondSwitchTask(std::string strHallID)
 {
 	m_csCondTaskLst.EnterCS();
@@ -398,7 +467,8 @@ bool C_HallList::IsHaveCondSwitchTask(std::string strHallID)
 // 添加条件等待切换任务
 bool C_HallList::AddCondSwitchTask(std::string strHallID,std::string strCond,int nVal)
 {
-	LOG(ERROR_SMSBUSY_DELAYSWITCH,(std::string("Switch SMS while SMS busy ,so delay switch SMS!")+strHallID).c_str());
+//	LOG(ERROR_SMSBUSY_DELAYSWITCH,(std::string("Switch SMS while SMS busy ,so delay switch SMS!")+strHallID).c_str());
+	LOGERRFMT(ERROR_SMSBUSY_DELAYSWITCH,"Switch SMS:%s while SMS busy ,so delay switch SMS!",strHallID.c_str());
 	if(IsHaveCondSwitchTask(strHallID))
 	{
 		printf("Delay switch SMS(%s) task has been!\n ",strHallID.c_str());

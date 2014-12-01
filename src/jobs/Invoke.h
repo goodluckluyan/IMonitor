@@ -4,7 +4,7 @@
 //date:2014-09-17 
 
 #ifndef INVOKE_INC
- #define INVOKE_INC
+#define INVOKE_INC
 #include "C_HallList.h"
 #include "CheckDisk.h"
 #include "DataManager.h"

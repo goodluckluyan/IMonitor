@@ -7,8 +7,9 @@
 
 bool g_bQuit = false;
 int g_LogLevel = 0;
-#define  LOG(errid,msg)  
-//C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+
 
 int  CInvoke::Init()
 {
@@ -47,7 +48,7 @@ int  CInvoke::Init()
 			time(&tm2);
 			if(tm2-tm1 >= 300)
 			{
-				LOG(ERROR_OTHERMONITOR_NORUN,"Other Monitor Not Run !");
+				LOGFAT(ERROR_OTHERMONITOR_NORUN,"Other Monitor Not Run !");
 				printf("Other Monitor Not Run !\n");
 				break;
 			}
@@ -489,16 +490,18 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 
 	if(m_ptrLstHall != NULL)
 	{
-		LOG(ERROR_POLICYTRI_SMSSWITCH,(std::string("Fault Of Policys Trigger Switch SMS! ")+ strHallID).c_str());
+//		LOG(ERROR_POLICYTRI_SMSSWITCH,(std::string("Fault Of Policys Trigger Switch SMS! ")+ strHallID).c_str());
+		LOGINFFMT(ERROR_POLICYTRI_SMSSWITCH,"Switch SMS(%s)! ",strHallID.c_str());
+
 		int nState;
 		 if(m_ptrLstHall->SwitchSMS(strHallID,nState))
 		 {
 			 std::string strNewIP;
 			 int nNewPort = 0;
 			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
-			 if(strNewIP.empty() && nNewPort > 0)
+			 if(!strNewIP.empty() && nNewPort > 0)
 			 {
-				 //m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strIP,nPort);
+				 m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 			 }
 		 }
 		 else
@@ -520,7 +523,7 @@ bool CInvoke::SwitchAllSMS()
 {
 	if(m_ptrLstHall != NULL)
 	{	
-		LOG(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");
+		LOGFAT(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");
 		printf("Fault Of Policys Trigger SwitchAllSMS!\n");		
 		std::vector<std::string> vecHallID;
 		m_ptrLstHall->GetAllHallID(vecHallID);
@@ -540,7 +543,7 @@ bool CInvoke::SwitchAllSMS()
 // ÍË³öÏµÍ³
 void CInvoke::Exit()
 {
-	LOG(ERROR_POLICYTRI_EXIT,"Fault Of Policys Trigger Exit!");
+	LOGFAT(ERROR_POLICYTRI_EXIT,"Fault Of Policys Trigger Exit!");
 	printf("Fault Of Policys Trigger Exit! 5 Sec Waiting \n");
 	for(int i = 5;i > 0 ;i--)
 	{
@@ -555,6 +558,6 @@ void CInvoke::Exit()
 void CInvoke::StartTMS()
 {
 	printf("Fault Of Policys Trigger StartTMS!\n");
-	LOG(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartTMS!");
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartTMS!");
 	m_ptrTMS->StartTMS();
 }

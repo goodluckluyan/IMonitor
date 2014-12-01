@@ -11,12 +11,13 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <time.h>
-#include "database/CppMySQL3DB.h"
-//#include "para/C_RunPara.h"
 #include "para/C_Para.h"
-#include "../C_ErrorDef.h"
+#include "C_ErrorDef.h"
+#include "log/C_LogManage.h"
 
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+
 
 #define BUFFLEN  2048
 using namespace std;
@@ -35,15 +36,21 @@ C_Hall::~C_Hall()
 
 
 // 初始化
-int C_Hall::Init(bool bRun)
+int C_Hall::Init(bool bRun,int nPID)
 {
 	 m_bInitRun = bRun;
-	 if(bRun)
+	 if(bRun && nPID == 0)
 	 {
 		 // 本机运行
 		int nPid;
 		StartSMS(nPid);
 		 m_SMS.stStatus.nRun = 1;
+	 }
+	 else if(bRun && nPID != 0)
+	 {
+		 // 本机运行
+		m_pid = nPID;
+		m_SMS.stStatus.nRun = 1;	
 	 }
 	 else
 	 {
@@ -264,6 +271,19 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	if (m_SMS.strIp.empty())
 	{
 		return -1;
+	}
+
+	std::vector<int> vecPID;
+	Getpid(m_SMS.strExepath,vecPID);
+	if(vecPID.size() == 0)
+	{
+		LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
+		int nPID;
+		StartSMS(nPID);
+	}
+	else
+	{
+		m_pid = vecPID[0];
 	}
 
 	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";

@@ -3,7 +3,8 @@
 #include"utility/C_HttpParser.h"
 #include"utility/C_TcpTransport.h"
 #include"log/C_LogManage.h"
-#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 
 CMonitorSensor::CMonitorSensor()
 {
@@ -300,7 +301,7 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 		 DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("bMain"));
 		if(ptrNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
 			return false;
 		}
 		else
@@ -321,7 +322,7 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 		 DOMNodeList *ptrStateNodeList = ptrDoc->getElementsByTagName(C2X("iState"));
 		if(ptrStateNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorState:没有找到iState节点");
 			return false;
 		}
@@ -344,7 +345,7 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -379,7 +380,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("bRun"));
 		if(ptrNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorTMSState:没有找到bRun节点");
 			return false;
 		}
@@ -401,7 +402,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 		DOMNodeList *ptrWorkStateNodeList = ptrDoc->getElementsByTagName(C2X("iWorkState"));
 		if(ptrWorkStateNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorTMSState:没有找到iWorkState节点");
 			return false;
 		}
@@ -422,7 +423,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 		DOMNodeList *ptrStateNodeList = ptrDoc->getElementsByTagName(C2X("iState"));
 		if(ptrStateNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorTMSState:没有找到iState节点");
 			return false;
 		}
@@ -444,7 +445,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -531,7 +532,7 @@ bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<S
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -566,7 +567,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("state"));
 		if(ptrNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorRaidState:没有找到status节点");
 			return false;
 		}
@@ -586,7 +587,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		DOMNodeList *ptrReadNodeList = ptrDoc->getElementsByTagName(C2X("ReadSpeed"));
 		if(ptrReadNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorRaidState:没有找到nReadSpeed");
 			return false;
 		}
@@ -606,7 +607,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		DOMNodeList *ptrWriteNodeList = ptrDoc->getElementsByTagName(C2X("WriteSpeed"));
 		if(ptrWriteNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorRaidState:没有找到nWriteSpeed节点");
 			return false;
 		}
@@ -626,7 +627,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 		DOMNodeList *ptrDiskNodeList = ptrDoc->getElementsByTagName(C2X("diskstate"));
 		if(ptrDiskNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorRaidState:没有找到diskstate节点");
 			return false;
 		}
@@ -651,7 +652,7 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -738,7 +739,7 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -773,7 +774,7 @@ bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwi
 		DOMNodeList *ptrS1NodeList = ptrDoc->getElementsByTagName(C2X("Switch1State"));
 		if(ptrS1NodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSwitchState:没有找到Swtch1State节点");
 			return false;
 		}
@@ -793,7 +794,7 @@ bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwi
 		DOMNodeList *ptrS2NodeList = ptrDoc->getElementsByTagName(C2X("Switch2State"));
 		if(ptrS2NodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSwitchState:没有找到Swtch2State节点");
 			return false;
 		}
@@ -815,7 +816,7 @@ bool  CMonitorSensor::ParseOtherMonitorSwitchState(std::string &retXml,int &nSwi
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -850,7 +851,7 @@ bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &b
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("bEnableIngest"));
 		if(ptrNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSpeedLmtState:没有找到bEnableIngest节点");
 			return false;
 		}
@@ -870,7 +871,7 @@ bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &b
 		DOMNodeList *ptrSLNodeList = ptrDoc->getElementsByTagName(C2X("speedLimit"));
 		if(ptrSLNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSpeedLmtState:没有找到speedLimit节点");
 			return false;
 		}
@@ -892,7 +893,7 @@ bool  CMonitorSensor::ParseOtherMonitorSpeedLmtState(std::string &retXml,bool &b
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -927,7 +928,7 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("state"));
 		if(ptrNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSMSEWState:没有找到HallId节点");
 			return false;
 		}
@@ -947,7 +948,7 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(C2X("info"));
 		if(ptrInfoNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSMSEWState:没有找到info节点");
 			return false;
 		}
@@ -963,7 +964,7 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 		DOMNodeList *ptrHallNodeList = ptrDoc->getElementsByTagName(C2X("hall"));
 		if(ptrHallNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
 				"ParseOtherMonitorSMSEWState:没有找到hall节点");
 			return false;
 		}
@@ -979,7 +980,7 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;

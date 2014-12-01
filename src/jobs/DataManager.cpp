@@ -6,8 +6,9 @@
 #include"log/C_LogManage.h"
 
 #define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGINFO(msg)	  C_LogManage::GetInstance()->WriteLog(LOG_INFO,LOG_MODEL_JOBS,0,0,msg)
-#define  LOGFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+#define  LOGINF(msg)	  C_LogManage::GetInstance()->WriteLog(LOG_INFO,LOG_MODEL_JOBS,0,0,msg)
+#define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+#define  LOGDEBFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_DEBUG,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
 						
 
 CDataManager *CDataManager::m_pinstance=NULL;
@@ -65,26 +66,26 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 	m_csDisk.EnterCS();
 	m_df = df;
 	
-    LOGFMT("*****************Raid State************");
-	LOGFMT("diskSize:%s",df.diskSize.c_str());
+    LOGDEBFMT("*****************Raid State************");
+	LOGDEBFMT("diskSize:%s",df.diskSize.c_str());
 	std::transform(m_df.diskState.begin(),m_df.diskState.end(),m_df.diskState.begin(),::tolower);
-	LOGFMT("diskState:%s",df.diskState.c_str());
-	LOGFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
-	LOGFMT("-------------------Detail--------------");
+	LOGDEBFMT("diskState:%s",df.diskState.c_str());
+	LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
+	LOGDEBFMT("-------------------Detail--------------");
 	int nLen = df.diskDrives.size();
 	for(int i = 0 ;i < nLen ;i ++)
 	{	
-	    LOGFMT("----------------%d----------------",i);
-	    LOGFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
-	    LOGFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
-	    LOGFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
-	    LOGFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
+	    LOGDEBFMT("----------------%d----------------",i);
+	    LOGDEBFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
+	    LOGDEBFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
+	    LOGDEBFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
+	    LOGDEBFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
 		std::transform(df.diskDrives[i].driveFirmwareState.begin(),
 			df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
-	    LOGFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
-	    LOGFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
+	    LOGDEBFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
+	    LOGDEBFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
 	}
-	LOGFMT("---------------------------------------");
+	LOGDEBFMT("---------------------------------------");
 	m_csDisk.LeaveCS();
 	
 	std::vector<stError> vecRE;
@@ -155,7 +156,7 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 		if(fit != m_mapEthStatus.end())
 		{
 			fit->second = vecEthStatus[i];
-			LOGFMT("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu",vecEthStatus[i].strName.c_str(),
+			LOGDEBFMT("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu",vecEthStatus[i].strName.c_str(),
 				vecEthStatus[i].nConnStatue,vecEthStatus[i].nRxSpeed,vecEthStatus[i].nTxSpeed);
 		}
 	}
@@ -168,7 +169,7 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 //更新SMS的状态
 bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string strInfo)
 {
-	LOGFMT("SMS:%s Status:%d  (%s)",strHallID.c_str(),nState,strInfo.c_str());
+	LOGDEBFMT("SMS:%s Status:%d  (%s)",strHallID.c_str(),nState,strInfo.c_str());
 	m_csSMS.EnterCS();
 	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
 	if(it != m_mapSmsStatus.end())
@@ -178,6 +179,8 @@ bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string st
 		//info.stStatus.bRun = 1;
 	}
 	m_csSMS.LeaveCS();
+
+	
 	return true;
 }
 
@@ -293,7 +296,7 @@ void * CDataManager::GetInvokerPtr()
 //更新对端调度软件状态
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
-	LOGFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
+	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
 	if(C_Para::GetInstance()->m_bMain == bMain && bMain )
 	{
 		stError er;
@@ -326,7 +329,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 //更新对端tms状态
 bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 {
-	LOGFMT("Other TMS State:bRun:%d,nWorkState:%d,nState:%d",bRun,nWorkState,nState);
+	LOGDEBFMT("Other TMS State:bRun:%d,nWorkState:%d,nState:%d",bRun,nWorkState,nState);
 	return true;
 }
 
@@ -334,7 +337,7 @@ bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 //更新对端sms状态
 bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
-// 	LOGFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s",strHallId.c_str(),
+// 	LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s",strHallId.c_str(),
 // 		bRun,nState,nPosition,strSplUuid.c_str());
 
 	
@@ -378,10 +381,10 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 										int nWriteSpeed,std::vector<int> &vecDiskState)
 {
-	LOGFMT("Other Raid State:State:%d,RS:%d,WS:%d",nState,nReadSpeed,nWriteSpeed);
+	LOGDEBFMT("Other Raid State:State:%d,RS:%d,WS:%d",nState,nReadSpeed,nWriteSpeed);
 	for(int i=0;i<vecDiskState.size();i++)
 	{
-		LOGFMT("Raid%d:%d",i,vecDiskState[i]);
+		LOGDEBFMT("Raid%d:%d",i,vecDiskState[i]);
 	}
 
 
@@ -395,7 +398,7 @@ bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 	for(int i = 0 ;i < nlen ;i++)
 	{
 		EthStatus &node = vecEthStatus[i];
-		LOGFMT("Other %s State:nConnectState:%d,nSpeed:%d",node.strName.c_str(),
+		LOGDEBFMT("Other %s State:nConnectState:%d,nSpeed:%d",node.strName.c_str(),
 			node.nConnStatue,node.nRxSpeed);
 	}
 	return true;
@@ -405,17 +408,17 @@ bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 //帮助信息打印tms状态
 void CDataManager::PrintTMSState()
 {
-	LOGFMT("TMS Current State:");
-	LOGFMT("bRun:%d",m_nTMSState);
+	LOGDEBFMT("TMS Current State:");
+	LOGDEBFMT("bRun:%d",m_nTMSState);
 }
 
 
 //帮助信息打印raid状态
 void CDataManager::PrintDiskState()
 {
-	LOGFMT("Number of RAID Disk :%s",m_df.diskNumOfDrives.c_str());
-	LOGFMT("RAID Disk State :%s",m_df.diskState.c_str());
-	LOGFMT("RAID Disk State: %s",m_df.diskSize.c_str());
+	LOGDEBFMT("Number of RAID Disk :%s",m_df.diskNumOfDrives.c_str());
+	LOGDEBFMT("RAID Disk State :%s",m_df.diskState.c_str());
+	LOGDEBFMT("RAID Disk State: %s",m_df.diskSize.c_str());
 }
 
 //帮助信息打印sms状态
@@ -429,8 +432,8 @@ void CDataManager::PrintSMSState()
 	for(;it != maptmp.end(); it++)
 	{
 		SMSInfo &info = it->second;
-		LOGFMT("hallid:%s",info.strId.c_str());
-		LOGFMT("SMS state:%d",info.stStatus.nStatus);
+		LOGDEBFMT("hallid:%s",info.strId.c_str());
+		LOGDEBFMT("SMS state:%d",info.stStatus.nStatus);
 	}
 }
 
@@ -445,29 +448,29 @@ void CDataManager::PrintEthState()
 	for(;it != mapTmp.end(); it++)
 	{
 		EthStatus &node = it->second;
-		LOGFMT("EthName:%s",node.strName.c_str());
-		LOGFMT("TaskType:%d",node.nTaskType);
-		LOGFMT("ConnState:%d",node.nConnStatue);
-		LOGFMT("Speed:%d",node.nRxSpeed);
+		LOGDEBFMT("EthName:%s",node.strName.c_str());
+		LOGDEBFMT("TaskType:%d",node.nTaskType);
+		LOGDEBFMT("ConnState:%d",node.nConnStatue);
+		LOGDEBFMT("Speed:%d",node.nRxSpeed);
 	}
 }
 
 
 bool  CDataManager::UpdateOtherSwitchState(int nSwitch1State,int nSwitch2State)
 {
-	//LOGFMT("Other Switch nSwitch1State:%d,nSwitch2State:%d",nSwitch1State,nSwitch2State);
+	//LOGDEBFMT("Other Switch nSwitch1State:%d,nSwitch2State:%d",nSwitch1State,nSwitch2State);
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSpeedLmtState(bool bEnableIngest,int nSpeedLimit)
 {
-	//LOGFMT("Other SpeedLmt bEnableIngest:%d,nSpeedLimit:%d",bEnableIngest,nSpeedLimit);
+	//LOGDEBFMT("Other SpeedLmt bEnableIngest:%d,nSpeedLimit:%d",bEnableIngest,nSpeedLimit);
 	return true;
 }
 
 bool  CDataManager::UpdateOtherSMSEWState(int nState,std::string  strInfo,std::string  strHall)
 {
-	//LOGFMT("Other SMSEW nState:%d,strInfo:%s,strHall:%s",nState,strInfo.c_str(),strHall.c_str());
+	//LOGDEBFMT("Other SMSEW nState:%d,strInfo:%s,strHall:%s",nState,strInfo.c_str(),strHall.c_str());
 	return true;
 }
 

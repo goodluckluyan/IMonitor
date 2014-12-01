@@ -18,8 +18,6 @@
 #include <arpa/inet.h>
 #include "DataManager.h"
 
-#define ETH_NUM 6 
-
 class Test_NetCard
 {
 public:

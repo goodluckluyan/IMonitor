@@ -70,7 +70,12 @@ private:
 
 	//¹Ø±Õtomcat
 	bool ShutdownTOMCAT(std::string strPath);
-	 
+
+
+	int GetPID(std::string strName,std::vector<int>& vecPID);
+
+	bool GetPIDExeDir(int ,std::string &);
+
     C_CS m_CS;
 	std::map<std::string,int> m_mapHallCurState;
 
@@ -83,6 +88,7 @@ private:
 	std::list<stConditionSwitch>  m_lstCondSwitch;
 	C_CS m_csCondTaskLst;
 	pthread_cond_t cond; 
+	C_CS m_csSwitching;
 
 };
 #endif //HALL_LIST;

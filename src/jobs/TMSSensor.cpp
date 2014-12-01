@@ -19,8 +19,11 @@
 #include "C_ErrorDef.h"
 #include "MonitorSensor.h"
 #include "log/C_LogManage.h"
+
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+
 
 using namespace std;
 using namespace xercesc;
@@ -75,26 +78,26 @@ int CTMSSensor::GetTMSWorkState()
 	FILE *fp = popen(command,"r");
 	if(fp==NULL)
 	{
-		printf("failed to popen %s:%s\n",command,strerror(errno));
+		LOGINFFMT("failed to popen %s:%s\n",command,strerror(errno));
 		state = -1;
 		return 0;//////////////return -1;
 	}
 	
 	if(fgets(buf,sizeof(buf)-1,fp)!=NULL)
 	{
-		LOGFMT("[ Tms20_DeviceService ] Pid = %s",buf);
+		LOGINFFMT("[ Tms20_DeviceService ] Pid = %s",buf);
 		int result(0);
 		result = sscanf( buf,"%d", &m_nPid );
 		if(result == 0)//sscanf失败，则返回0
 		{
 			string error = "Error:pidof -s  Tms20_DeviceService\n";
-			printf( "%s" , error.c_str() );
+			LOGINFFMT( "%s" , error.c_str() );
 			state = -1;
 		}
 // 		if ( pid != 0 )
 // 		{
 // 			fprintf( stderr, "[ %s ] is: <%u>\n", "Tms20_DeviceService", ( unsigned int )pid );  
-// 			printf( "[ %s ] is: <%u>\n", "Tms20_DeviceService", ( unsigned int )pid  );
+// 			LOGINFFMT( "[ %s ] is: <%u>\n", "Tms20_DeviceService", ( unsigned int )pid  );
 // 		}
 	}
 	else
@@ -127,16 +130,16 @@ bool CTMSSensor::SwitchTMS()
 
 	if(C_Para::GetInstance()->m_bMain)
 	{
-		printf("Call Standby SwitchTMS Interface !\n");
+		LOGINFFMT("Call Standby SwitchTMS Interface !");
 		if( CallStandbySwitchTMS())
 		{
 			bRet &= true;
-			printf("Call Standby SwitchTMS Interface OK!\n");
+			LOGINFFMT("Call Standby SwitchTMS Interface OK!");
 		}
 		else
 		{
 			bRet &= false;
-			printf("Call Standby SwitchTMS Interface Fail!\n");
+			LOGINFFMT("Call Standby SwitchTMS Interface Fail!");
 		}
 	}
 	return bRet;
@@ -151,7 +154,7 @@ bool CTMSSensor::ShutDownTMS()
 		int nRet = kill(m_nPid,9);
 		if(nRet == 0)
 		{
-			printf("Kill Local TMS(%d) Done!\n",m_nPid);
+			LOGINFFMT("Kill Local TMS(%d) Done!\n",m_nPid);
 		}
 		return nRet == 0 ? true: false;
 	}
@@ -166,7 +169,7 @@ bool CTMSSensor::StartTMS()
 {
 	if(!C_Para::GetInstance()->m_bMain)
 	{
-		printf("Standby host can't start TMS!\n");
+		LOGINFFMT("Standby host can't start TMS!\n");
 		return false;
 	}
 
@@ -209,7 +212,7 @@ int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
-		printf("popen fail\n");
+		LOGINFFMT("%s popen fail",acExe);
 		return -1;
 	}
 	char tmpbuf[128]={'\0'};
@@ -253,7 +256,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 	char buf[256]={'\0'};
 	snprintf(buf,sizeof(buf),"gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"",
 		"TMS",strDir.c_str(),strTMSPath.c_str());
-	printf("%s\n",buf);
+	LOGINFFMT("%s\n",buf);
 	system(buf);
 
 	//等待3秒
@@ -279,7 +282,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 			{
 				exepid = vecNowPID[i];
 				bRun = true;
-				printf("Fork Process(%d) Start SMS ... \n",exepid);
+				LOGINFFMT("Fork Process(%d) Start SMS ... \n",exepid);
 				break;
 			}
 		}
@@ -288,7 +291,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 		time(&tm2);
 		if( tm2-tm1 > 5)
 		{
-			printf("waiting 5 sec ,but SMS not run..\n");
+			LOGINFFMT("waiting 5 sec ,but SMS not run..\n");
 			break;
 		}
 	}
@@ -316,7 +319,7 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 	}
 	else if(pid == 0)
 	{
-		printf("Fork Process(%d) Start TMS ... \n",getpid());
+		LOGINFFMT("Fork Process(%d) Start TMS ... \n",getpid());
 		if(execl(strTMSPath.c_str(),"Tms20_DeviceService","",NULL) < 0)
 		{
 			perror("execl error");
@@ -363,7 +366,7 @@ bool CTMSSensor::CallStandbySwitchTMS()
 
 	if(retXml.empty())
 	{
-		printf("GetOtherMonitorState:Parse Fail! xml is empty!\n");
+		LOGINFFMT("GetOtherMonitorState:Parse Fail! xml is empty!\n");
 		return false;
 	}
 
@@ -389,7 +392,7 @@ bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,u
 	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
 	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
 	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
-	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/ns1.xsd\" ";
 	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
 	xml += "<ns1:SwitchSMS><strHallId>"+strHallId+"</strHallId><strNewIp>"+strNewIp+"</strNewIp><port>"+os.str()+"</port></ns1:SwitchSMS>";
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
@@ -411,7 +414,7 @@ bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,u
 
 	if(retXml.empty())
 	{
-		printf("GetOtherMonitorState:Parse Fail! xml is empty!\n");
+		LOGINFFMT("GetOtherMonitorState:Parse Fail! xml is empty!\n");
 		return false;
 	}
 
@@ -445,19 +448,23 @@ bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if(ptrNodeList == NULL)
 		{
-			LOG(ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
+			LOG(ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMS:ret");
 			return false;
 		}
-		else
+		else 
 		{
-
+			if(ptrNodeList->getLength() == 0)
+			{
+				LOG(ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMS:ret");
+				return false;
+			}
 			DOMNode* ptrNode = ptrNodeList->item(0);
 			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
 			if(!str_state.empty())
 			{
 				nRet = atoi(str_state.c_str());
 			}
-			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
+			//LOGINFFMT("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 	}
 	catch(  XMLException& e )
@@ -510,7 +517,7 @@ bool  CTMSSensor::ParseXmlFromOtherMonitor(std::string &retXml,int &nRet)
 			{
 				nRet = atoi(str_state.c_str());
 			}
-			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
+			//LOGINFFMT("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 	}
 	catch(  XMLException& e )
@@ -554,14 +561,14 @@ int CTMSSensor::SendAndRecvResponse(bool bTMSWS,const std::string &request, std:
 
 	if(result < 0)
 	{	
-		printf("CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
+		LOGINFFMT("CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
 		return  ERROR_SENSOR_TCP_CONNECT;
 	}
 
 	result = tcp.BlockSend(request.c_str(), request.size());
 	if(result < 0)
 	{
-		printf("CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail !\n",request.c_str());
+		LOGINFFMT("CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail !\n",request.c_str());
 		return  ERROR_SENSOR_TCP_SEND;
 	}
 
