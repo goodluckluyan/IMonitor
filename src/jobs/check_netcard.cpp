@@ -311,7 +311,7 @@ bool Test_NetCard::ReadEthinfoTable(std::map<std::string,int>& mapEthBaseInfo)
 	C_Para *ptrPara = C_Para::GetInstance();
 	CppMySQL3DB mysql;
 	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
-		ptrPara->m_strDBPWD.c_str(),"tms"/*ptrPara->m_strDBName.c_str()*/) == -1)
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
 	{
 		printf("mysql open failed!\n");
 		return false;

@@ -61,7 +61,7 @@ bool CTMSSensor ::Init(std::string strIP,int nPort,int nTMSWSPort)
 		xercesc::XMLString::release( &message );
 	}
 
-	StartTMS();
+	//StartTMS();
 	return true;
 }
 
@@ -459,11 +459,13 @@ bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
 				return false;
 			}
 			DOMNode* ptrNode = ptrNodeList->item(0);
-			std::string str_state =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			char* pstate =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state = pstate;
 			if(!str_state.empty())
 			{
 				nRet = atoi(str_state.c_str());
 			}
+			XMLString::release(&pstate);
 			//LOGINFFMT("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 	}

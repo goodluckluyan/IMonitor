@@ -155,8 +155,8 @@ bool CInvoke::AddInitTask()
 		ptrRunPara->GetCurTime() + m_nOtherMonitorCheckDelay);
 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS,NULL,
 		ptrRunPara->GetCurTime() + m_nOtherTMSCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherSMSCheckDelay);
+// 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS,NULL,
+// 		ptrRunPara->GetCurTime() + m_nOtherSMSCheckDelay);
 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS,NULL,
 		ptrRunPara->GetCurTime() + m_nOtherRAIDCheckDelay);
 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS,NULL,
@@ -490,7 +490,6 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 
 	if(m_ptrLstHall != NULL)
 	{
-//		LOG(ERROR_POLICYTRI_SMSSWITCH,(std::string("Fault Of Policys Trigger Switch SMS! ")+ strHallID).c_str());
 		LOGINFFMT(ERROR_POLICYTRI_SMSSWITCH,"Switch SMS(%s)! ",strHallID.c_str());
 
 		int nState;
@@ -499,7 +498,7 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 			 std::string strNewIP;
 			 int nNewPort = 0;
 			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
-			 if(!strNewIP.empty() && nNewPort > 0)
+			 if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->m_bMain)
 			 {
 				 m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 			 }
@@ -518,18 +517,27 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 	}
 }
 
-// 切换本机上的所有SMS
+// 切换本机上的所有SMS,属于策略中自动切换
 bool CInvoke::SwitchAllSMS()
 {
 	if(m_ptrLstHall != NULL)
-	{	
+	{
 		LOGFAT(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");
 		printf("Fault Of Policys Trigger SwitchAllSMS!\n");		
 		std::vector<std::string> vecHallID;
-		m_ptrLstHall->GetAllHallID(vecHallID);
+		m_ptrLstHall->GetAllLocalRunHallID(vecHallID);
 		for(int i = 0 ;i < vecHallID.size();i++)
 		{
-			SwitchSMS(vecHallID[i]);
+			if(C_Para::GetInstance()->m_bMain )
+			{
+				SwitchSMS(vecHallID[i]);
+			}
+			else 
+			{
+				m_ptrLstHall->SwitchSMSByStdby(vecHallID[i]);
+				LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,
+					"SwitchAllSMS:Due To This Is STDBY ,So SMS Switch call Main Switch SMS!");
+			}
 		}
 	}
 	else

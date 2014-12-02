@@ -34,7 +34,36 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 		mons__SMSState node;
 		node.HallId = vecSMSState[i].hallid;
 		node.bRun = vecSMSState[i].nRun == 1 ? true:false;
-		node.state = vecSMSState[i].nStatus;
+		switch(vecSMSState[i].nStatus)
+		{
+		case 101:
+		case 201:
+		case 202:
+		case 203:
+		case 204:
+		case 206:
+		case 301:
+		case 302:
+		case 303:
+		case 304:
+		case 305:
+		case 401:
+		case 402:
+		case 403:
+		case 404:
+			node.state = 0;
+			break;
+		case 102:
+		case 103:
+			node.state = 1;
+			break;
+		case 205:
+		case 306:
+		case 405:
+			node.state = 2;
+			break;
+		}
+	
 		node.position = 25;//vecSMSState[i].nPosition;
 		node.strSplUuid = "C80CF8FC-D6F5-26F8-3927-E30B0AE06C56";//vecSMSState[i].strSPLUuid;
 		vecret.push_back(node);

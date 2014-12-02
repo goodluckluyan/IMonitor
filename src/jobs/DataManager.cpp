@@ -169,13 +169,16 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 //¸üÐÂSMSµÄ×´Ì¬
 bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string strInfo)
 {
-	LOGDEBFMT("SMS:%s Status:%d  (%s)",strHallID.c_str(),nState,strInfo.c_str());
 	m_csSMS.EnterCS();
 	std::map<std::string,SMSInfo>::iterator it = m_mapSmsStatus.find(strHallID);
 	if(it != m_mapSmsStatus.end())
 	{
 		SMSInfo &info = it->second;
 		info.stStatus.nStatus = nState;
+		
+		std::string strLocation;
+		strLocation = info.stStatus.nRun == 1 ? "Local" :"Other";
+		LOGDEBFMT("SMS:%s(%s) Status:%d  (%s)",strHallID.c_str(),strLocation.c_str(),nState,strInfo.c_str());
 		//info.stStatus.bRun = 1;
 	}
 	m_csSMS.LeaveCS();

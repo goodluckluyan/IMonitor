@@ -64,7 +64,7 @@ int C_Hall::Init(bool bRun,int nPID)
 SMSInfo& C_Hall::ChangeSMSHost(std::string strIP,bool bLocalRun)
 {
 	m_SMS.strIp = strIP;
-	m_SMS.stStatus.nRun = bLocalRun ? 1:3;
+	m_SMS.stStatus.nRun = bLocalRun ? 1:2;
 	m_SMS.nRole = bLocalRun ? 1:2;
 	return m_SMS;
 }
@@ -273,18 +273,22 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 		return -1;
 	}
 
-	std::vector<int> vecPID;
-	Getpid(m_SMS.strExepath,vecPID);
-	if(vecPID.size() == 0)
+	if(IsLocal())
 	{
-		LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
-		int nPID;
-		StartSMS(nPID);
+		std::vector<int> vecPID;
+		Getpid(m_SMS.strExepath,vecPID);
+		if(vecPID.size() == 0)
+		{
+			LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
+			int nPID;
+			StartSMS(nPID);
+		}
+		else
+		{
+			m_pid = vecPID[0];
+		}
 	}
-	else
-	{
-		m_pid = vecPID[0];
-	}
+	
 
 	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";

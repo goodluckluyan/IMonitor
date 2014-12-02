@@ -48,8 +48,11 @@ public:
 	// 切换sms
 	bool SwitchSMS(std::string strHallID,int &nState);
 
+	// 备机调用主机进行切换
+	int SwitchSMSByStdby(std::string strHallID);
+
 	// 获取hallid
-	void GetAllHallID(std::vector<std::string>& vecHallID);
+	void GetAllLocalRunHallID(std::vector<std::string>& vecHallID);
 
 	// 获取运行主机及webservice端口
 	bool GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPort);
