@@ -155,8 +155,46 @@ int mons__GetSwitchState(struct soap* cSoap, struct mons__SwitchStateRes &ret)
 
 int mons__GetIngestSpeedLimit(struct soap* cSoap, struct mons__IngestSpeedLimitRes &ret)
 {
-	ret.bEnableIngest =1 ;
-	ret.speedLimit = 1000;
+	CDataManager *pDM = CDataManager::GetInstance();
+	std::vector<SMSStatus> vecSMSState;
+
+	int nRun = 0 ;
+	pDM->GetSMSStat(vecSMSState);
+	int nLen = vecSMSState.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		if(vecSMSState[i].nRun == 1 && vecSMSState[i].nStatus == 201)
+		{
+			nRun++;
+		}
+	}
+
+	if(nRun <= 1)
+	{
+		ret.bEnableIngest =1 ;
+		ret.speedLimit = -1;
+	}
+	else if(nRun == 2)
+	{
+		ret.bEnableIngest =1 ;
+		ret.speedLimit = 20;
+	}
+	else if(nRun == 3)
+	{
+		ret.bEnableIngest =1 ;
+		ret.speedLimit = 15;
+	}
+	else if(nRun == 5)
+	{
+		ret.bEnableIngest =1 ;
+		ret.speedLimit = 10;
+	}
+	else if(nRun >= 6)
+	{
+		ret.bEnableIngest =1 ;
+		ret.speedLimit = 0;
+	}
+
 	return 0;
 }
 

@@ -19,6 +19,9 @@ const std::string smsname = "oristar_sms_server";
 // using namespace std;
 C_HallList* C_HallList::m_pInstance = NULL;
 
+#define MAINRUN 0
+#define STDBYRUN 1
+
 C_HallList::~C_HallList()
 {
 	ShutdownTOMCAT(C_Para::GetInstance()->m_strTOMCATPath);
@@ -84,7 +87,7 @@ int C_HallList::Init(bool bRunOther )
 		// 如查对方调度软件没有启动，则在本机启动所有sms
 		if(bRunOther)
 		{
-			node.nRole = nTmp == 0 ? 1 : 2;
+			node.nRole = nTmp == MAINRUN ? 1 : 2;
 		}
 		else
 		{
@@ -358,7 +361,9 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 			return false;
 		}
 	}
+
 	// 如果在本机运行
+	C_Para *ptrPara = C_Para::GetInstance();
 	if(ptr->IsLocal())
 	{
 		bool bRet = ptr->ShutDownSMS();
@@ -366,7 +371,6 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 		if(C_Para::GetInstance()->m_bMain)
 		{
 			// 调用备机的切换Sms`
- 			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms!");
 		}
@@ -374,14 +378,16 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 		{
 		     SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,false);
 		     m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+			 if(ptrPara->m_bMain)
+			 {
+				 UpdateDataBase(stSMSInfo.strId,STDBYRUN);
+			 }
 		}
 	}
 	else//在对端运行
 	{
-		if(C_Para::GetInstance()->m_bMain)
+		if(ptrPara->m_bMain)
 		{
-			// 调用备机的切换Sms
- 			C_Para *ptrPara = C_Para::GetInstance();
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
 		}
@@ -405,6 +411,10 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 			{
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+				if(ptrPara->m_bMain)
+				{
+					UpdateDataBase(stSMSInfo.strId,MAINRUN);
+				}
 				LOGINFFMT(ERROR_SMSSWITCH_LOCALRUNOK,"SMS:%s Switch local run OK!",strHallID.c_str());
 			}
 			else
@@ -541,4 +551,28 @@ int C_HallList::SwitchSMSByStdby(std::string strHallID)
 	
 	return ptrHall->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 
+}
+
+// 更新数据库中的sms运行主机位置
+bool C_HallList::UpdateDataBase(std::string strHallID,int nPosition)
+{
+	// 打开数据库
+	C_Para *ptrPara = C_Para::GetInstance();
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+	{
+		LOG(0,"mysql open failed!\n");
+		return false;
+	}
+
+	char sql[256]={'\0'};
+	snprintf(sql,sizeof(sql),"update devices set default_position=%d where hall_id = %s",nPosition,strHallID.c_str());
+	int nResult = mysql.execSQL(sql);
+	if(nResult == -1)
+	{
+		LOGERRFMT(ERROR_UPDATESMSTABLE_FAILED,"C_HallList Update SMS RUN Position failed!\n");
+		return false;
+	}
+	return true;
 }

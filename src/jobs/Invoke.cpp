@@ -522,8 +522,7 @@ bool CInvoke::SwitchAllSMS()
 {
 	if(m_ptrLstHall != NULL)
 	{
-		LOGFAT(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");
-		printf("Fault Of Policys Trigger SwitchAllSMS!\n");		
+		LOGFAT(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");	
 		std::vector<std::string> vecHallID;
 		m_ptrLstHall->GetAllLocalRunHallID(vecHallID);
 		for(int i = 0 ;i < vecHallID.size();i++)

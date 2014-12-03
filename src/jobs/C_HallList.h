@@ -79,6 +79,8 @@ private:
 
 	bool GetPIDExeDir(int ,std::string &);
 
+	bool UpdateDataBase(std::string strHallID,int nPosition);
+
     C_CS m_CS;
 	std::map<std::string,int> m_mapHallCurState;
 

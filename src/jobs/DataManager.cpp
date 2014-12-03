@@ -179,7 +179,6 @@ bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string st
 		std::string strLocation;
 		strLocation = info.stStatus.nRun == 1 ? "Local" :"Other";
 		LOGDEBFMT("SMS:%s(%s) Status:%d  (%s)",strHallID.c_str(),strLocation.c_str(),nState,strInfo.c_str());
-		//info.stStatus.bRun = 1;
 	}
 	m_csSMS.LeaveCS();
 
@@ -389,8 +388,6 @@ bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 	{
 		LOGDEBFMT("Raid%d:%d",i,vecDiskState[i]);
 	}
-
-
 	return true;
 }
 
