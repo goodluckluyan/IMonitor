@@ -299,6 +299,7 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
+	// 两端都是主
 	if(C_Para::GetInstance()->m_bMain == bMain && bMain )
 	{
 		stError er;
@@ -311,6 +312,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 		}
 	}
+	// 两端都是备
 	else if(C_Para::GetInstance()->m_bMain == bMain && !bMain )
 	{
 		stError er;
@@ -339,13 +341,11 @@ bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
 //更新对端sms状态
 bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
-// 	LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s",strHallId.c_str(),
-// 		bRun,nState,nPosition,strSplUuid.c_str());
-
-	
 	int nLen = vecSMSStatus.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
+		LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s",vecSMSStatus[i].hallid.c_str(),
+			vecSMSStatus[i].nRun,vecSMSStatus[i].nStatus,vecSMSStatus[i].nPosition,vecSMSStatus[i].strSPLUuid.c_str());
 		if(vecSMSStatus[i].nRun == 0)
 		{
 			continue;
@@ -361,21 +361,21 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	}
 
 	// 更新主结构
-	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
-	for(;it != m_mapOtherSMSStatus.end();it++)
-	{
-		SMSInfo &info = it->second;
-		if(info.nRole == 1 && info.stStatus.nRun == 1)
-		{
-			m_csSMS.EnterCS();
-			std::map<std::string,SMSInfo>::iterator fit= m_mapSmsStatus.find(info.strId);
-			if(fit != m_mapSmsStatus.end())
-			{
-				it->second.stStatus.nRun = 2;
-			}
-			m_csSMS.LeaveCS();
-		}
-	}
+// 	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
+// 	for(;it != m_mapOtherSMSStatus.end();it++)
+// 	{
+// 		SMSInfo &info = it->second;
+// 		if(info.nRole == 1 && info.stStatus.nRun == 1)
+// 		{
+// 			m_csSMS.EnterCS();
+// 			std::map<std::string,SMSInfo>::iterator fit= m_mapSmsStatus.find(info.strId);
+// 			if(fit != m_mapSmsStatus.end())
+// 			{
+// 				it->second.stStatus.nRun = 2;
+// 			}
+// 			m_csSMS.LeaveCS();
+// 		}
+// 	}
 	return true;
 }
 

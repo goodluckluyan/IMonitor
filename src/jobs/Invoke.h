@@ -71,41 +71,6 @@ private:
 	void ParseCmd(std::string strCmd, std::vector<std::string> &vecParam);
 	
 private:
-	// 检测磁盘状态时间间隔
-	int m_nDiskCheckDelay;
-
-	// 检测网卡状态时间间隔
-	int m_nEthCheckDelay;
-
-	// 检测网卡状态时间间隔
-	int m_nHallListCheckDelay;
-
-	// 检测网卡状态时间间隔
-	int m_nTMSCheckDelay;
-
-	// 检测对端调度程序状态时间间隔
-	int m_nOtherMonitorCheckDelay;
-
-	// 检测对端TMS状态时间间隔
-	int m_nOtherTMSCheckDelay;
-
-	// 检测对端SMS状态时间间隔
-	int m_nOtherSMSCheckDelay;
-
-	// 检测对端磁盘状态时间间隔
-	int m_nOtherRAIDCheckDelay;
-
-	// 检测对端网络状态时间间隔
-	int m_nOtherEthCheckDelay;
-
-	// 检测对端交换机时间间隔
-	int m_nOtherSwitchCheckDelay;
-
-	// 检测对端速度限制时间间隔
-	int m_nOtherSpeedLmtCheckDelay;
-
-	// 检测对端异常状态时间间隔
-	int m_nOtherEWCheckDelay;
 
 	C_HallList *m_ptrLstHall;
 	CheckDisk *m_ptrDisk;

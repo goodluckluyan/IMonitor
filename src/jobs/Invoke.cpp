@@ -23,8 +23,8 @@ int  CInvoke::Init()
 	}
 
 	// 监测对端调度软件
-	bool bRunOther = false;
 	C_Para * pPara = C_Para::GetInstance();
+	bool bRunOther = false;
 	if(m_ptrMonitor == NULL)
 	{
 		m_ptrMonitor = new  CMonitorSensor();
@@ -49,7 +49,6 @@ int  CInvoke::Init()
 			if(tm2-tm1 >= 300)
 			{
 				LOGFAT(ERROR_OTHERMONITOR_NORUN,"Other Monitor Not Run !");
-				printf("Other Monitor Not Run !\n");
 				break;
 			}
 		}
@@ -121,52 +120,84 @@ void CInvoke::DeInit()
 
 bool CInvoke::AddInitTask()
 {
-	// 设置各个状态检测的时间间隔
-	m_nDiskCheckDelay = 300;
-	m_nEthCheckDelay = 10;
-	m_nOtherMonitorCheckDelay = 10;
-	m_nOtherTMSCheckDelay = 10;
-	m_nOtherSMSCheckDelay = 6;
-	m_nOtherRAIDCheckDelay = 5;
-	m_nOtherEthCheckDelay = 5;
-	m_nOtherSwitchCheckDelay = 5;
-	m_nOtherSpeedLmtCheckDelay = 5;
-	m_nOtherEWCheckDelay = 5;
-	m_nHallListCheckDelay = 5;
-	m_nTMSCheckDelay = 5;
-
+	C_Para * pPara = C_Para::GetInstance();
 	C_TaskList * ptrTaskList = C_TaskList::GetInstance();
 	C_RunPara * ptrRunPara = C_RunPara::GetInstance();
+
+	// 添加对对端调度程序的检测的定时任务
+	if(0 == pPara->m_nOtherMonitorCheckDelay)
+	{
+		pPara->m_nOtherMonitorCheckDelay = 3;
+	}
+	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
+		ptrRunPara->GetCurTime() + pPara->m_nOtherMonitorCheckDelay);
 	 
 	// 添加磁盘检测定时任务
-	ptrTaskList->AddTask(TASK_NUMBER_GET_DISK_STATUS,NULL,ptrRunPara->GetCurTime()+m_nDiskCheckDelay);
+	if(0 != pPara->m_nDiskCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_DISK_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nDiskCheckDelay);
+	}
 
 	// 添加网络检测定时任务
-	ptrTaskList->AddTask(TASK_NUMBER_GET_NET_STATUS,NULL,ptrRunPara->GetCurTime()+m_nEthCheckDelay);
+	if(0 != pPara->m_nEthCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_NET_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nEthCheckDelay);
+	}
 
 	// 添加tms检测定时任务
-	ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+m_nTMSCheckDelay);
+	if(0 != pPara->m_nTMSCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nTMSCheckDelay);
+	}
 
 	// 添加sms检测定时任务
-	ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+m_nOtherSMSCheckDelay);
+	if(0 != pPara->m_nOtherSMSCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nOtherSMSCheckDelay);
+	}
 	
-	// 添加对对端调度程序的检测的定时任务
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherMonitorCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherTMSCheckDelay);
-// 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS,NULL,
-// 		ptrRunPara->GetCurTime() + m_nOtherSMSCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherRAIDCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherEthCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherSwitchCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherSpeedLmtCheckDelay);
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS,NULL,
-		ptrRunPara->GetCurTime() + m_nOtherEWCheckDelay);
+	if(0 != pPara->m_nOtherTMSCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherTMSCheckDelay);
+	}
+	
+	if(0 != pPara->m_nOtherSMSCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherSMSCheckDelay);
+	}
+ 
+	if(0 != pPara->m_nOtherRAIDCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherRAIDCheckDelay);
+	}
+	
+	if(0 != pPara->m_nOtherEthCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherEthCheckDelay);
+	}
+	
+	if(0 != pPara->m_nOtherSwitchCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherSwitchCheckDelay);
+	}
+	
+	if(0 != pPara->m_nOtherSpeedLmtCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherSpeedLmtCheckDelay);
+	}
+	
+	if(0 != pPara->m_nOtherEWCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nOtherEWCheckDelay);
+	}
+	
 
 	// 添加调度任务
 	ptrTaskList->AddTask(TASK_NUMBER_DISPATCH_ROUTINE,NULL,-1);
@@ -182,44 +213,45 @@ bool CInvoke::AddInitTask()
 // 获取时间间隔
 int CInvoke::GetCheckDelay(int nStateType)
 {
+	C_Para * pPara = C_Para::GetInstance();
 	int nDelay = 0;
 	switch(nStateType)
 	{
 	case TASK_NUMBER_GET_DISK_STATUS:
-		nDelay = m_nDiskCheckDelay;
+		nDelay = pPara->m_nDiskCheckDelay;
 		break;
 	case TASK_NUMBER_GET_NET_STATUS:
-		nDelay = m_nEthCheckDelay;
+		nDelay = pPara->m_nEthCheckDelay;
 		break;
 	case TASK_NUMBER_GET_HALL_STATUS:
-		nDelay = m_nHallListCheckDelay ;
+		nDelay = pPara->m_nHallListCheckDelay ;
 		break;
 	case TASK_NUMBER_GET_TMS_STATUS:
-		nDelay = m_nTMSCheckDelay ;
+		nDelay = pPara->m_nTMSCheckDelay ;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
-		nDelay = m_nOtherMonitorCheckDelay;
+		nDelay = pPara->m_nOtherMonitorCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS:
-		nDelay = m_nOtherTMSCheckDelay;
+		nDelay = pPara->m_nOtherTMSCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS:
-		nDelay = m_nOtherSMSCheckDelay;
+		nDelay = pPara->m_nOtherSMSCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS:
-		nDelay = m_nOtherRAIDCheckDelay;
+		nDelay = pPara->m_nOtherRAIDCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS:
-		nDelay = m_nOtherEthCheckDelay;
+		nDelay = pPara->m_nOtherEthCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS:
-		nDelay = m_nOtherSwitchCheckDelay;
+		nDelay = pPara->m_nOtherSwitchCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS:
-		nDelay = m_nOtherSpeedLmtCheckDelay;
+		nDelay = pPara->m_nOtherSpeedLmtCheckDelay;
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS:
-		nDelay = m_nOtherEWCheckDelay;
+		nDelay = pPara->m_nOtherEWCheckDelay;
 		break;
 	}
 	return nDelay;

@@ -15,6 +15,19 @@ C_Para::C_Para()
 {
 	m_nStartSMSType = 1;
 	m_nTimeOutWaitOtherIMonitor = 300;
+	m_nDiskCheckDelay = 300;
+	m_nEthCheckDelay = 10;
+	m_nHallListCheckDelay = 5;
+	m_nTMSCheckDelay = 5;
+	m_nOtherMonitorCheckDelay = 10;
+	m_nOtherTMSCheckDelay = 10;
+	m_nOtherSMSCheckDelay = 5;
+	m_nOtherRAIDCheckDelay = 5;
+	m_nOtherEthCheckDelay = 5;
+	m_nOtherSwitchCheckDelay = 5;
+	m_nOtherSpeedLmtCheckDelay = 5;
+	m_nOtherEWCheckDelay = 5;
+
 }
 C_Para::~C_Para()
 {
@@ -226,6 +239,90 @@ int C_Para::ReadPara()
 		return iResult;
 	}
 	m_nWirteLogLevel = atoi(a);
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","DiskCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nDiskCheckDelay = atoi(a);
+	}
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","EthCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nEthCheckDelay = atoi(a);
+	}
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","HallListCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nHallListCheckDelay = atoi(a);
+	}
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","TMSCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nTMSCheckDelay = atoi(a);
+	}
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherMonitorCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherMonitorCheckDelay = atoi(a);
+	}
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherTMSCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherTMSCheckDelay = atoi(a);
+	}
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherSMSCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherSMSCheckDelay = atoi(a);
+	}
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherRAIDCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherRAIDCheckDelay = atoi(a);
+	}
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherEthCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherEthCheckDelay = atoi(a);
+	}
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherSwitchCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherSwitchCheckDelay = atoi(a);
+	}
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherSpeedLmtCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherSpeedLmtCheckDelay = atoi(a);
+	}
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","OtherEWCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nOtherEWCheckDelay = atoi(a);
+	}
 
 	return 0;
 
