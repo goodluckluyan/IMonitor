@@ -190,6 +190,13 @@ bool CTMSSensor::StartTMS()
 	}
 	else
 	{
+		
+		ForkExeSh("/sbin/umount.sh");
+		printf("ForkExeSh:/sbin/umount.sh\n");
+		sleep(3);
+		ForkExeSh("/sbin/mount.sh");
+		printf("ForkExeSh:/sbin/mount.sh\n");
+
 		int nStartType = C_Para::GetInstance()->m_nStartSMSType;
 		if(nStartType == 1)
 		{
@@ -282,7 +289,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 			{
 				exepid = vecNowPID[i];
 				bRun = true;
-				LOGINFFMT("Fork Process(%d) Start SMS ... \n",exepid);
+				LOGINFFMT("Fork Process(%d) Start TMS ... \n",exepid);
 				break;
 			}
 		}
@@ -291,7 +298,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 		time(&tm2);
 		if( tm2-tm1 > 5)
 		{
-			LOGINFFMT("waiting 5 sec ,but SMS not run..\n");
+			LOGINFFMT("waiting 5 sec ,but TMS not run..\n");
 			break;
 		}
 	}
@@ -628,5 +635,38 @@ int CTMSSensor::InvokerWebServer(bool bTMSWS,std::string strURI,std::string &xml
 	int result = SendAndRecvResponse(bTMSWS,strHttp, strResponse);
 
 	return result;
+
+}
+
+
+int CTMSSensor::ForkExeSh(std::string strExe)
+{
+	struct rlimit rl;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+	{
+		return false;
+	}
+	pid_t pid;
+
+	if((pid = fork()) == 0)
+	{
+		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
+		if(rl.rlim_max == RLIM_INFINITY)
+		{
+			rl.rlim_max = 1024;
+		}
+		for(int i = 0 ;i < rl.rlim_max;i++)
+		{
+			close(i);
+		}
+
+		char buf[128]={'\0'};
+		snprintf(buf,sizeof(buf),"/bin/bash %s",strExe.c_str());
+		printf("%s\n",buf);
+		system(buf);
+		exit(0);
+	}
+
+	return true;
 
 }

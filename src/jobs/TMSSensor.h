@@ -60,6 +60,8 @@ private:
 	bool ParseXmlFromTMS(std::string &retXml,int &nRet);
 
 	bool CallStandbySwitchTMS();
+
+	int ForkExeSh(std::string strExe);
 	
 
 private:

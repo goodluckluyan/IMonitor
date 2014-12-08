@@ -208,19 +208,20 @@ int mons__GetWorkState_USCORECS(struct soap* cSoap, struct mons__WorkStateRes &r
 
 int mons__ExeSwitchTMSToOther(struct soap* cSoap,int &ret)
 {
-	CDataManager *pDM = CDataManager::GetInstance();
-	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
-	if(ptr->SwitchTMS())
-	{	
-		ret = 0;
-		return 0;
-	}
-	else
-	{
-		soap_sender_fault_subcode(cSoap, "mons:1", "Switch Fail", "SwitchTMS");
-		ret = 1;
-		return 1;
-	}
+// 	CDataManager *pDM = CDataManager::GetInstance();
+// 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+// 	if(ptr->SwitchTMS())
+// 	{	
+// 		ret = 0;
+// 		return 0;
+// 	}
+// 	else
+// 	{
+// 		soap_sender_fault_subcode(cSoap, "mons:1", "Switch Fail", "SwitchTMS");
+// 		ret = 1;
+// 		return 1;
+// 	}
+	return 0;
 }
 
 

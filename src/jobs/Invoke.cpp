@@ -151,9 +151,9 @@ bool CInvoke::AddInitTask()
 	}
 
 	// 添加sms检测定时任务
-	if(0 != pPara->m_nOtherSMSCheckDelay)
+	if(0 != pPara->m_nHallListCheckDelay)
 	{
-		ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nOtherSMSCheckDelay);
+		ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nHallListCheckDelay);
 	}
 	
 	if(0 != pPara->m_nOtherTMSCheckDelay)
