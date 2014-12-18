@@ -69,6 +69,7 @@ bool CDispatch::ParsePolicy(std::string strPath)
 		mapTmp[SMSTask] = "SMS";
 		mapTmp[TMSTask] = "TMS";
 		mapTmp[IMonitorTask] = "IMonitor";
+		mapTmp[ETH] = "Eth";
  
 		std::map<int,std::string>::iterator it = mapTmp.begin();
 		for(;it != mapTmp.end();it++)
@@ -232,6 +233,7 @@ bool CDispatch::Routine()
 	case SMSTask:	
 	case TMSTask:
 	case IMonitorTask:
+	case ETH:
 		{
 			std::map<int,std::vector<std::string> > mapAction;
 			ApplyPolicy(nodeTask.nDTriggerType,nodeTask,mapAction);

@@ -62,6 +62,8 @@ public:
 	// 更新网卡监测数据
 	bool UpdateNetStat(std::vector<EthStatus> &vecEthStatus);
 
+	void CheckEthError(std::vector<stError> &vecErr);
+
 	// 更新sms状态
 	bool UpdateSMSStat(std::string strHallID,int nState,std::string strInfo);
 	bool UpdateSMSStat(std::string strHallID,SMSInfo &stSMSInfo);

@@ -30,7 +30,7 @@
 #include "C_constDef.h"
 
 
-enum enDTriggerType{NULLTask=0,RAIDTask=1,ETHTask=2,SMSTask=3,TMSTask=4,IMonitorTask=5};
+enum enDTriggerType{NULLTask=0,RAIDTask=1,ETHTask=2,SMSTask=3,TMSTask=4,IMonitorTask=5,ETH=6};
 enum enCMDType{NULLCMD=0,LOGCmd=1,POLICYCmd =2};
 struct DispatchTask
 {

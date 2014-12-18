@@ -155,15 +155,60 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 		std::map<std::string,EthStatus>::iterator fit = m_mapEthStatus.find(vecEthStatus[i].strName);
 		if(fit != m_mapEthStatus.end())
 		{
-			fit->second = vecEthStatus[i];
+			fit->second.nConnStatue = vecEthStatus[i].nConnStatue;
+			fit->second.nRxSpeed = vecEthStatus[i].nRxSpeed;
+			fit->second.nTxSpeed = vecEthStatus[i].nTxSpeed;
 			LOGDEBFMT("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu",vecEthStatus[i].strName.c_str(),
 				vecEthStatus[i].nConnStatue,vecEthStatus[i].nRxSpeed,vecEthStatus[i].nTxSpeed);
 		}
 	}
-	
 	m_csNet.LeaveCS();
 
+	std::vector<stError> vecErr;
+	CheckEthError(vecErr);
+	if(vecErr.size()>0)
+	{
+		if(m_ptrDispatch)
+		{
+			m_ptrDispatch->TriggerDispatch(ETH,vecErr);
+		}
+	}
+
+
+
 	return true;
+}
+
+void CDataManager::CheckEthError(std::vector<stError> &vecErr)
+{
+	m_csNet.EnterCS();
+	std::map<std::string,EthStatus>::iterator it = m_mapEthStatus.begin();
+	for(;it!=m_mapEthStatus.end();it++)
+	{
+		EthStatus &estate = it->second;
+		if(estate.nConnStatue == 0)
+		{
+			stError re;
+			switch(estate.nTaskType)
+			{
+			case 1:
+				re.ErrorName = "type1noconn";
+				break;
+			case 2:
+				re.ErrorName = "type2noconn";
+				break;
+			case 3:
+				re.ErrorName = "type3noconn";
+				break;
+			}
+			
+			re.ErrorVal = estate.strName;
+			re.nOrdinal = 0;
+			vecErr.push_back(re);
+		}
+	}
+	m_csNet.LeaveCS();
+
 }
 
 //¸üÐÂSMSµÄ×´Ì¬

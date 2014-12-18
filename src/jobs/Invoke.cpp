@@ -65,7 +65,10 @@ int  CInvoke::Init()
 	if(m_ptrLstHall == NULL)
 	{
 		m_ptrLstHall = new C_HallList();
-		m_ptrLstHall->Init(bRunOther);
+		if(m_ptrLstHall->Init(bRunOther)!=0)
+		{
+			return -1;
+		}
 	}
 
 	// µ÷¶ÈÄ£¿é
