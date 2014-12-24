@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include "log/C_LogManage.h"
+#include "para/C_Para.h"
 #include "Invoke.h"
 
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
@@ -280,6 +281,19 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 					{
 						((CInvoke*)m_ptrInvoker)->Exit();
 					}
+					else if(vecStr[i] == "StartALLSMS" && m_ptrInvoker)
+					{
+						((CInvoke*)m_ptrInvoker)->StartALLSMS();
+					}
+					else if(vecStr[i] == "TakeOverMain" && m_ptrInvoker)
+					{
+						// 不能颠倒调用顺序，否则会在启动sms会对数据库表devices中的default_position的更新出现问题。
+						((CInvoke*)m_ptrInvoker)->StartALLSMS();
+						if(!C_Para::GetInstance()->IsMain())
+						{
+							((CInvoke*)m_ptrInvoker)->TakeOverMain();
+						}
+					}
 				}
 			}
 			break;
@@ -340,8 +354,41 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 			{
 				int nMin = atoi(stPE.strFault.substr(0,nPos).c_str());
 				int nMax = atoi(stPE.strFault.substr(nPos+1).c_str());
+				if(nMin>nMax)
+				{
+					int tmp = nMin;
+					nMin = nMax;
+					nMax = tmp;
+				}
 				int errvalue = atoi(err.ErrorVal.c_str());
-				if(errvalue < nMin && errvalue > nMax)
+				if(errvalue < nMin || errvalue > nMax)
+				{
+					char buf[128];
+					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
+						err.ErrorVal.c_str(),stPE.strFault.c_str(),stPE.strAct.c_str());
+					mapAction[LOGCmd].push_back(std::string(buf));
+
+					//获取动作
+					vecAct.push_back(stPE);
+				}
+			}
+		}
+
+		if(stPE.strType == "inrange")
+		{
+			int nPos = stPE.strFault.find(',');
+			if(nPos != std::string::npos)
+			{
+				int nMin = atoi(stPE.strFault.substr(0,nPos).c_str());
+				int nMax = atoi(stPE.strFault.substr(nPos+1).c_str());
+				if(nMin>nMax)
+				{
+					int tmp = nMin;
+					nMin = nMax;
+					nMax = tmp;
+				}
+				int errvalue = atoi(err.ErrorVal.c_str());
+				if(errvalue >= nMin && errvalue <= nMax)
 				{
 					char buf[128];
 					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),

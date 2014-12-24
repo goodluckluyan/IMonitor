@@ -48,6 +48,10 @@ public:
 	// 切换sms
 	bool SwitchSMS(std::string strHallID,int &nState);
 
+
+	// 在本机启动所有sms
+	bool StartAllSMS();
+
 	// 备机调用主机进行切换
 	int SwitchSMSByStdby(std::string strHallID);
 

@@ -9,7 +9,7 @@ using namespace std;
 
 int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 {
-	ret.bMain = C_Para::GetInstance()->m_bMain;
+	ret.bMain = C_Para::GetInstance()->IsMain();
 	ret.iState = 0;
 	return 0;
 }

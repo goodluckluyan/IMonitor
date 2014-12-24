@@ -5,6 +5,7 @@
 #include"log/C_LogManage.h"
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGFATFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_FATAL,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 CMonitorSensor::CMonitorSensor()
 {
@@ -132,7 +133,7 @@ int CMonitorSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 }
 
 // 获取另一台主机的调度程序的状态
-bool CMonitorSensor::GetOtherMonitorState(int nStateType)
+bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 {
 	//printf("GetOtherMonitorState Called!\n");
 	std::string strStateType ;
@@ -163,13 +164,18 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
 	{
 		// 写错误日志
+		LOGFATFMT(ERROR_CALLOTHERWS_CONNFAIL,"Call OtherHost Web Service(%s) Failed,Due To Connection Fail!",
+			strStateType.c_str());
+		if(bNoticeDM && nStateType == TASK_NUMBER_GET_OTHERMONITOR_STATUS)
+		{
+			m_ptrDM->UpdateOtherMonitorState(false,-1);
+		}
 		return false;
 	}
 
 	// 提取xml
 	std::string retXml;
 	int result = GetHttpContent(strResponse, retXml);
-	
 	if(retXml.empty())
 	{
 		printf("GetOtherMonitorState:Parse Fail! xml is empty!\n");
@@ -185,7 +191,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 			bool bMain;
 			int nState;
 			bRet = ParseOtherMonitorState(retXml,bMain,nState);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 			   m_ptrDM->UpdateOtherMonitorState(bMain,nState);
 			}
@@ -197,7 +203,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 			int nWorkState;
 			int nState;	
 			bRet = ParseOtherMonitorTMSState(retXml,bRun,nWorkState,nState);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherTMSState(bRun,nWorkState,nState);
 			}
@@ -207,7 +213,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 		{
 			std::vector<SMSStatus> vecSMSStatus;
 			bRet = ParseOtherMonitorSMSState(retXml,vecSMSStatus);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherSMSState(vecSMSStatus);
 			}
@@ -221,7 +227,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 			int nWriteSpeed;
 			std::vector<int> vecDiskState;
 			bRet = ParseOtherMonitorRaidState(retXml,nState,nReadSpeed,nWriteSpeed,vecDiskState);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherRaidState(nState,nReadSpeed,nWriteSpeed,vecDiskState);
 			}
@@ -231,7 +237,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 		{
 			std::vector<EthStatus> vecEthStatus;
 			bRet = ParseOtherMonitorEthState(retXml,vecEthStatus);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherEthState(vecEthStatus);
 			}
@@ -242,7 +248,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 			int nSwitch1State;
 			int nSwitch2State;
 			bRet = ParseOtherMonitorSwitchState(retXml,nSwitch1State, nSwitch2State);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherSwitchState(nSwitch1State,nSwitch2State);
 			}
@@ -253,7 +259,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 			bool bEnableIngest;
 			int nSpeedLimit;
 			bRet = ParseOtherMonitorSpeedLmtState(retXml,bEnableIngest, nSpeedLimit);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherSpeedLmtState(bEnableIngest,nSpeedLimit);
 			}
@@ -266,7 +272,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType)
 			std::string strInfo;
 			std::string strHall;
 			bRet = ParseOtherMonitorSMSEWState(retXml,nState, strInfo, strHall);
-			if(bRet && m_ptrDM != NULL)
+			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
 				m_ptrDM->UpdateOtherSMSEWState(nState, strInfo, strHall);
 			}

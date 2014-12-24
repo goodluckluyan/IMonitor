@@ -320,7 +320,7 @@ bool Test_NetCard::ReadEthinfoTable(std::map<std::string,int>& mapEthBaseInfo)
 	// 读取ethinfo ,初始化网卡信息
 	int nResult;
 	char strSQL[256];
-	snprintf(strSQL,256,"select * from eth_set where position=%d",ptrPara->m_bMain ? 0:1);
+	snprintf(strSQL,256,"select * from eth_set where position=%d",ptrPara->IsMain() ? 0:1);
 	CppMySQLQuery query = mysql.querySQL(strSQL,nResult);
 	int nRows = 0 ;
 	if((nRows = query.numRow()) == 0)

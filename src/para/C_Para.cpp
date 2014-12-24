@@ -28,10 +28,12 @@ C_Para::C_Para()
 	m_nOtherSpeedLmtCheckDelay = 5;
 	m_nOtherEWCheckDelay = 5;
 
+	pthread_rwlock_init(&m_rwlk_main,NULL);
+
 }
 C_Para::~C_Para()
 {
-
+	pthread_rwlock_destroy(&m_rwlk_main);
 }
 C_Para* C_Para::GetInstance()
 {
@@ -326,4 +328,22 @@ int C_Para::ReadPara()
 
 	return 0;
 
+}
+
+
+bool C_Para::IsMain()
+{
+	bool bRet;
+	pthread_rwlock_rdlock(&m_rwlk_main);
+	bRet = m_bMain;
+	pthread_rwlock_unlock(&m_rwlk_main);
+}
+
+bool C_Para::SetMainFlag(bool bMain)
+{
+	bool bRet;
+	pthread_rwlock_wrlock(&m_rwlk_main);
+	bRet = m_bMain;
+	m_bMain = bMain;
+	pthread_rwlock_unlock(&m_rwlk_main);
 }

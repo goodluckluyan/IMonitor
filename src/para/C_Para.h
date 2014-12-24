@@ -116,5 +116,6 @@ public:
 	
 private:
     static C_Para *m_pInstance;
+	pthread_rwlock_t m_rwlk_main;
 };
 #endif //_TMS20_PARA

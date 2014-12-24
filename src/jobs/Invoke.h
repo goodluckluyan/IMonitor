@@ -56,7 +56,11 @@ public:
 
 	void StartTMS();
 
+	void StartALLSMS();
+
 	void Exit();
+
+	void TakeOverMain();
 
 private:
 	// ¥Ú”°∞Ô÷˙–≈œ¢

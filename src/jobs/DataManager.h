@@ -110,6 +110,10 @@ private:
 	CDispatch * m_ptrDispatch;
 	void * m_ptrInvoker;
 
+	// 记录对端主机连接异常次数和时间
+	time_t m_tmOtherHostFail;
+	int m_nOterHostFail;
+
 };
 
 #endif

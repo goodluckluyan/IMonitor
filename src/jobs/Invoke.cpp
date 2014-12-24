@@ -35,7 +35,7 @@ int  CInvoke::Init()
 		time(&tm1);
 		while(1)
 		{
-			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS))
+			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS,false))
 			{
 				bRunOther = true;
 				break;
@@ -361,7 +361,7 @@ void CInvoke::ParseCmd(std::string strCmd, std::vector<std::string> &vecParam)
 // 打印产品信息
 void CInvoke::PrintProductInfo()
 {
-	std::string strMORS = C_Para::GetInstance()->m_bMain ? "MAIN" :"STDBY";
+	std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
 	printf("#-----------------------------------------------------------------------------#\n");
 	printf("#                      <<<<<IMonitor1.0(%5s)>>>>                          #\n",strMORS.c_str());
 	printf("#                                                                             #\n");
@@ -533,14 +533,14 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 			 std::string strNewIP;
 			 int nNewPort = 0;
 			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
-			 if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->m_bMain)
+			 if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
 			 {
 				 m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 			 }
 		 }
 		 else
 		 {
-			 if(nState == 2 && C_Para::GetInstance()->m_bMain)// 因为sms busy切换失败
+			 if(nState == 2 && C_Para::GetInstance()->IsMain())// 因为sms busy切换失败
 			 {
 				 m_ptrLstHall->AddCondSwitchTask(strHallID,"state",101);
 			 }
@@ -562,7 +562,7 @@ bool CInvoke::SwitchAllSMS()
 		m_ptrLstHall->GetAllLocalRunHallID(vecHallID);
 		for(int i = 0 ;i < vecHallID.size();i++)
 		{
-			if(C_Para::GetInstance()->m_bMain )
+			if(C_Para::GetInstance()->IsMain() )
 			{
 				SwitchSMS(vecHallID[i]);
 			}
@@ -596,10 +596,29 @@ void CInvoke::Exit()
 	g_bQuit = true;
 }
 
+// 在本机启动所有sms
+void CInvoke::StartALLSMS()
+{
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartALLSMS!");
+	if(m_ptrLstHall != NULL)
+	{
+		m_ptrLstHall->StartAllSMS();
+	}
+}
+
+// 接管主服务器成为主角色
+void CInvoke::TakeOverMain()
+{
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
+	C_Para::GetInstance()->SetMainFlag(true);
+}
+
 // 开始TMS
 void CInvoke::StartTMS()
 {
-	printf("Fault Of Policys Trigger StartTMS!\n");
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartTMS!");
-	m_ptrTMS->StartTMS();
+	if(m_ptrTMS != NULL)
+	{
+		m_ptrTMS->StartTMS();
+	}
 }

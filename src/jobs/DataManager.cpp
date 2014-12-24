@@ -1,6 +1,7 @@
 #include<algorithm>
 #include<stdio.h>
 #include<stdlib.h>
+#include<time.h>
 #include"para/C_Para.h"
 #include"DataManager.h"
 #include"log/C_LogManage.h"
@@ -16,6 +17,8 @@ CDataManager::CDataManager()
 {
 	m_ptrInvoker = NULL;
 	m_ptrDispatch = NULL;
+	m_nOterHostFail = 0;
+	time(&m_tmOtherHostFail);
 }
 CDataManager::~CDataManager()
 {
@@ -174,8 +177,6 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 		}
 	}
 
-
-
 	return true;
 }
 
@@ -254,7 +255,7 @@ bool CDataManager::UpdateTMSStat(int state)
 	m_csTMS.LeaveCS();
 
 	std::vector<stError> vecRE;
-	if(state == -1 && C_Para::GetInstance()->m_bMain)
+	if(state == -1 && C_Para::GetInstance()->IsMain())
 	{
 		stError er;
 		er.ErrorName = "state";
@@ -344,8 +345,44 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
+	if(-1 == nState)
+	{
+		time_t tm;
+		time(&tm);
+		int nSec = tm-m_tmOtherHostFail;
+		if(nSec > 100)
+		{
+			m_nOterHostFail = 1;
+			time(&m_tmOtherHostFail);
+		}
+		else
+		{
+			m_nOterHostFail++;
+		}
+
+		if(m_nOterHostFail > 3)
+		{
+			int nPerSec = nSec/m_nOterHostFail;
+			char buf[16]={'\0'};
+			snprintf(buf,16,"%d",nPerSec);
+			
+			LOGDEBFMT("Other Host Connection Fail(Interval Sec/PerCnt:%s=%d/%d)",buf,nSec,m_nOterHostFail);
+			stError er;
+			std::vector<stError> vecRE;
+			er.ErrorName="connfailinterval";
+			er.ErrorVal=buf;
+			vecRE.push_back(er);
+			if(m_ptrDispatch)
+			{
+				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+			}
+		}
+
+		return true;
+	}   
+
 	// 两端都是主
-	if(C_Para::GetInstance()->m_bMain == bMain && bMain )
+	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -358,7 +395,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 		}
 	}
 	// 两端都是备
-	else if(C_Para::GetInstance()->m_bMain == bMain && !bMain )
+	else if(C_Para::GetInstance()->IsMain() == bMain && !bMain )
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -370,6 +407,8 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 		}
 	}
+
+
 	
 	return true;
 }

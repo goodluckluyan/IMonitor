@@ -24,7 +24,7 @@ C_HallList* C_HallList::m_pInstance = NULL;
 
 C_HallList::~C_HallList()
 {
-	ShutdownTOMCAT(C_Para::GetInstance()->m_strTOMCATPath);
+	//ShutdownTOMCAT(C_Para::GetInstance()->m_strTOMCATPath);
 	std::map<std::string,C_Hall*>::iterator it = m_mapHall.begin();
 	for(;it != m_mapHall.end();it++)
 	{
@@ -91,7 +91,7 @@ int C_HallList::Init(bool bRunOther )
 		}
 		else
 		{
-			node.nRole = ptrPara->m_bMain ? 1 : 2;
+			node.nRole = ptrPara->IsMain() ? 1 : 2;
 		}
 		if(node.nRole == 1)
 		{
@@ -130,7 +130,7 @@ int C_HallList::Init(bool bRunOther )
 	{
 		SMSInfo &node = vecSMSInfo[i];
 	
-		bool bRun = ptrPara->m_bMain ? node.nRole == 1 : node.nRole == 2;
+		bool bRun = ptrPara->IsMain() ? node.nRole == 1 : node.nRole == 2;
 		C_Hall * ptrHall = new C_Hall(node);
 		
 		// 是否已经存在
@@ -329,6 +329,80 @@ void C_HallList::GetAllLocalRunHallID(std::vector<std::string> &vecHallID)
 	}
 }
 
+// 启动所有sms
+bool C_HallList::StartAllSMS()
+{
+	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
+	for( ;it != m_mapHall.end() ;it++)
+	{
+		C_Hall *ptr=it->second;
+		if(ptr->IsLocal())
+		{
+			continue;	
+		}
+
+
+		// 测试3次获取sms的状态
+		int i = 0;
+		while(i<3)
+		{
+			int nState = -1;
+			std::string strInfo;
+			int nRet = ptr->GetSMSWorkState(nState,strInfo);
+			if(nRet >= 0 && nState > 0 && nState != 103 )
+			{
+				break;
+			}
+			i++;
+		}
+
+		// 三次获取状态失败才开启sms
+		if(i<3)
+		{
+			LOGERRFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s run normal can't local run!",ptr->GetHallID().c_str());
+			continue;
+		}
+
+		int nPid = 0;
+		ptr->StartSMS(nPid);
+		LOGINFFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s local run !",ptr->GetHallID().c_str());
+
+		if(nPid == 0)
+		{
+			LOGERRFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s local run failed!",ptr->GetHallID().c_str());
+			continue;
+		}
+
+		// 验证启动是否成功
+		C_Para *ptrPara = C_Para::GetInstance();
+		char buf[32]={'\0'};
+		snprintf(buf,sizeof(buf),"/proc/%d",nPid);
+		struct stat dstat;
+		if(stat(buf,&dstat) == 0)
+		{
+			if(S_ISDIR(dstat.st_mode))
+			{
+				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
+				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+				if(ptrPara->IsMain())
+				{
+					UpdateDataBase(stSMSInfo.strId,MAINRUN);
+				}
+				else
+				{
+					UpdateDataBase(stSMSInfo.strId,STDBYRUN);
+				}
+				LOGINFFMT(ERROR_SMSSWITCH_LOCALRUNOK,"SMS:%s StartAllSMS local run OK!",ptr->GetHallID().c_str());
+			}
+			else
+			{
+				LOGERRFMT(ERROR_SMSSWITCH_LOCALRUNFAIL,"SMS:%s StartAllSMS local run failed!",ptr->GetHallID().c_str());
+			}
+		}
+
+	}
+}
+
 
 //切换SMS nState 返回1:表示没有些hallid 2:表示sms busy 3:启动新sms失败
 bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
@@ -347,7 +421,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 
 	LOGINFFMT(ERROR_SMSSWITCH_START,"SMS:%s Switch Start!",strHallID.c_str());
 	C_Hall * ptr = fit->second;
-	if(m_ptrDM != NULL && C_Para::GetInstance()->m_bMain)
+	if(m_ptrDM != NULL && C_Para::GetInstance()->IsMain())
 	{
 		SMSInfo smsinfo;
 		m_ptrDM->GetSMSStat(strHallID,smsinfo);
@@ -368,7 +442,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 	{
 		bool bRet = ptr->ShutDownSMS();
 		LOGINFFMT(ERROR_SMSSWITCH_LOCALSHUTDOWN,"SMS:%s Switch local run sms shutdown!",strHallID.c_str());
-		if(C_Para::GetInstance()->m_bMain)
+		if(C_Para::GetInstance()->IsMain())
 		{
 			// 调用备机的切换Sms`
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
@@ -378,7 +452,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 		{
 		     SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,false);
 		     m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-			 if(ptrPara->m_bMain)
+			 if(ptrPara->IsMain())
 			 {
 				 UpdateDataBase(stSMSInfo.strId,STDBYRUN);
 			 }
@@ -386,7 +460,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 	}
 	else//在对端运行
 	{
-		if(ptrPara->m_bMain)
+		if(ptrPara->IsMain())
 		{
  			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
@@ -411,7 +485,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 			{
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-				if(ptrPara->m_bMain)
+				if(ptrPara->IsMain())
 				{
 					UpdateDataBase(stSMSInfo.strId,MAINRUN);
 				}

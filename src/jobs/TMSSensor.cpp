@@ -128,7 +128,7 @@ bool CTMSSensor::SwitchTMS()
 		 bRet =ShutDownTMS();
 	}
 
-	if(C_Para::GetInstance()->m_bMain)
+	if(C_Para::GetInstance()->IsMain())
 	{
 		LOGINFFMT("Call Standby SwitchTMS Interface !");
 		if( CallStandbySwitchTMS())
@@ -167,7 +167,7 @@ bool CTMSSensor::ShutDownTMS()
 // 启动tms
 bool CTMSSensor::StartTMS()
 {
-	if(!C_Para::GetInstance()->m_bMain)
+	if(!C_Para::GetInstance()->IsMain())
 	{
 		LOGINFFMT("Standby host can't start TMS!\n");
 		return false;
@@ -209,7 +209,6 @@ bool CTMSSensor::StartTMS()
 	}
 
 }
-
 
 // 获取指定进程的pid
 int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)

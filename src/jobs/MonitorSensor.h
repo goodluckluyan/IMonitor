@@ -79,7 +79,7 @@ public:
 	bool Init(std::string strIP,int nPort);
 	
 	// 获取另一台主机的调度程序的状态
-	bool GetOtherMonitorState(int nStateType);
+	bool GetOtherMonitorState(int nStateType,bool bNoticeDM = true);
 
 private:
 
