@@ -17,6 +17,7 @@
 
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 
 #define BUFFLEN  2048
@@ -308,8 +309,9 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	string response_c;
 	string content_c;
 	string http;
+	LOGINFFMT(0,"GetSMSWorkState %s:%s",m_SMS.strId.c_str(),m_SMS.strIp.c_str());
 	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
-	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 10);
+	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 5);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP

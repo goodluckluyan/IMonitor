@@ -150,7 +150,7 @@ int C_Para::ReadPara()
 	{
 		return iResult;
 	}
-	m_bMain = atoi(a) == 1 ?true: false;
+	m_enRole = atoi(a) == 1 ?MAINROLE: STDBYROLE;
 
 	// 	memset(a,0,64);
 	// 	iResult = config.readvalue("PARA","WebServiceIP",a,strInipath.c_str());
@@ -334,16 +334,35 @@ int C_Para::ReadPara()
 bool C_Para::IsMain()
 {
 	bool bRet;
-	pthread_rwlock_rdlock(&m_rwlk_main);
-	bRet = m_bMain;
-	pthread_rwlock_unlock(&m_rwlk_main);
+	//pthread_rwlock_rdlock(&m_rwlk_main);
+	bRet = (m_enRole == MAINROLE || m_enRole== TMPMAINROLE);
+	//pthread_rwlock_unlock(&m_rwlk_main);
+	return bRet;
 }
 
-bool C_Para::SetMainFlag(bool bMain)
+int C_Para::GetRole()
+{
+	int nRet;
+	//pthread_rwlock_rdlock(&m_rwlk_main);
+	nRet = m_enRole ;
+	//pthread_rwlock_unlock(&m_rwlk_main);
+	return nRet;
+}
+
+bool C_Para::SetRoleFlag(int nRole)
 {
 	bool bRet;
-	pthread_rwlock_wrlock(&m_rwlk_main);
-	bRet = m_bMain;
-	m_bMain = bMain;
-	pthread_rwlock_unlock(&m_rwlk_main);
+	//pthread_rwlock_wrlock(&m_rwlk_main);
+	if(nRole > 0 && nRole <=3)
+	{
+		m_enRole = (enHOSTROLE)nRole;
+		bRet = true;
+	}
+	else
+	{
+		bRet = false;
+	}
+	//pthread_rwlock_unlock(&m_rwlk_main);
+
+	return bRet;
 }

@@ -171,14 +171,16 @@ int C_HallList::Init(bool bRunOther )
 	}
 
 	// 启动tomcat
-	StartTOMCAT(ptrPara->m_strTOMCATPath);
+	ExeShell_Fork(ptrPara->m_strTOMCATPath,"shutdown.sh");
+	ExeShell_Fork(ptrPara->m_strTOMCATPath,"startup.sh");
 
 	return 0;
 }
 
 //启动tomcat
-bool C_HallList::StartTOMCAT(std::string strPath)
+bool C_HallList::ExeShell_Fork(std::string strPath,std::string strShell)
 {
+	C_Para *ptrPara = C_Para::GetInstance();
 	if(strPath.empty())
 	{
 		return false;
@@ -203,13 +205,13 @@ bool C_HallList::StartTOMCAT(std::string strPath)
 		{
 			rl.rlim_max = 1024;
 		}
-		for(int i = 0 ;i < rl.rlim_max;i++)
+		for(int i = 3 ;i < rl.rlim_max;i++)
 		{
 			close(i);
 		}
 
 		char buf[128]={'\0'};
-		snprintf(buf,sizeof(buf),"/bin/bash %sstartup.sh",strPath.c_str());
+		snprintf(buf,sizeof(buf),"/bin/bash %s%s",strPath.c_str(),strShell.c_str());
 		printf("%s\n",buf);
 		system(buf);
 		exit(0);
@@ -218,25 +220,6 @@ bool C_HallList::StartTOMCAT(std::string strPath)
 	return true;
 }
 
-//关闭tomcat
-bool C_HallList::ShutdownTOMCAT(std::string strPath)
-{
-	if(strPath.empty())
-	{
-		return false;
-	}
-
-	if(strPath.at(strPath.size()-1) != '/')
-	{
-		strPath +="/";
-	}
-
-	char buf[128]={'\0'};
-	snprintf(buf,sizeof(buf),"/bin/bash %sshutdown.sh",strPath.c_str());
-	printf("%s\n",buf);
-	system(buf);
-	return true;
-}
 
 int C_HallList::GetPID(std::string strName,std::vector<int>& vecPID)
 {	
@@ -330,7 +313,7 @@ void C_HallList::GetAllLocalRunHallID(std::vector<std::string> &vecHallID)
 }
 
 // 启动所有sms
-bool C_HallList::StartAllSMS()
+bool C_HallList::StartAllSMS(std::vector<std::string>& vecHallid)
 {
 	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
 	for( ;it != m_mapHall.end() ;it++)
@@ -353,6 +336,8 @@ bool C_HallList::StartAllSMS()
 			{
 				break;
 			}
+			LOGERRFMT(ERROR_GETSMSSTATUS_FAIL,"StartAllSMS SMS:%s GetState Fail!(nRet=%d,nState=%d",
+				ptr->GetHallID().c_str(),nRet,nState);
 			i++;
 		}
 
@@ -384,14 +369,15 @@ bool C_HallList::StartAllSMS()
 			{
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-				if(ptrPara->IsMain())
+				if(ptrPara->GetRole()==(int)MAINROLE)
 				{
 					UpdateDataBase(stSMSInfo.strId,MAINRUN);
 				}
-				else
+				else if(ptrPara->GetRole()>=(int)STDBYROLE)
 				{
 					UpdateDataBase(stSMSInfo.strId,STDBYRUN);
 				}
+				vecHallid.push_back(stSMSInfo.strId);
 				LOGINFFMT(ERROR_SMSSWITCH_LOCALRUNOK,"SMS:%s StartAllSMS local run OK!",ptr->GetHallID().c_str());
 			}
 			else
@@ -452,7 +438,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 		{
 		     SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,false);
 		     m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-			 if(ptrPara->IsMain())
+			 if(ptrPara->GetRole()>=(int)STDBYROLE)
 			 {
 				 UpdateDataBase(stSMSInfo.strId,STDBYRUN);
 			 }
@@ -485,7 +471,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 			{
 				SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,true);
 				m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
-				if(ptrPara->IsMain())
+				if(ptrPara->GetRole() == (int)MAINROLE)
 				{
 					UpdateDataBase(stSMSInfo.strId,MAINRUN);
 				}
@@ -642,11 +628,28 @@ bool C_HallList::UpdateDataBase(std::string strHallID,int nPosition)
 
 	char sql[256]={'\0'};
 	snprintf(sql,sizeof(sql),"update devices set default_position=%d where hall_id = %s",nPosition,strHallID.c_str());
-	int nResult = mysql.execSQL(sql);
-	if(nResult == -1)
+	int i=0;
+	while(i<3)
 	{
-		LOGERRFMT(ERROR_UPDATESMSTABLE_FAILED,"C_HallList Update SMS RUN Position failed!\n");
+		int nResult = mysql.execSQL(sql);
+		if(nResult != -1)
+		{
+			LOGINFFMT(0,"update database OK<%s>",sql);
+			break;
+		}
+		else
+		{
+			LOGINFFMT(0,"update database FAILED<%s>",sql);
+		}
+		i++;
+		sleep(1);
+	}
+
+	if(i == 3)
+	{
+		LOGERRFMT(ERROR_UPDATESMSTABLE_FAILED,"C_HallList Update SMS RUN Position failed!<%s>",sql);
 		return false;
 	}
+	
 	return true;
 }

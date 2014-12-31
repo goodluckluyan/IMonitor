@@ -19,6 +19,9 @@ CDataManager::CDataManager()
 	m_ptrDispatch = NULL;
 	m_nOterHostFail = 0;
 	time(&m_tmOtherHostFail);
+
+	time(&m_tmCheckTMSNoRun);
+	m_nCheckTMSNoRun = 0;
 }
 CDataManager::~CDataManager()
 {
@@ -257,14 +260,21 @@ bool CDataManager::UpdateTMSStat(int state)
 	std::vector<stError> vecRE;
 	if(state == -1 && C_Para::GetInstance()->IsMain())
 	{
-		stError er;
-		er.ErrorName = "state";
-		er.ErrorVal = "norun";
-		vecRE.push_back(er);
-
-		if(m_ptrDispatch)
+		time_t tm;
+		time(&tm);
+		int nSec = tm-m_tmOtherHostFail;
+		if(nSec > 5)
 		{
-			m_ptrDispatch->TriggerDispatch(TMSTask,vecRE);
+			stError er;
+			er.ErrorName = "state";
+			er.ErrorVal = "norun";
+			vecRE.push_back(er);
+
+			if(m_ptrDispatch)
+			{
+				m_ptrDispatch->TriggerDispatch(TMSTask,vecRE);
+			}
+			time(&m_tmOtherHostFail);
 		}
 	}
 
@@ -384,15 +394,32 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 	// 两端都是主
 	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
-		stError er;
-		std::vector<stError> vecRE;
-		er.ErrorName="brotherhood";
-		er.ErrorVal="nostandby";
-		vecRE.push_back(er);
-		if(m_ptrDispatch)
-		{
-			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+		// 发现主机出现时，把临时主改回备
+		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE)
+		{	
+			stError er;
+			std::vector<stError> vecRE;
+			er.ErrorName="mainback";
+			er.ErrorVal="mainback";
+			vecRE.push_back(er);
+			if(m_ptrDispatch)
+			{
+				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+			}
 		}
+		else
+		{
+			stError er;
+			std::vector<stError> vecRE;
+			er.ErrorName="brotherhood";
+			er.ErrorVal="nostandby";
+			vecRE.push_back(er);
+			if(m_ptrDispatch)
+			{
+				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+			}
+		}
+		
 	}
 	// 两端都是备
 	else if(C_Para::GetInstance()->IsMain() == bMain && !bMain )

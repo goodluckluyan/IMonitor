@@ -9,6 +9,9 @@
 #define _TMS20_PARA
 #include <string>
 using namespace std;
+
+// 主机角色，主机只有MAINROLE一种状态，备机有STDBYROLE和TMPMAINROLE两种状态
+enum enHOSTROLE{MAINROLE = 1,STDBYROLE = 2,TMPMAINROLE = 3};
 class C_Para
 {
 public:
@@ -18,6 +21,10 @@ public:
     ~C_Para();
     //读取配置参数。
     int ReadPara();
+
+	bool IsMain();
+	int GetRole();
+	bool SetRoleFlag(int nRole);
 protected:
      C_Para();
 public:    
@@ -42,7 +49,7 @@ public:
     string m_strLogPath;
 
 	//是主、辅调度程序
-	bool m_bMain ;
+	enHOSTROLE m_enRole ;
 
 	//本机webservice服务打开的端口
 	//std::string m_strWebServiceIP;

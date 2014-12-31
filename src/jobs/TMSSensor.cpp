@@ -156,6 +156,8 @@ bool CTMSSensor::ShutDownTMS()
 		{
 			LOGINFFMT("Kill Local TMS(%d) Done!\n",m_nPid);
 		}
+// 		ForkExeSh("/sbin/umount.sh");
+// 		printf("ForkExeSh:/sbin/umount.sh\n");
 		return nRet == 0 ? true: false;
 	}
 	else
@@ -191,11 +193,11 @@ bool CTMSSensor::StartTMS()
 	else
 	{
 		
-		ForkExeSh("/sbin/umount.sh");
-		printf("ForkExeSh:/sbin/umount.sh\n");
-		sleep(3);
-		ForkExeSh("/sbin/mount.sh");
-		printf("ForkExeSh:/sbin/mount.sh\n");
+// 		ForkExeSh("/sbin/umount.sh");
+// 		printf("ForkExeSh:/sbin/umount.sh\n");
+// 		sleep(3);
+// 		ForkExeSh("/sbin/mount.sh");
+// 		printf("ForkExeSh:/sbin/mount.sh\n");
 
 		int nStartType = C_Para::GetInstance()->m_nStartSMSType;
 		if(nStartType == 1)
@@ -206,8 +208,28 @@ bool CTMSSensor::StartTMS()
 		{
 			StartTMS_NewTerminal(strTMSPath);
 		}
-	}
 
+		// 启动后把通知切换信息发给tms
+		if(m_nPid > 0 && m_vecSwitchInfo.size() > 0)
+		{
+			std::vector<stNotifySmsSwitchInfo>::iterator it = m_vecSwitchInfo.begin();
+			for( ;it != m_vecSwitchInfo.end() ;)
+			{
+				stNotifySmsSwitchInfo &stNode = *it;
+				int i = 0;
+				while(i<3)
+				{
+					bool bRet = NotifyTMSSMSSwitch(stNode.strHallId,stNode.strNewIp,stNode.port);
+					if(bRet)
+					{
+						break;
+					}
+					i++;
+				}
+				m_vecSwitchInfo.erase(it++);
+			}
+		}
+	}
 }
 
 // 获取指定进程的pid
@@ -390,6 +412,11 @@ bool CTMSSensor::CallStandbySwitchTMS()
 // 通过webservice调用对端的切换tms接口
 bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,unsigned short port)
 {
+	if(m_nPid <= 0)
+	{
+		m_vecSwitchInfo.push_back(stNotifySmsSwitchInfo(strHallId,strNewIp,port));
+		return false;
+	}
 
 	std::ostringstream os;
 	os<<port;
@@ -625,13 +652,15 @@ int CTMSSensor::InvokerWebServer(bool bTMSWS,std::string strURI,std::string &xml
 	request.SetMethod("POST");
 	request.SetUri(strURI.c_str());
 	request.SetVersion("HTTP/1.1");
-	request.SetHost(m_strIP.c_str());
+	request.SetHost(bTMSWS?"127.0.0.1":m_strIP);
 	request.SetContentType("text/xml; charset=utf-8");
 	request.SetContent(xml);
 	request.SetSoapAction("");
 	std::string strHttp = request.GetHttpRequest();
 
 	int result = SendAndRecvResponse(bTMSWS,strHttp, strResponse);
+
+
 
 	return result;
 
@@ -654,13 +683,13 @@ int CTMSSensor::ForkExeSh(std::string strExe)
 		{
 			rl.rlim_max = 1024;
 		}
-		for(int i = 0 ;i < rl.rlim_max;i++)
+		for(int i = 3 ;i < rl.rlim_max;i++)
 		{
 			close(i);
 		}
 
 		char buf[128]={'\0'};
-		snprintf(buf,sizeof(buf),"/bin/bash %s",strExe.c_str());
+		snprintf(buf,sizeof(buf),"sudo /bin/bash %s",strExe.c_str());
 		printf("%s\n",buf);
 		system(buf);
 		exit(0);

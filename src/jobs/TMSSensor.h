@@ -28,6 +28,42 @@
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/XMLString.hpp>
 
+struct stNotifySmsSwitchInfo
+{
+	std::string strHallId;
+	std::string strNewIp;
+	unsigned short port;
+
+	stNotifySmsSwitchInfo():
+	  port(0)
+	{
+	}
+
+	  stNotifySmsSwitchInfo(std::string HallId,std::string NewIp,unsigned short Port)
+	  {
+		  strHallId = HallId;
+		  strNewIp = NewIp;
+		  port = Port;
+	  }
+
+	stNotifySmsSwitchInfo(const stNotifySmsSwitchInfo &obj)
+	{
+		strHallId = obj.strHallId;
+		strNewIp = obj.strNewIp;
+		port = obj.port;
+	}
+
+	stNotifySmsSwitchInfo& operator=(const stNotifySmsSwitchInfo &obj)
+	{
+		if(this != &obj)
+		{
+			strHallId = obj.strHallId;
+			strNewIp = obj.strNewIp;
+			port = obj.port;
+		}
+		return *this;
+	}
+};
 class CTMSSensor
 {
 public:
@@ -47,8 +83,10 @@ public:
 
 	bool NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,unsigned short port);
 
-private:
 	bool ShutDownTMS();
+
+private:
+	
 	
 	bool StartTMS_CurTerminal(std::string strTMSPath);
 	bool StartTMS_NewTerminal(std::string strTMSPath);
@@ -67,6 +105,8 @@ private:
 private:
 	CDataManager * m_ptrDM;
 	int m_nPid;
+
+	std::vector<stNotifySmsSwitchInfo> m_vecSwitchInfo;
 
 	//对端主机信息
 	std::string m_strIP;

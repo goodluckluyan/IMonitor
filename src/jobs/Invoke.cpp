@@ -69,6 +69,30 @@ int  CInvoke::Init()
 		{
 			return -1;
 		}
+
+		if(!bRunOther)
+		{
+			if(pPara->GetRole()==STDBYROLE)
+			{
+				TakeOverMain();
+			}
+
+			std::vector<std::string> vecLocalRun;
+			m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
+			for(int i = 0;i<vecLocalRun.size();i++)
+			{
+				std::string strNewIP;
+				int nNewPort = 0;
+				m_ptrLstHall->GetSMSRunHost(vecLocalRun[i],strNewIP,nNewPort);
+				if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+				{
+					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecLocalRun[i],strNewIP,nNewPort);
+					LOGINFFMT(0,"Init:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecLocalRun[i].c_str(),
+						strNewIP.c_str(),nNewPort,bRet?1:0);
+				}
+			}
+		}
+		
 	}
 
 	// 调度模块
@@ -533,9 +557,14 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 			 std::string strNewIP;
 			 int nNewPort = 0;
 			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
+			 LOGINFFMT(0,"****SwitchSMS:GetSMSRunHost< %s Switch To %s Host >",strHallID.c_str(),
+				 strNewIP.c_str());
 			 if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
 			 {
-				 m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
+				 bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
+				 LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",strHallID.c_str(),
+					 strNewIP.c_str(),nNewPort,bRet?1:0);
+
 			 }
 		 }
 		 else
@@ -602,7 +631,25 @@ void CInvoke::StartALLSMS()
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartALLSMS!");
 	if(m_ptrLstHall != NULL)
 	{
-		m_ptrLstHall->StartAllSMS();
+		std::vector<std::string> vecHallID;
+		m_ptrLstHall->StartAllSMS(vecHallID);
+		if(vecHallID.size() == 0)
+		{
+			return;
+		}
+
+		for(int i = 0;i < vecHallID.size();i++)
+		{
+			std::string strNewIP;
+			int nNewPort = 0;
+			m_ptrLstHall->GetSMSRunHost(vecHallID[i],strNewIP,nNewPort);
+			if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+			{
+				bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
+				LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
+					strNewIP.c_str(),nNewPort,bRet?1:0);
+			}
+		}
 	}
 }
 
@@ -610,7 +657,18 @@ void CInvoke::StartALLSMS()
 void CInvoke::TakeOverMain()
 {
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
-	C_Para::GetInstance()->SetMainFlag(true);
+	if(C_Para::GetInstance()->GetRole() != TMPMAINROLE)
+	{
+		C_Para::GetInstance()->SetRoleFlag(TMPMAINROLE);
+	}
+}
+
+// 从临时主服务器改变成为备角色
+void CInvoke::ChangeToStdby()
+{
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To STDBYHost!****");
+	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
+	m_ptrTMS->ShutDownTMS();
 }
 
 // 开始TMS

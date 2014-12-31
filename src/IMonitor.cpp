@@ -58,11 +58,11 @@ void InitSigFun(C_LogManage *pLogManage)
 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
 		printf("add signal Number:SIGALRM\n");	
 	}
-	if(signal(SIGHUP,sig_fun) == SIG_ERR)
-	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
-		printf("add signal Number:SIGHUP\n");	
-	}  
+// 	if(signal(SIGHUP,sig_fun) == SIG_ERR)
+// 	{
+// 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
+// 		printf("add signal Number:SIGHUP\n");	
+// 	}  
 	if(signal(SIGPIPE,sig_fun) == SIG_ERR)
 	{
 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 

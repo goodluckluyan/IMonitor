@@ -113,6 +113,8 @@ private:
 	// 记录对端主机连接异常次数和时间
 	time_t m_tmOtherHostFail;
 	int m_nOterHostFail;
+	time_t m_tmCheckTMSNoRun;
+	int m_nCheckTMSNoRun;
 
 };
 

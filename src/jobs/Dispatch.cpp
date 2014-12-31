@@ -287,12 +287,15 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 					}
 					else if(vecStr[i] == "TakeOverMain" && m_ptrInvoker)
 					{
-						// 不能颠倒调用顺序，否则会在启动sms会对数据库表devices中的default_position的更新出现问题。
-						((CInvoke*)m_ptrInvoker)->StartALLSMS();
 						if(!C_Para::GetInstance()->IsMain())
 						{
 							((CInvoke*)m_ptrInvoker)->TakeOverMain();
 						}
+						((CInvoke*)m_ptrInvoker)->StartALLSMS();
+					}
+					else if(vecStr[i] == "ChangeToStdby" && m_ptrInvoker)
+					{
+						((CInvoke*)m_ptrInvoker)->ChangeToStdby();
 					}
 				}
 			}

@@ -199,7 +199,7 @@ int C_ThreadManage::GetIdlThread(C_ThreadData **pThreadData)
 
 		}while(itTmp != m_itIdl);
 		C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_LIST_FULL,
-			"线程对列已满，无空闲线程。");
+			"no idel thread!");
 		m_cs.LeaveCS();
 
     return ERROR_THREAD_LIST_FULL;

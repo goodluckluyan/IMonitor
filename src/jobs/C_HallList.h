@@ -50,7 +50,7 @@ public:
 
 
 	// 在本机启动所有sms
-	bool StartAllSMS();
+	bool StartAllSMS(std::vector<std::string>& vecHallid);
 
 	// 备机调用主机进行切换
 	int SwitchSMSByStdby(std::string strHallID);
@@ -73,11 +73,7 @@ public:
 private:
 
 	//启动tomcat
-	bool StartTOMCAT(std::string strPath);
-
-	//关闭tomcat
-	bool ShutdownTOMCAT(std::string strPath);
-
+	bool ExeShell_Fork(std::string strPath,std::string strShell);
 
 	int GetPID(std::string strName,std::vector<int>& vecPID);
 

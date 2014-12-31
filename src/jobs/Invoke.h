@@ -62,6 +62,8 @@ public:
 
 	void TakeOverMain();
 
+	void ChangeToStdby();
+
 private:
 	// ¥Ú”°∞Ô÷˙–≈œ¢
 	void PrintProductInfo();
