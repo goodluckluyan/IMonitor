@@ -230,8 +230,8 @@ struct SMSInfo
 {
 	std::string strId;		// 标识id或序列号
 	std::string strIp;		// 通信的ip地址
-	int nPort ;			// 通信的端口
-	int nRole;				// 角色，是主要运行角色还是候选角色 1:为主角，2:为候选 
+	int nPort ;				// 通信的端口
+	int nRole;				// 角色，是主要运行角色还是候选角色 1:为主机运行，2:为备机运行 3:接管运行 
 	std::string strExepath;// sms执行文件路径
 	std::string strConfpath;// 配置文件路径
 	SMSStatus stStatus;

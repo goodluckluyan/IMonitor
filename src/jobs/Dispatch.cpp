@@ -178,7 +178,7 @@ bool CDispatch::GetPolicyNode(DOMDocument* ptrDoc,std::string strNodeName,std::m
 					}
 					else if(nodeName_str == "action")
 					{
-						pinfo.strAct = attrValue;
+						pinfo.vecAct.push_back(attrValue);
 					}
 					XMLString::release(&attrValue);//释放资源
 				}
@@ -291,11 +291,21 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 						{
 							((CInvoke*)m_ptrInvoker)->TakeOverMain();
 						}
-						((CInvoke*)m_ptrInvoker)->StartALLSMS();
 					}
 					else if(vecStr[i] == "ChangeToStdby" && m_ptrInvoker)
 					{
 						((CInvoke*)m_ptrInvoker)->ChangeToStdby();
+					}
+					else if(vecStr[i] == "TakeOverStdby" && m_ptrInvoker)
+					{
+						if(C_Para::GetInstance()->IsMain())
+						{
+							((CInvoke*)m_ptrInvoker)->TakeOverStdby();
+						}
+					}
+					else if(vecStr[i] == "ChangeToMain" && m_ptrInvoker)
+					{
+						((CInvoke*)m_ptrInvoker)->ChangeToMain();
 					}
 				}
 			}
@@ -326,7 +336,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 		return false;
 	}
 
-	std::vector<PolicyInfoEle> vecAct;
+	std::vector<PolicyInfoEle> vecPIEAct;
 	PolicyInfo& stPI = fit->second;
 	int nLen = nodeTask.vecErr.size();
 	for(int i = 0 ;i < nLen ;i++)
@@ -341,13 +351,18 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 		PolicyInfoEle &stPE = fele->second;
 		if(stPE.strType == "value" && stPE.strFault == err.ErrorVal)
 		{
+			std::string strAct;
+			for(int i=0 ;i<stPE.vecAct.size();i++)
+			{
+				strAct+=stPE.vecAct[i];
+			}
 			char buf[128];
-			snprintf(buf,sizeof(buf),"LOG:%s%d value: %s = Policy:%s\n",err.ErrorName.c_str(),err.nOrdinal,
-				err.ErrorVal.c_str(),stPE.strFault.c_str());
+			snprintf(buf,sizeof(buf),"LOG:%s%d value: %s = Policy:%s->%s\n",err.ErrorName.c_str(),err.nOrdinal,
+				err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 			mapAction[LOGCmd].push_back(std::string(buf));
 		
 			//获取动作
-			vecAct.push_back(stPE);
+			vecPIEAct.push_back(stPE);
 		}
 
 		if(stPE.strType == "exrange")
@@ -366,13 +381,18 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 				int errvalue = atoi(err.ErrorVal.c_str());
 				if(errvalue < nMin || errvalue > nMax)
 				{
+					std::string strAct;
+					for(int i=0 ;i<stPE.vecAct.size();i++)
+					{
+					  strAct+=stPE.vecAct[i];
+					}
 					char buf[128];
 					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
-						err.ErrorVal.c_str(),stPE.strFault.c_str(),stPE.strAct.c_str());
+						err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 					mapAction[LOGCmd].push_back(std::string(buf));
 
 					//获取动作
-					vecAct.push_back(stPE);
+					vecPIEAct.push_back(stPE);
 				}
 			}
 		}
@@ -393,13 +413,18 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 				int errvalue = atoi(err.ErrorVal.c_str());
 				if(errvalue >= nMin && errvalue <= nMax)
 				{
+					std::string strAct;
+					for(int i=0 ;i<stPE.vecAct.size();i++)
+					{
+						strAct+=stPE.vecAct[i];
+					}
 					char buf[128];
 					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
-						err.ErrorVal.c_str(),stPE.strFault.c_str(),stPE.strAct.c_str());
+						err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 					mapAction[LOGCmd].push_back(std::string(buf));
 
 					//获取动作
-					vecAct.push_back(stPE);
+					vecPIEAct.push_back(stPE);
 				}
 			}
 		}
@@ -408,23 +433,31 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 		{
 			if(stPE.strFault.find(err.ErrorVal) != std::string::npos)
 			{
+				std::string strAct;
+				for(int i=0 ;i<stPE.vecAct.size();i++)
+				{
+					strAct+=stPE.vecAct[i];
+				}
 				char buf[128];
-				snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s\n",err.ErrorName.c_str(),
-					err.ErrorVal.c_str(),stPE.strFault.c_str());
+				snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s->%s\n",err.ErrorName.c_str(),
+					err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 				mapAction[LOGCmd].push_back(std::string(buf));
 
 				//获取动作
-				vecAct.push_back(stPE);
+				vecPIEAct.push_back(stPE);
 			}
 		}
 	}
 
-	if(vecAct.size()>0)
+	if(vecPIEAct.size()>0)
 	{
-		std::sort(vecAct.begin(),vecAct.end());
-		for(int i = 0;i < vecAct.size() ;i++)
+		std::sort(vecPIEAct.begin(),vecPIEAct.end());
+		for(int i = 0;i < vecPIEAct.size() ;i++)
 		{
-			mapAction[POLICYCmd].push_back(vecAct[i].strAct);
+			for(int j=0;j<vecPIEAct[i].vecAct.size();j++)
+			{
+				mapAction[POLICYCmd].push_back(vecPIEAct[i].vecAct[j]);
+			}
 		}
 	}
 	return true;

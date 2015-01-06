@@ -43,7 +43,7 @@ class C_Hall
 
 public:
 	// 初始化
-	int Init(bool bRun,int nPID = 0);
+	SMSInfo & Init(bool bRun,int nPID = 0);
 
 	 // 获取SMS工作状态
 	int  GetSMSWorkState( int &state, std::string &info);
@@ -55,7 +55,7 @@ public:
 	bool ShutDownSMS();
 
 	// 改变SMS的运行主机信息	
-	SMSInfo& ChangeSMSHost(std::string strIP,bool bLocalRun);
+	SMSInfo& ChangeSMSHost(std::string strIP,int nRunType,bool bLocalRun);
 
 	
 
@@ -69,6 +69,11 @@ public:
 	bool IsLocal()
 	{
 		return m_SMS.stStatus.nRun == 1;
+	}
+
+	int GetRunRole()
+	{
+		return m_SMS.nRole;
 	}
 
 	// 调用对端调度软件的切换接口

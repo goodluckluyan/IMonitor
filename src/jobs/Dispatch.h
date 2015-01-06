@@ -68,7 +68,40 @@ struct PolicyInfoEle
 	std::string strType;
 	int nPriority;
 	std::string strFault;
-	std::string strAct;
+	std::vector<std::string> vecAct;
+
+	PolicyInfoEle():
+	 nPriority(-1)
+	{
+
+	}
+
+    PolicyInfoEle(const PolicyInfoEle &obj)
+	{
+		strErrName = obj.strErrName;
+		strType = obj.strType;
+		nPriority = obj.nPriority;
+		strFault = obj.strFault;
+		vecAct.clear();
+		vecAct.insert(vecAct.end(),obj.vecAct.begin(),obj.vecAct.end());
+	}
+	
+
+	PolicyInfoEle& operator=(const PolicyInfoEle &obj)
+	{
+		if(this != &obj)
+		{
+			strErrName = obj.strErrName;
+			strType = obj.strType;
+			nPriority = obj.nPriority;
+			strFault = obj.strFault;
+			vecAct.clear();
+			vecAct.insert(vecAct.end(),obj.vecAct.begin(),obj.vecAct.end());
+		}
+		return *this;
+		
+	}
+
 
 	bool operator < (const PolicyInfoEle &obj) const 
 	{

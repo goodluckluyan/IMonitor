@@ -6,7 +6,7 @@
 //@author: wangzhongping@oristartech.com
 //date: 2012-05-23
 #include <pthread.h>
-
+#include <error.h>
 class C_CS
 {
 	
@@ -28,6 +28,19 @@ public:
 	void LeaveCS(void)
 	{
 		pthread_mutex_unlock(&m_CS);
+	}
+
+	bool TryLock(void)
+	{
+		int nRet = pthread_mutex_trylock(&m_CS);
+		if(nRet == 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 };
 

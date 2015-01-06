@@ -210,25 +210,25 @@ bool CTMSSensor::StartTMS()
 		}
 
 		// 启动后把通知切换信息发给tms
-		if(m_nPid > 0 && m_vecSwitchInfo.size() > 0)
-		{
-			std::vector<stNotifySmsSwitchInfo>::iterator it = m_vecSwitchInfo.begin();
-			for( ;it != m_vecSwitchInfo.end() ;)
-			{
-				stNotifySmsSwitchInfo &stNode = *it;
-				int i = 0;
-				while(i<3)
-				{
-					bool bRet = NotifyTMSSMSSwitch(stNode.strHallId,stNode.strNewIp,stNode.port);
-					if(bRet)
-					{
-						break;
-					}
-					i++;
-				}
-				m_vecSwitchInfo.erase(it++);
-			}
-		}
+// 		if(m_nPid > 0 && m_vecSwitchInfo.size() > 0)
+// 		{
+// 			std::vector<stNotifySmsSwitchInfo>::iterator it = m_vecSwitchInfo.begin();
+// 			for( ;it != m_vecSwitchInfo.end() ;)
+// 			{
+// 				stNotifySmsSwitchInfo &stNode = *it;
+// 				int i = 0;
+// 				while(i<3)
+// 				{
+// 					bool bRet = NotifyTMSSMSSwitch(stNode.strHallId,stNode.strNewIp,stNode.port);
+// 					if(bRet)
+// 					{
+// 						break;
+// 					}
+// 					i++;
+// 				}
+// 				m_vecSwitchInfo.erase(it++);
+// 			}
+// 		}
 	}
 }
 
@@ -414,7 +414,7 @@ bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,u
 {
 	if(m_nPid <= 0)
 	{
-		m_vecSwitchInfo.push_back(stNotifySmsSwitchInfo(strHallId,strNewIp,port));
+		//m_vecSwitchInfo.push_back(stNotifySmsSwitchInfo(strHallId,strNewIp,port));
 		return false;
 	}
 

@@ -56,13 +56,19 @@ public:
 
 	void StartTMS();
 
-	void StartALLSMS();
+	void StartALLSMS(bool bCheckOtherSMSRun=true);
+
+	void SwtichTakeOverSMS();
 
 	void Exit();
 
-	void TakeOverMain();
+	void TakeOverMain(bool bCheckOtherSMSRun=true);
+
+	void TakeOverStdby(bool bCheckOtherSMSRun=true);
 
 	void ChangeToStdby();
+
+	void ChangeToMain();
 
 private:
 	// ¥Ú”°∞Ô÷˙–≈œ¢

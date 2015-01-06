@@ -65,32 +65,37 @@ int  CInvoke::Init()
 	if(m_ptrLstHall == NULL)
 	{
 		m_ptrLstHall = new C_HallList();
-		if(m_ptrLstHall->Init(bRunOther)!=0)
+		if(m_ptrLstHall->Init()!=0)
 		{
 			return -1;
 		}
 
 		if(!bRunOther)
 		{
-			if(pPara->GetRole()==STDBYROLE)
+			int nRole = pPara->GetRole();
+			if(nRole== (int)STDBYROLE)
 			{
-				TakeOverMain();
+				TakeOverMain(false);
+			}
+			else if(nRole == (int)MAINROLE)
+			{
+				TakeOverStdby(false);
 			}
 
-			std::vector<std::string> vecLocalRun;
-			m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
-			for(int i = 0;i<vecLocalRun.size();i++)
-			{
-				std::string strNewIP;
-				int nNewPort = 0;
-				m_ptrLstHall->GetSMSRunHost(vecLocalRun[i],strNewIP,nNewPort);
-				if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
-				{
-					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecLocalRun[i],strNewIP,nNewPort);
-					LOGINFFMT(0,"Init:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecLocalRun[i].c_str(),
-						strNewIP.c_str(),nNewPort,bRet?1:0);
-				}
-			}
+// 			std::vector<std::string> vecLocalRun;
+// 			m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
+// 			for(int i = 0;i<vecLocalRun.size();i++)
+// 			{
+// 				std::string strNewIP;
+// 				int nNewPort = 0;
+// 				m_ptrLstHall->GetSMSRunHost(vecLocalRun[i],strNewIP,nNewPort);
+// 				if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+// 				{
+// 					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecLocalRun[i],strNewIP,nNewPort);
+// 					LOGINFFMT(0,"Init:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecLocalRun[i].c_str(),
+// 						strNewIP.c_str(),nNewPort,bRet?1:0);
+// 				}
+// 			}
 		}
 		
 	}
@@ -625,42 +630,83 @@ void CInvoke::Exit()
 	g_bQuit = true;
 }
 
+// 切换本机接管的sms
+void CInvoke::SwtichTakeOverSMS()
+{
+	std::vector<std::string> vecSMS;
+	m_ptrLstHall->GetTakeOverSMS(vecSMS);
+
+	for(int i=0;i<vecSMS.size();i++)
+	{
+		if(!vecSMS[i].empty())
+		{
+			SwitchSMS(vecSMS[i]);
+		}
+	}
+}
+
 // 在本机启动所有sms
-void CInvoke::StartALLSMS()
+void CInvoke::StartALLSMS(bool bCheckOtherSMSRun)
 {
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartALLSMS!");
 	if(m_ptrLstHall != NULL)
 	{
 		std::vector<std::string> vecHallID;
-		m_ptrLstHall->StartAllSMS(vecHallID);
+		m_ptrLstHall->StartAllSMS(bCheckOtherSMSRun,vecHallID);
 		if(vecHallID.size() == 0)
 		{
 			return;
 		}
 
-		for(int i = 0;i < vecHallID.size();i++)
+		// 只有主机需要通过调用web接口的方式通知tms sms的位置，因为这时tms已在主机上启动。
+		int nRole=C_Para::GetInstance()->GetRole();
+		if(nRole==MAINROLE || nRole == TMPMAINROLE)
 		{
-			std::string strNewIP;
-			int nNewPort = 0;
-			m_ptrLstHall->GetSMSRunHost(vecHallID[i],strNewIP,nNewPort);
-			if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+			for(int i = 0;i < vecHallID.size();i++)
 			{
-				bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
-				LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
-					strNewIP.c_str(),nNewPort,bRet?1:0);
+				std::string strNewIP;
+				int nNewPort = 0;
+				m_ptrLstHall->GetSMSRunHost(vecHallID[i],strNewIP,nNewPort);
+				if(!strNewIP.empty() && nNewPort > 0)
+				{
+					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
+					LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
+						strNewIP.c_str(),nNewPort,bRet?1:0);
+				}
 			}
 		}
+
 	}
 }
 
 // 接管主服务器成为主角色
-void CInvoke::TakeOverMain()
+void CInvoke::TakeOverMain(bool bCheckOtherSMSRun)
 {
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
+	StartALLSMS(bCheckOtherSMSRun);
 	if(C_Para::GetInstance()->GetRole() != TMPMAINROLE)
 	{
 		C_Para::GetInstance()->SetRoleFlag(TMPMAINROLE);
 	}
+}
+
+// 接管备服务器成为（只有主）角色
+void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
+{
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
+	StartALLSMS(bCheckOtherSMSRun);
+	if(C_Para::GetInstance()->GetRole() != ONLYMAINROLE)
+	{
+		C_Para::GetInstance()->SetRoleFlag(ONLYMAINROLE);
+	}
+}
+
+// 从（只有主）服务器角色改变成为主角色
+void CInvoke::ChangeToMain()
+{
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To MAINHost!****");
+	C_Para::GetInstance()->SetRoleFlag(MAINROLE);
+	SwtichTakeOverSMS();
 }
 
 // 从临时主服务器改变成为备角色
@@ -669,6 +715,7 @@ void CInvoke::ChangeToStdby()
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To STDBYHost!****");
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
+	SwtichTakeOverSMS();
 }
 
 // 开始TMS

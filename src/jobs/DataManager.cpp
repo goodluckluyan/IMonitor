@@ -370,7 +370,8 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 			m_nOterHostFail++;
 		}
 
-		if(m_nOterHostFail > 3)
+		int nRole = C_Para::GetInstance()->GetRole();
+		if(m_nOterHostFail > 3&& nRole!=(int)TMPMAINROLE && nRole!=(int)ONLYMAINROLE)
 		{
 			int nPerSec = nSec/m_nOterHostFail;
 			char buf[16]={'\0'};
@@ -428,6 +429,18 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 		std::vector<stError> vecRE;
 		er.ErrorName="brotherhood";
 		er.ErrorVal="nomain";
+		vecRE.push_back(er);
+		if(m_ptrDispatch)
+		{
+			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+		}
+	}
+	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain )
+	{
+		stError er;
+		std::vector<stError> vecRE;
+		er.ErrorName="stdbyback";
+		er.ErrorVal="stdbyback";
 		vecRE.push_back(er);
 		if(m_ptrDispatch)
 		{

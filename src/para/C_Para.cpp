@@ -335,7 +335,7 @@ bool C_Para::IsMain()
 {
 	bool bRet;
 	//pthread_rwlock_rdlock(&m_rwlk_main);
-	bRet = (m_enRole == MAINROLE || m_enRole== TMPMAINROLE);
+	bRet = (m_enRole == MAINROLE || m_enRole== TMPMAINROLE ||m_enRole == ONLYMAINROLE);
 	//pthread_rwlock_unlock(&m_rwlk_main);
 	return bRet;
 }

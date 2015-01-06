@@ -27,6 +27,7 @@ struct stConditionSwitch
 	int nVal;
 };
 
+enum enRUNTYPE{MAINRUNTYPE=1,STDBYRUNTYPE=2,TAKEOVERRUNTYPE=3};
 class C_HallList
 {
 public:
@@ -40,7 +41,7 @@ public:
     ~C_HallList();
 
    	//初始化所有影厅。
-    int Init(bool bRunOther);
+    int Init();
    
 	// 获取SMS工作状态
 	bool GetSMSWorkState();
@@ -50,13 +51,16 @@ public:
 
 
 	// 在本机启动所有sms
-	bool StartAllSMS(std::vector<std::string>& vecHallid);
+	bool StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& vecHallid);
 
 	// 备机调用主机进行切换
 	int SwitchSMSByStdby(std::string strHallID);
 
-	// 获取hallid
+	// 获取在本机运行的hallid
 	void GetAllLocalRunHallID(std::vector<std::string>& vecHallID);
+
+	// 获取由本机接管理过来的hallid
+	void GetTakeOverSMS(std::vector<std::string> &vecHallID);
 
 	// 获取运行主机及webservice端口
 	bool GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPort);
@@ -81,7 +85,7 @@ private:
 
 	bool UpdateDataBase(std::string strHallID,int nPosition);
 
-    C_CS m_CS;
+    C_CS m_csHallCurState;//保护m_mapHallCurState
 	std::map<std::string,int> m_mapHallCurState;
 
 	std::map<std::string,C_Hall *> m_mapHall;
@@ -91,9 +95,10 @@ private:
 	CDataManager *m_ptrDM;
 
 	std::list<stConditionSwitch>  m_lstCondSwitch;
-	C_CS m_csCondTaskLst;
+	C_CS m_csCondTaskLst;// 保护条件
 	pthread_cond_t cond; 
-	C_CS m_csSwitching;
+
+	std::map<std::string,C_CS*> m_mapCS;// 串行化切换和获取状态
 
 };
 #endif //HALL_LIST;

@@ -37,7 +37,7 @@ C_Hall::~C_Hall()
 
 
 // 初始化
-int C_Hall::Init(bool bRun,int nPID)
+SMSInfo&  C_Hall::Init(bool bRun,int nPID)
 {
 	 m_bInitRun = bRun;
 	 if(bRun && nPID == 0)
@@ -53,20 +53,34 @@ int C_Hall::Init(bool bRun,int nPID)
 		m_pid = nPID;
 		m_SMS.stStatus.nRun = 1;	
 	 }
-	 else
+	 else if(!bRun && nPID != 0)
+	 {
+		 m_pid = nPID;
+		 m_SMS.stStatus.nRun = 1;
+		 int nRole = C_Para::GetInstance()->GetRole();
+		 if(nRole==(int)MAINROLE)
+		 {
+			 m_SMS.nRole =  (int)MAINRUNTYPE;
+		 }
+		 else
+		 {
+			 (int)STDBYRUNTYPE;
+		 }
+	 }
+	 else 
 	 {
 		 // 另一台机子运行
 		m_SMS.stStatus.nRun = 2;
 	 }
-	return m_SMS.stStatus.nRun;
+	return m_SMS;
 }
 
 // 改变SMS的运行主机信息	
-SMSInfo& C_Hall::ChangeSMSHost(std::string strIP,bool bLocalRun)
+SMSInfo& C_Hall::ChangeSMSHost(std::string strIP,int nRunType,bool bLocalRun)
 {
 	m_SMS.strIp = strIP;
 	m_SMS.stStatus.nRun = bLocalRun ? 1:2;
-	m_SMS.nRole = bLocalRun ? 1:2;
+	m_SMS.nRole = nRunType;
 	return m_SMS;
 }
 
