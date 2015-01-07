@@ -353,7 +353,7 @@ bool C_Para::SetRoleFlag(int nRole)
 {
 	bool bRet;
 	//pthread_rwlock_wrlock(&m_rwlk_main);
-	if(nRole > 0 && nRole <=3)
+	if(nRole > 0 && nRole <=4)
 	{
 		m_enRole = (enHOSTROLE)nRole;
 		bRet = true;

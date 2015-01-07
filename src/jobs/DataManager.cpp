@@ -225,9 +225,9 @@ bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string st
 		SMSInfo &info = it->second;
 		info.stStatus.nStatus = nState;
 		
-		std::string strLocation;
-		strLocation = info.stStatus.nRun == 1 ? "Local" :"Other";
-		LOGDEBFMT("SMS:%s(%s) Status:%d  (%s)",strHallID.c_str(),strLocation.c_str(),nState,strInfo.c_str());
+		//std::string strLocation;
+		//strLocation = info.stStatus.nRun == 1 ? "Local" :"Other";
+		LOGDEBFMT("SMS:%s(%d:%d) Status:%d  (%s)",strHallID.c_str(),info.nRole,info.stStatus.nRun,nState,strInfo.c_str());
 	}
 	m_csSMS.LeaveCS();
 
@@ -371,7 +371,19 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 		}
 
 		int nRole = C_Para::GetInstance()->GetRole();
-		if(m_nOterHostFail > 3&& nRole!=(int)TMPMAINROLE && nRole!=(int)ONLYMAINROLE)
+		
+		int nCnt=0;
+		int nSmsSize=m_mapSmsStatus.size();
+		std::map<std::string,SMSInfo>::iterator it=m_mapSmsStatus.begin();
+		for(;it!=m_mapSmsStatus.end();it++)
+		{
+			if(it->second.stStatus.nRun==1)
+			{
+				nCnt++;
+			}
+		}
+
+		if(m_nOterHostFail > 3 && nCnt!=nSmsSize)
 		{
 			int nPerSec = nSec/m_nOterHostFail;
 			char buf[16]={'\0'};

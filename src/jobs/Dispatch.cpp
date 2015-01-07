@@ -287,10 +287,10 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 					}
 					else if(vecStr[i] == "TakeOverMain" && m_ptrInvoker)
 					{
-						if(!C_Para::GetInstance()->IsMain())
-						{
+// 						if(!C_Para::GetInstance()->IsMain())
+// 						{
 							((CInvoke*)m_ptrInvoker)->TakeOverMain();
-						}
+//						}
 					}
 					else if(vecStr[i] == "ChangeToStdby" && m_ptrInvoker)
 					{
@@ -298,10 +298,10 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 					}
 					else if(vecStr[i] == "TakeOverStdby" && m_ptrInvoker)
 					{
-						if(C_Para::GetInstance()->IsMain())
-						{
+//						if(C_Para::GetInstance()->IsMain())
+//						{
 							((CInvoke*)m_ptrInvoker)->TakeOverStdby();
-						}
+//						}
 					}
 					else if(vecStr[i] == "ChangeToMain" && m_ptrInvoker)
 					{

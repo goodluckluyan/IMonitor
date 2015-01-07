@@ -27,7 +27,7 @@ struct stConditionSwitch
 	int nVal;
 };
 
-enum enRUNTYPE{MAINRUNTYPE=1,STDBYRUNTYPE=2,TAKEOVERRUNTYPE=3};
+
 class C_HallList
 {
 public:

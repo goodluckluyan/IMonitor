@@ -633,6 +633,7 @@ void CInvoke::Exit()
 // 切换本机接管的sms
 void CInvoke::SwtichTakeOverSMS()
 {
+	sleep(3);
 	std::vector<std::string> vecSMS;
 	m_ptrLstHall->GetTakeOverSMS(vecSMS);
 
@@ -640,7 +641,14 @@ void CInvoke::SwtichTakeOverSMS()
 	{
 		if(!vecSMS[i].empty())
 		{
-			SwitchSMS(vecSMS[i]);
+			if(!C_Para::GetInstance()->IsMain())
+			{
+				m_ptrLstHall->SwitchSMSByStdby(vecSMS[i]);
+			}
+			else
+			{
+				SwitchSMS(vecSMS[i]);
+			}
 		}
 	}
 }
@@ -693,7 +701,7 @@ void CInvoke::TakeOverMain(bool bCheckOtherSMSRun)
 // 接管备服务器成为（只有主）角色
 void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
 {
-	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverStdby!");
 	StartALLSMS(bCheckOtherSMSRun);
 	if(C_Para::GetInstance()->GetRole() != ONLYMAINROLE)
 	{

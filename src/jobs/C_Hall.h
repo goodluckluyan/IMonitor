@@ -33,7 +33,7 @@
 #include "C_constDef.h"
 #include "utility/C_HttpParser.h"
 #include "utility/C_TcpTransport.h"
-
+enum enRUNTYPE{MAINRUNTYPE=1,STDBYRUNTYPE=2,TAKEOVERRUNTYPE=3};
 class C_Hall
 {
 

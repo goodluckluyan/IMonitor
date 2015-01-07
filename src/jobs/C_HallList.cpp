@@ -173,13 +173,13 @@ int C_HallList::Init()
 		//关联已经存在的sms
 		if(it != mapDir.end())
 		{
-			 SMSInfo newnode = ptrHall->Init(bRun,it->first);
-			 UpdateDataBase(newnode.strId,newnode.nRole);
+			 node = ptrHall->Init(bRun,it->first);
+			 UpdateDataBase(node.strId,node.nRole);
 		}
 		else//根据bRun标记是否新建运行sms
 		{
-			 SMSInfo newnode = ptrHall->Init(bRun);
-			 UpdateDataBase(newnode.strId,newnode.nRole);
+			 node = ptrHall->Init(bRun);
+			 UpdateDataBase(node.strId,node.nRole);
 		}
 		
 		
