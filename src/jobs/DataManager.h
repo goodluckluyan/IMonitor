@@ -28,6 +28,7 @@ public:
 	
 	bool Init(void *);
 
+	// 包含调度类的指针
 	void SetDispatchPtr(CDispatch *ptr)
 	{
 		m_ptrDispatch = ptr;
@@ -62,6 +63,7 @@ public:
 	// 更新网卡监测数据
 	bool UpdateNetStat(std::vector<EthStatus> &vecEthStatus);
 
+	// 检测Eth的状态
 	void CheckEthError(std::vector<stError> &vecErr);
 
 	// 更新sms状态
@@ -91,6 +93,7 @@ public:
 	// 打印网卡状态
 	void PrintEthState();
 
+	// 获取Invoker指针
 	void *GetInvokerPtr();
 private:
 	CDataManager();

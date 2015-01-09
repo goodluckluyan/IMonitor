@@ -57,8 +57,6 @@ public:
 	// 改变SMS的运行主机信息	
 	SMSInfo& ChangeSMSHost(std::string strIP,int nRunType,bool bLocalRun);
 
-	
-
 	// 获取hallid
 	std::string GetHallID()
 	{
@@ -71,6 +69,7 @@ public:
 		return m_SMS.stStatus.nRun == 1;
 	}
 
+	// 获取运行角色分为1:为主机运行，2:为备机运行 3:接管运行
 	int GetRunRole()
 	{
 		return m_SMS.nRole;
@@ -82,8 +81,7 @@ public:
 	// 获取运行主机及webservice端口
 	void GetRunHost(std::string &strIP,int &nPort);
 
-	int Parser_CloseSMS(std::string &content,int &nRet);
-
+	// 调用从机的closesms接口
 	int  CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string strHallID);
 private:
 
@@ -93,28 +91,26 @@ private:
 	// 打开新终端启动SMS
 	bool StartSMS_NewTerminal(int &nPid);
 
+	// webservice调用函数
 	int UsherHttp(std::string &strURI,std::string& strIP,std::string &xml,std::string action,std::string &strRequest);
-
 	int GetHttpContent(const std::string &http, std::string &content);
-
-	int Parser_GetSMSWorkState( const std::string &content, int &state, std::string &info);
-
-	int Parser_SwitchSMS(std::string &content,int &nRet);
-
 	int TcpOperator(std::string strIP,int nPort,const std::string &send, std::string &recv, int overtime);
-
 	int SendAndRecvInfo(const std::string &send, std::string &recv, int overtime);
-
 	int ReceiveCommand(std::string &recv, int waitTime);
-
-	 std::string ExtractXml(const std::string &response);
-
+	std::string ExtractXml(const std::string &response);
  	int GetRootChild( const std::string &xml,xercesc::XercesDOMParser *parser,
  		xercesc::ErrorHandler *errHandler, xercesc::DOMElement **rootChild);
- 
  	xercesc::DOMElement *GetElementByName( const xercesc::DOMNode *elem, const std::string &name);
- 
  	xercesc::DOMElement *FindElementByName( const xercesc::DOMNode *elem, const std::string &name);
+
+	// 解析调用GetSMSWorkState接口的返回
+	int Parser_GetSMSWorkState( const std::string &content, int &state, std::string &info);
+
+	// 解析调用SwitchSMS接口的返回
+	int Parser_SwitchSMS(std::string &content,int &nRet);
+
+	// 解析调用closesms接口的返回
+	int Parser_CloseSMS(std::string &content,int &nRet);
 
 	// 获取指定命令的pid
 	int Getpid(std::string strName,std::vector<int>& vecPID);

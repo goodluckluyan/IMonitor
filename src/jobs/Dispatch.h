@@ -132,19 +132,34 @@ public:
 	CDispatch(void * ptrInvoker );
 	~CDispatch();
 public:
-
+	// 初始化
 	bool Init(std::string strPath);
+
+	// 触发调度,即添加事件
 	bool TriggerDispatch(int nTaskType,std::vector<stError> &vecRE);
+
+	// 调度线程
 	bool Routine();
+
+	// 添加sms运行冲突信息
 	void AddConflictInfo(std::vector<ConflictInfo> &vecCI);
 
 private:
+	// 删除字符串两则空格
 	void TrimSpace(std::string &str);
+
+	// 应用策略
 	bool ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,
 		std::map<int,std::vector<std::string> >& mapAction);
+
+	// 获取策略xml中的结点
 	bool GetPolicyNode(xercesc::DOMDocument* ptrDoc,std::string strNodeName,
 		std::map<std::string,PolicyInfoEle> &mapPInfo);
+
+	// 解析策略
 	bool ParsePolicy(std::string strPath);
+
+	// 执行策略中的动作
 	void ExeCmd(std::map<int,std::vector<std::string> > &mapAction);
 
 private:

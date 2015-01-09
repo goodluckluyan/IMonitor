@@ -72,28 +72,33 @@ public:
 	
 	~CTMSSensor();
 
+	// 开启tms
 	bool StartTMS();
 
+	// 切换tms
 	bool SwitchTMS();
 		
-	//获取TMS PID
+	// 获取TMS PID
 	int GetTMSPID();
 
-	//获取对端主机的TMS工作状态
+	// 获取对端主机的TMS工作状态
 	bool GetTMSWorkState();
 
+	// 初始化
 	bool Init(std::string strIP,int nPort,int nTMSWSPort);
 
+	// 通知tms sms切换到新的主机
 	bool NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,unsigned short port);
 
+	// kill tms PID
 	bool ShutDownTMS();
 
 private:
 	
-	
+	// 用不同的方式启动tms
 	bool StartTMS_CurTerminal(std::string strTMSPath);
 	bool StartTMS_NewTerminal(std::string strTMSPath);
-	int Getpid(std::string strName,std::vector<int>& vecPID);
+	
 
 	// 调用webservice接口，bTMSWS:是否调用本机的tms接口
 	int InvokerWebServer(bool bTMSWS,std::string strURI,std::string &xml,std::string &strResponse);
@@ -101,13 +106,20 @@ private:
 	int SendAndRecvResponse(bool bTMSWS,const std::string &request, std::string &response, int delayTime = 3);
 	bool ParseXmlFromOtherMonitor(std::string &retXml,int &nRet);
 	bool ParseXmlFromTMS(std::string &retXml,int &nRet);
-	bool  ParseXmlFromTMSState(std::string &retXml,int &nRet);
+	bool ParseXmlFromTMSState(std::string &retXml,int &nRet);
 
+	// 调用备机上的切换tms接口
 	bool CallStandbySwitchTMS();
 
+	// 在新的进程中执行脚本
 	int ForkExeSh(std::string strExe);
 
+	// 更新数据库中tms的启动位置
 	bool UpdateDataBaseTMSPos(int nPosition);
+
+	// 获取指定进程的pid
+	int Getpid(std::string strName,std::vector<int>& vecPID);
+
 	
 
 private:

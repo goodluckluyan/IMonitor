@@ -59,12 +59,16 @@ public:
 private:
 	
 	int GetDiskInfo( const char* ppath, DiskInfo &diskInfo);
+
 	//生成包含磁盘信息的MegaSAS.log文件
 	int GetDickInfoLog(std::string ppath);
+
 	//删除存储磁盘信息的MegaSAS.log文件
 	int RemoveDir( const std::string &dir);
+
 	//是否为空白行
 	int isblank( const char *pbuf);
+
 	//获取每行名称和值
 	int getkey( const char *pbuf, std::string &temp_key, std::string &temp_value);
 

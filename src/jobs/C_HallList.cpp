@@ -726,7 +726,7 @@ bool C_HallList::UpdateDataBase(std::string strHallID,int nPosition)
 	}
 
 	char sql[256]={'\0'};
-	snprintf(sql,sizeof(sql),"update devices set cur_position=%d where hall_id = %s",nPosition,strHallID.c_str());
+	snprintf(sql,sizeof(sql),"update devices set cur_position=%d where hall_id =\"%s\"",nPosition,strHallID.c_str());
 	int i=0;
 	while(i<3)
 	{

@@ -504,6 +504,11 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			SMSInfo& node = it->second;
 			node.stStatus = vecSMSStatus[i];
 		}
+		else
+		{
+			m_mapOtherSMSStatus[strID].strId=vecSMSStatus[i].hallid;
+			m_mapOtherSMSStatus[strID].stStatus=vecSMSStatus[i];
+		}
 	}
 
 	//只有主机才能判断和解决冲突

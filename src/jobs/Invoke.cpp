@@ -802,20 +802,18 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 		if(nSWeight > nMWeight)
 		{
 			LOGINFFMT(0," SolveConflict %s,Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
-			if(m_ptrLstHall->CloseSMS(node.strHallID))
-			{
-				node.nMainSMSSum--;
-				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
-			}
+			m_ptrLstHall->CloseSMS(node.strHallID);
+			node.nMainSMSSum--;
+			m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
+			
 		}
 		else
 		{
 			LOGINFFMT(0," SolveConflict %s,Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
-			if(m_ptrLstHall->CloseStdBySMS(node.strHallID))
-			{
-				node.nStdbySMSSum--;
-				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
-			}
+			m_ptrLstHall->CloseStdBySMS(node.strHallID);
+			node.nStdbySMSSum--;
+			m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+
 		}
 	}
 }

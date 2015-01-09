@@ -467,7 +467,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 }
 
 // ½âÎöSMS×´Ì¬
-bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<SMSStatus> vecSMSStatus)
+bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<SMSStatus> &vecSMSStatus)
 {
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
 	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );

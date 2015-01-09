@@ -40,7 +40,7 @@ public:
 	
     ~C_HallList();
 
-   	//初始化所有影厅。
+   	// 初始化所有影厅。
     int Init();
    
 	// 获取SMS工作状态
@@ -85,11 +85,13 @@ public:
 
 private:
 
-	//启动tomcat
+	// 在新的里程中执行脚本
 	bool ExeShell_Fork(std::string strPath,std::string strShell);
 
+	// 获取指定进程的pid
 	int GetPID(std::string strName,std::vector<int>& vecPID);
 
+	// 获取进程的启动目录
 	bool GetPIDExeDir(int ,std::string &);
 
 

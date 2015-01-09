@@ -144,14 +144,26 @@ bool CTMSSensor::SwitchTMS()
 // ¹Ø±Õtms
 bool CTMSSensor::ShutDownTMS()
 {
+	bool bRet = false;
 	if(m_nPid > 0)
 	{
-		int nRet = kill(m_nPid,9);
-		if(nRet == 0)
+		int i=0;
+		while(i<3)
 		{
-			LOGFMT(LOG_INFO,"Kill Local TMS(%d) Done!\n",m_nPid);
+			kill(m_nPid,9);
+			sleep(1);
+			std::vector<int> vecPID;
+			int nRet = Getpid("Tms20_DeviceService",vecPID);
+			if(nRet == 0 && vecPID.size()==0)
+			{
+				LOGFMT(LOG_INFO,"Kill Local TMS(%d) Done!\n",m_nPid);
+				bRet = true;
+				break;
+			}
+			i++;
 		}
-		return nRet == 0 ? true: false;
+		
+		return bRet;
 	}
 	else
 	{
@@ -708,25 +720,28 @@ int CTMSSensor::SendAndRecvResponse(bool bTMSWS,const std::string &request, std:
 
 	TcpTransport tcp;
 	int result= -1;
+	std::string strIP;
 	if(bTMSWS)
 	{
-		result = tcp.TcpConnect("127.0.0.1", m_nTMSWBPort,delayTime);
+		strIP="127.0.0.1";
 	}
 	else
 	{
-		result = tcp.TcpConnect(m_strIP.c_str(), m_nPort,delayTime);
+		strIP=m_strIP;
 	}
 
+	result = tcp.TcpConnect(strIP.c_str(), m_nTMSWBPort,delayTime);
 	if(result < 0)
 	{	
-		LOGFMT(LOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
+		LOGFMT(LOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nTMSWBPort);
 		return  ERROR_SENSOR_TCP_CONNECT;
 	}
 
 	result = tcp.BlockSend(request.c_str(), request.size());
 	if(result < 0)
 	{
-		LOGFMT(LOG_ERROR,"CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail !\n",request.c_str());
+		LOGFMT(LOG_ERROR,"CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail(%s:%d) !\n",request.c_str(),
+			m_strIP.c_str(),m_nTMSWBPort);
 		return  ERROR_SENSOR_TCP_SEND;
 	}
 
@@ -833,7 +848,7 @@ bool CTMSSensor::UpdateDataBaseTMSPos(int nPosition)
 	}
 
 	char sql[256]={'\0'};
-	snprintf(sql,sizeof(sql),"update system_config  set tms_boot_postion =%d ",nPosition);
+	snprintf(sql,sizeof(sql),"update system_config  set conf_val=%d where conf_item=\"tms_boot_postion\"",nPosition);
 	int i=0;
 	while(i<3)
 	{
@@ -859,3 +874,5 @@ bool CTMSSensor::UpdateDataBaseTMSPos(int nPosition)
 
 	return true;
 }
+
+
