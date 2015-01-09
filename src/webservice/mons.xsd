@@ -189,5 +189,37 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeSwitchSMSToOtherDelay">
+   <complexType>
+    <sequence>
+     <element name="strHallID" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeSwitchSMSToOtherDelay::strHallID -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeSwitchSMSToOtherDelayResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ExeSwitchSMSToOtherDelay::ret -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="ExeCloseSMS">
+   <complexType>
+    <sequence>
+     <element name="strHallID" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeCloseSMS::strHallID -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeCloseSMSResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ExeCloseSMS::ret -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 

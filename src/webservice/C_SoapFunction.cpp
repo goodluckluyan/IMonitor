@@ -33,7 +33,8 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 	{
 		mons__SMSState node;
 		node.HallId = vecSMSState[i].hallid;
-		node.bRun = vecSMSState[i].nRun == 1 ? true:false;
+		node.bRun = vecSMSState[i].nRun;
+		node.state = vecSMSState[i].nStatus<<8;
 		switch(vecSMSState[i].nStatus)
 		{
 		case 101:
@@ -51,16 +52,16 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 		case 402:
 		case 403:
 		case 404:
-			node.state = 0;
+			node.state |= 0;
 			break;
 		case 102:
 		case 103:
-			node.state = 1;
+			node.state |= 1;
 			break;
 		case 205:
 		case 306:
 		case 405:
-			node.state = 2;
+			node.state |= 2;
 			break;
 		}
 	
@@ -229,14 +230,41 @@ int mons__ExeSwitchSMSToOther(struct soap* cSoap,std::string strHallID,int &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
-	if(ptr->SwitchSMS(strHallID))
+	if(ptr->SwitchSMS(strHallID,false,ret))
+	{	
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+int mons__ExeSwitchSMSToOtherDelay(struct soap* cSoap,std::string strHallID,int &ret)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	if(ptr->SwitchSMS(strHallID,true,ret))
+	{	
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+int mons__ExeCloseSMS(struct soap* cSoap,std::string strHallID,int &ret)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	if(ptr->CloseSMS(strHallID))
 	{	
 		ret = 0;
 		return 0;
 	}
 	else
 	{
-		soap_sender_fault_subcode(cSoap, "mons:2", "Switch Fail", "SwitchSMS");
 		ret = 1;
 		return 1;
 	}

@@ -511,7 +511,7 @@ bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<S
 			std::string str_state =  pstate;
 			if(!str_state.empty())
 			{
-				node.nStatus = atoi(str_state.c_str());
+				node.nStatus = atoi(str_state.c_str())>>8;
 			}
 			XMLString::release(&pstate);
 		

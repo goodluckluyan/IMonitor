@@ -354,8 +354,8 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	return 0;
 }
 
-// 调用对端调度软件的切换接口
-int  C_Hall::CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string strHallID)
+// 调用对端调度软件的关闭sms接口
+int  C_Hall::CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string strHallID)
 {
 	int iResult;
 	string response_c;
@@ -372,7 +372,97 @@ int  C_Hall::CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string s
 	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
 	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
 	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
-	xml += "<ns2:ExeSwitchSMSToOther><strHallID>"+strHallID+"</strHallID></ns0:ExeSwitchSMSToOther>";
+	xml += "<ns2:ExeCloseSMS><strHallID>"+strHallID+"</strHallID></ns2:ExeCloseSMS>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	string http ;
+	// 	char buff[64]={'\0'};
+	// 	snprintf(buff,128,"http://%s:%d/?wsdl",strOtherIP.c_str(),nPort);
+	string strURI = "/";//buff;
+	UsherHttp(strURI,strOtherIP,xml,"",http);
+
+	iResult = TcpOperator(strOtherIP,nPort, http, response_c, 5);
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_TCP
+	}
+
+	iResult = GetHttpContent( response_c, content_c);
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_HTTP
+	}
+
+	int nRet;
+	iResult = Parser_CloseSMS(content_c,nRet );
+	if(iResult!=0)
+	{
+		return iResult;
+	}
+	return nRet;
+}
+
+// 解析切换结果
+int C_Hall::Parser_CloseSMS(std::string &content,int &nRet)
+{
+	XercesDOMParser *parser = new XercesDOMParser();
+	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
+	DOMElement *rootChild = NULL;
+
+	int result = GetRootChild( content, parser, errHandler, &rootChild);
+	if (result < 0 || rootChild == NULL)
+		return -1;
+
+
+	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "ExeCloseSMS");
+	if(child == NULL)
+	{
+		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+	}
+
+	char *p;
+	DOMElement *root = GetElementByName(child->getFirstChild(), "ret");
+	if ( child == NULL || child->getFirstChild() == NULL || child->getFirstChild()->getNodeValue() == NULL)
+	{
+		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+	}
+	p = (char *)XMLString::transcode(root->getFirstChild()->getNodeValue());
+	nRet = atoi(p);
+	XMLString::release( &p);
+
+
+	delete errHandler;
+	delete parser;
+	return result;
+}
+
+
+// 调用对端调度软件的切换接口
+int  C_Hall::CallStandbySwitchSMS(bool bDelaySwitch,std::string strOtherIP,int nPort,std::string strHallID)
+{
+	int iResult;
+	string response_c;
+	string content_c;
+
+	if (strOtherIP.empty())
+	{
+		return -1;
+	}
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	if(bDelaySwitch)
+	{
+		xml += "<ns2:ExeSwitchSMSToOtherDelay><strHallID>"+strHallID+"</strHallID></ns2:ExeSwitchSMSToOther>";
+	}
+	else
+	{
+		xml += "<ns2:ExeSwitchSMSToOther><strHallID>"+strHallID+"</strHallID></ns2:ExeSwitchSMSToOther>";
+	}
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
 	string http ;
@@ -381,7 +471,7 @@ int  C_Hall::CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string s
  	string strURI = "/";//buff;
 	UsherHttp(strURI,strOtherIP,xml,"",http);
 
-	iResult = TcpOperator(strOtherIP,nPort, http, response_c, 30);
+	iResult = TcpOperator(strOtherIP,nPort, http, response_c, 5);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP
@@ -395,10 +485,6 @@ int  C_Hall::CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string s
 
 	int nRet;
 	iResult = Parser_SwitchSMS(content_c,nRet );
-	if (iResult != 0)
-	{
-		return iResult;//SoftwareSTATE_ERROR_XMLPARSER
-	}
 	return nRet;
 }
 

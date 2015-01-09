@@ -77,10 +77,14 @@ public:
 	}
 
 	// 调用对端调度软件的切换接口
-	int CallStandbySwitchSMS(std::string strOtherIP,int nPort,std::string strHallID);
+	int CallStandbySwitchSMS(bool bDelaySwitch,std::string strOtherIP,int nPort,std::string strHallID);
 
 	// 获取运行主机及webservice端口
 	void GetRunHost(std::string &strIP,int &nPort);
+
+	int Parser_CloseSMS(std::string &content,int &nRet);
+
+	int  CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string strHallID);
 private:
 
 	// 在当前终端启动SMS

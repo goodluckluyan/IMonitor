@@ -14,7 +14,7 @@ compiling, linking, and/or using OpenSSL is allowed.
 #endif
 #include "soapH.h"
 
-SOAP_SOURCE_STAMP("@(#) soapServer.cpp ver 2.8.18 2014-11-20 09:34:45 GMT")
+SOAP_SOURCE_STAMP("@(#) soapServer.cpp ver 2.8.18 2015-01-09 02:30:06 GMT")
 
 
 extern "C" SOAP_FMAC5 int SOAP_FMAC6 soap_serve(struct soap *soap)
@@ -76,6 +76,10 @@ extern "C" SOAP_FMAC5 int SOAP_FMAC6 soap_serve_request(struct soap *soap)
 		return soap_serve_mons__ExeSwitchTMSToOther(soap);
 	if (!soap_match_tag(soap, soap->tag, "mons:ExeSwitchSMSToOther"))
 		return soap_serve_mons__ExeSwitchSMSToOther(soap);
+	if (!soap_match_tag(soap, soap->tag, "mons:ExeSwitchSMSToOtherDelay"))
+		return soap_serve_mons__ExeSwitchSMSToOtherDelay(soap);
+	if (!soap_match_tag(soap, soap->tag, "mons:ExeCloseSMS"))
+		return soap_serve_mons__ExeCloseSMS(soap);
 	return soap->error = SOAP_NO_METHOD;
 }
 #endif
@@ -483,6 +487,88 @@ SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeSwitchSMSToOther(struct soap *soap
 	 || soap_putheader(soap)
 	 || soap_body_begin_out(soap)
 	 || soap_put_mons__ExeSwitchSMSToOtherResponse(soap, &soap_tmp_mons__ExeSwitchSMSToOtherResponse, "mons:ExeSwitchSMSToOtherResponse", NULL)
+	 || soap_body_end_out(soap)
+	 || soap_envelope_end_out(soap)
+	 || soap_end_send(soap))
+		return soap->error;
+	return soap_closesock(soap);
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeSwitchSMSToOtherDelay(struct soap *soap)
+{	struct mons__ExeSwitchSMSToOtherDelay soap_tmp_mons__ExeSwitchSMSToOtherDelay;
+	struct mons__ExeSwitchSMSToOtherDelayResponse soap_tmp_mons__ExeSwitchSMSToOtherDelayResponse;
+	soap_default_mons__ExeSwitchSMSToOtherDelayResponse(soap, &soap_tmp_mons__ExeSwitchSMSToOtherDelayResponse);
+	soap_default_mons__ExeSwitchSMSToOtherDelay(soap, &soap_tmp_mons__ExeSwitchSMSToOtherDelay);
+	if (!soap_get_mons__ExeSwitchSMSToOtherDelay(soap, &soap_tmp_mons__ExeSwitchSMSToOtherDelay, "mons:ExeSwitchSMSToOtherDelay", NULL))
+		return soap->error;
+	if (soap_body_end_in(soap)
+	 || soap_envelope_end_in(soap)
+	 || soap_end_recv(soap))
+		return soap->error;
+	soap->error = mons__ExeSwitchSMSToOtherDelay(soap, soap_tmp_mons__ExeSwitchSMSToOtherDelay.strHallID, soap_tmp_mons__ExeSwitchSMSToOtherDelayResponse.ret);
+	if (soap->error)
+		return soap->error;
+	soap->encodingStyle = NULL;
+	soap_serializeheader(soap);
+	soap_serialize_mons__ExeSwitchSMSToOtherDelayResponse(soap, &soap_tmp_mons__ExeSwitchSMSToOtherDelayResponse);
+	if (soap_begin_count(soap))
+		return soap->error;
+	if (soap->mode & SOAP_IO_LENGTH)
+	{	if (soap_envelope_begin_out(soap)
+		 || soap_putheader(soap)
+		 || soap_body_begin_out(soap)
+		 || soap_put_mons__ExeSwitchSMSToOtherDelayResponse(soap, &soap_tmp_mons__ExeSwitchSMSToOtherDelayResponse, "mons:ExeSwitchSMSToOtherDelayResponse", NULL)
+		 || soap_body_end_out(soap)
+		 || soap_envelope_end_out(soap))
+			 return soap->error;
+	};
+	if (soap_end_count(soap)
+	 || soap_response(soap, SOAP_OK)
+	 || soap_envelope_begin_out(soap)
+	 || soap_putheader(soap)
+	 || soap_body_begin_out(soap)
+	 || soap_put_mons__ExeSwitchSMSToOtherDelayResponse(soap, &soap_tmp_mons__ExeSwitchSMSToOtherDelayResponse, "mons:ExeSwitchSMSToOtherDelayResponse", NULL)
+	 || soap_body_end_out(soap)
+	 || soap_envelope_end_out(soap)
+	 || soap_end_send(soap))
+		return soap->error;
+	return soap_closesock(soap);
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeCloseSMS(struct soap *soap)
+{	struct mons__ExeCloseSMS soap_tmp_mons__ExeCloseSMS;
+	struct mons__ExeCloseSMSResponse soap_tmp_mons__ExeCloseSMSResponse;
+	soap_default_mons__ExeCloseSMSResponse(soap, &soap_tmp_mons__ExeCloseSMSResponse);
+	soap_default_mons__ExeCloseSMS(soap, &soap_tmp_mons__ExeCloseSMS);
+	if (!soap_get_mons__ExeCloseSMS(soap, &soap_tmp_mons__ExeCloseSMS, "mons:ExeCloseSMS", NULL))
+		return soap->error;
+	if (soap_body_end_in(soap)
+	 || soap_envelope_end_in(soap)
+	 || soap_end_recv(soap))
+		return soap->error;
+	soap->error = mons__ExeCloseSMS(soap, soap_tmp_mons__ExeCloseSMS.strHallID, soap_tmp_mons__ExeCloseSMSResponse.ret);
+	if (soap->error)
+		return soap->error;
+	soap->encodingStyle = NULL;
+	soap_serializeheader(soap);
+	soap_serialize_mons__ExeCloseSMSResponse(soap, &soap_tmp_mons__ExeCloseSMSResponse);
+	if (soap_begin_count(soap))
+		return soap->error;
+	if (soap->mode & SOAP_IO_LENGTH)
+	{	if (soap_envelope_begin_out(soap)
+		 || soap_putheader(soap)
+		 || soap_body_begin_out(soap)
+		 || soap_put_mons__ExeCloseSMSResponse(soap, &soap_tmp_mons__ExeCloseSMSResponse, "mons:ExeCloseSMSResponse", NULL)
+		 || soap_body_end_out(soap)
+		 || soap_envelope_end_out(soap))
+			 return soap->error;
+	};
+	if (soap_end_count(soap)
+	 || soap_response(soap, SOAP_OK)
+	 || soap_envelope_begin_out(soap)
+	 || soap_putheader(soap)
+	 || soap_body_begin_out(soap)
+	 || soap_put_mons__ExeCloseSMSResponse(soap, &soap_tmp_mons__ExeCloseSMSResponse, "mons:ExeCloseSMSResponse", NULL)
 	 || soap_body_end_out(soap)
 	 || soap_envelope_end_out(soap)
 	 || soap_end_send(soap))

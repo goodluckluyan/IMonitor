@@ -115,6 +115,16 @@ struct PolicyInfo
 	std::map<std::string,PolicyInfoEle> mapPInfo;
 };
 
+struct ConflictInfo
+{
+	std::string strHallID;
+	int nType ;//冲突类型  1:两机都在运行同一个sms,2:两机都没有运行sms
+	int nMainState;
+	int nMainSMSSum;
+	int nStdbyState;
+	int nStdbySMSSum;
+};
+
 // 事务处理中心
 class CDispatch
 {
@@ -126,6 +136,7 @@ public:
 	bool Init(std::string strPath);
 	bool TriggerDispatch(int nTaskType,std::vector<stError> &vecRE);
 	bool Routine();
+	void AddConflictInfo(std::vector<ConflictInfo> &vecCI);
 
 private:
 	void TrimSpace(std::string &str);
@@ -135,12 +146,14 @@ private:
 		std::map<std::string,PolicyInfoEle> &mapPInfo);
 	bool ParsePolicy(std::string strPath);
 	void ExeCmd(std::map<int,std::vector<std::string> > &mapAction);
+
 private:
 	std::list<DispatchTask> m_lstDTask;
 	C_CS m_csLDTask;
 	std::map<int,PolicyInfo> m_mapPolicy;
 	pthread_cond_t cond;
 	void  * m_ptrInvoker;
+	std::vector<ConflictInfo> m_vecConflict;
 };
 
 #endif

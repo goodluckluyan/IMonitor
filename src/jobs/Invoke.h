@@ -50,7 +50,8 @@ public:
 
 	bool SwitchTMS();
 
-	bool SwitchSMS(std::string strHallID);
+	// 切换sms，bDelaySwitch是否
+	bool SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nState);
 
 	bool SwitchAllSMS();
 
@@ -69,6 +70,10 @@ public:
 	void ChangeToStdby();
 
 	void ChangeToMain();
+
+	bool CloseSMS(std::string strHallID);
+
+	bool SolveConflict(std::vector<ConflictInfo> &vecCI);
 
 private:
 	// 打印帮助信息

@@ -67,3 +67,5 @@ int mons__GetWorkState_USCORECS(struct mons__WorkStateRes &ret);
 
 int mons__ExeSwitchTMSToOther(int &ret);
 int mons__ExeSwitchSMSToOther(std::string strHallID,int &ret);
+int mons__ExeSwitchSMSToOtherDelay(std::string strHallID,int &ret);
+int mons__ExeCloseSMS(std::string strHallID,int &ret);

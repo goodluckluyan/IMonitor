@@ -76,8 +76,11 @@ public:
 
 	bool SwitchTMS();
 		
-	//获取TMS 工作状态
-	int GetTMSWorkState();
+	//获取TMS PID
+	int GetTMSPID();
+
+	//获取对端主机的TMS工作状态
+	bool GetTMSWorkState();
 
 	bool Init(std::string strIP,int nPort,int nTMSWSPort);
 
@@ -91,15 +94,20 @@ private:
 	bool StartTMS_CurTerminal(std::string strTMSPath);
 	bool StartTMS_NewTerminal(std::string strTMSPath);
 	int Getpid(std::string strName,std::vector<int>& vecPID);
+
+	// 调用webservice接口，bTMSWS:是否调用本机的tms接口
 	int InvokerWebServer(bool bTMSWS,std::string strURI,std::string &xml,std::string &strResponse);
 	int GetHttpContent(const std::string &http, std::string &response);
 	int SendAndRecvResponse(bool bTMSWS,const std::string &request, std::string &response, int delayTime = 3);
 	bool ParseXmlFromOtherMonitor(std::string &retXml,int &nRet);
 	bool ParseXmlFromTMS(std::string &retXml,int &nRet);
+	bool  ParseXmlFromTMSState(std::string &retXml,int &nRet);
 
 	bool CallStandbySwitchTMS();
 
 	int ForkExeSh(std::string strExe);
+
+	bool UpdateDataBaseTMSPos(int nPosition);
 	
 
 private:

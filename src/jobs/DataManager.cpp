@@ -216,6 +216,16 @@ void CDataManager::CheckEthError(std::vector<stError> &vecErr)
 }
 
 //更新SMS的状态
+/*
+可能出现的角色和运行状态
+        角色（info.nRole）               运行状态（info.stStatus.nRun）
+		主机（MAINROLE）                     本机运行（1）
+		主机（STDBYROLE）                    异机运行（2）
+		从机（MAINROLE）                     异机运行（2）
+		从机（STDBYROLE）                    本机运行（1）
+		主机（TAKEOVERROLE）                 本机运行（1）
+		从机（TAKEOVERROLE）                 本机运行（1）
+*/
 bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string strInfo)
 {
 	m_csSMS.EnterCS();
@@ -496,22 +506,87 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		}
 	}
 
-	// 更新主结构
-// 	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
-// 	for(;it != m_mapOtherSMSStatus.end();it++)
-// 	{
-// 		SMSInfo &info = it->second;
-// 		if(info.nRole == 1 && info.stStatus.nRun == 1)
-// 		{
-// 			m_csSMS.EnterCS();
-// 			std::map<std::string,SMSInfo>::iterator fit= m_mapSmsStatus.find(info.strId);
-// 			if(fit != m_mapSmsStatus.end())
-// 			{
-// 				it->second.stStatus.nRun = 2;
-// 			}
-// 			m_csSMS.LeaveCS();
-// 		}
-// 	}
+	//只有主机才能判断和解决冲突
+	if(C_Para::GetInstance()->GetRole()!=(int)MAINROLE)
+	{
+		return true;
+	}
+
+	// 判断冲突
+	m_csSMS.EnterCS();
+	std::map<std::string,SMSInfo>maptmp = m_mapSmsStatus;
+	m_csSMS.LeaveCS();
+
+	int nStdbyRun =0;
+	std::vector<ConflictInfo> vecConflict;
+	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
+	for(;it != m_mapOtherSMSStatus.end();it++)
+	{
+		SMSInfo &Other = it->second;
+		std::map<std::string,SMSInfo>::iterator fit= maptmp.find(Other.strId);
+		if(fit == maptmp.end())
+		{
+			continue;	
+		}
+		
+		if(Other.stStatus.nRun == 1)
+		{
+			nStdbyRun++;
+		}
+		
+	
+		// 都在运行这个sms
+		if(Other.stStatus.nRun == 1 && fit->second.stStatus.nRun == 1)
+		{
+			ConflictInfo ci;
+			ci.nMainState=fit->second.stStatus.nStatus;
+			ci.nStdbyState=Other.stStatus.nStatus;
+			ci.nType = 1;
+			ci.strHallID=Other.strId;
+			vecConflict.push_back(ci);
+		}
+
+		// 都没有运行这个sms
+		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
+		{
+			ConflictInfo ci;
+			ci.nMainState=fit->second.stStatus.nStatus;
+			ci.nStdbyState=Other.stStatus.nStatus;
+			ci.nType = 2;
+			ci.strHallID=Other.strId;
+			vecConflict.push_back(ci);
+		}
+	}
+
+	int nMainRun=0;
+	std::map<std::string,SMSInfo>::iterator mit = maptmp.begin();
+	for(;mit!=maptmp.end();mit++)
+	{
+		if(mit->second.stStatus.nRun==1)
+		{
+			nMainRun++;
+		}
+	}
+
+	nLen = vecConflict.size();
+	for(int i=0;i<nLen;i++)
+	{
+		vecConflict[i].nStdbySMSSum=nStdbyRun;
+		vecConflict[i].nMainSMSSum=nMainRun;
+	}
+
+	if(vecConflict.size()>0 && m_ptrDispatch!=NULL)
+	{
+		m_ptrDispatch->AddConflictInfo(vecConflict);
+		stError er;
+		std::vector<stError> vecRE;
+		er.ErrorName="smsconflict";
+		er.ErrorVal="smsconflict";
+		vecRE.push_back(er);
+		m_ptrDispatch->TriggerDispatch(SMSTask,vecRE);
+
+	}
+
 	return true;
 }
 

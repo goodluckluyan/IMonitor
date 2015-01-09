@@ -206,6 +206,38 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeSwitchSMSToOtherDelay">
+   <complexType>
+    <sequence>
+     <element name="strHallID" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeSwitchSMSToOtherDelay::strHallID -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeSwitchSMSToOtherDelayResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ExeSwitchSMSToOtherDelay::ret -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="ExeCloseSMS">
+   <complexType>
+    <sequence>
+     <element name="strHallID" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeCloseSMS::strHallID -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeCloseSMSResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ExeCloseSMS::ret -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 
 </types>
@@ -290,6 +322,22 @@
  <part name="Body" element="mons:ExeSwitchSMSToOtherResponse"/>
 </message>
 
+<message name="ExeSwitchSMSToOtherDelayRequest">
+ <part name="Body" element="mons:ExeSwitchSMSToOtherDelay"/><!-- mons__ExeSwitchSMSToOtherDelay::mons__ExeSwitchSMSToOtherDelay -->
+</message>
+
+<message name="ExeSwitchSMSToOtherDelayResponse">
+ <part name="Body" element="mons:ExeSwitchSMSToOtherDelayResponse"/>
+</message>
+
+<message name="ExeCloseSMSRequest">
+ <part name="Body" element="mons:ExeCloseSMS"/><!-- mons__ExeCloseSMS::mons__ExeCloseSMS -->
+</message>
+
+<message name="ExeCloseSMSResponse">
+ <part name="Body" element="mons:ExeCloseSMSResponse"/>
+</message>
+
 <portType name="ServicePortType">
  <operation name="GetMontorState">
   <documentation>Service definition of function mons__GetMontorState</documentation>
@@ -340,6 +388,16 @@
   <documentation>Service definition of function mons__ExeSwitchSMSToOther</documentation>
   <input message="tns:ExeSwitchSMSToOtherRequest"/>
   <output message="tns:ExeSwitchSMSToOtherResponse"/>
+ </operation>
+ <operation name="ExeSwitchSMSToOtherDelay">
+  <documentation>Service definition of function mons__ExeSwitchSMSToOtherDelay</documentation>
+  <input message="tns:ExeSwitchSMSToOtherDelayRequest"/>
+  <output message="tns:ExeSwitchSMSToOtherDelayResponse"/>
+ </operation>
+ <operation name="ExeCloseSMS">
+  <documentation>Service definition of function mons__ExeCloseSMS</documentation>
+  <input message="tns:ExeCloseSMSRequest"/>
+  <output message="tns:ExeCloseSMSResponse"/>
  </operation>
 </portType>
 
@@ -427,6 +485,24 @@
   </output>
  </operation>
  <operation name="ExeSwitchSMSToOther">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="ExeSwitchSMSToOtherDelay">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="ExeCloseSMS">
   <SOAP:operation soapAction=""/>
   <input>
      <SOAP:body parts="Body" use="literal"/>

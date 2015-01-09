@@ -320,7 +320,7 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		m_ptrLstHall->GetSMSWorkState();
 		break;
 	case TASK_NUMBER_GET_TMS_STATUS:
-		m_ptrTMS->GetTMSWorkState();
+		m_ptrTMS->GetTMSPID();
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
 	case TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS:
@@ -545,10 +545,20 @@ bool CInvoke::SwitchTMS()
 }
 
 // 切换SMS
-bool CInvoke::SwitchSMS(std::string strHallID)
+bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 {
-	if(m_ptrLstHall->IsHaveCondSwitchTask(strHallID))
+	int nRole=C_Para::GetInstance()->GetRole();
+
+	// 只有一台主机运行时不允许切换
+	if(nRole == TMPMAINROLE || nRole == ONLYMAINROLE)
 	{
+		nRet = 3;// 调度软件异常
+		return false;
+	}
+
+	if(bDelaySwitch && m_ptrLstHall->IsHaveCondSwitchTask(strHallID))
+	{
+		nRet = 2;// sms正在延时切换
 		return false;
 	}
 
@@ -557,31 +567,42 @@ bool CInvoke::SwitchSMS(std::string strHallID)
 		LOGINFFMT(ERROR_POLICYTRI_SMSSWITCH,"Switch SMS(%s)! ",strHallID.c_str());
 
 		int nState;
-		 if(m_ptrLstHall->SwitchSMS(strHallID,nState))
+		 if(m_ptrLstHall->SwitchSMS(bDelaySwitch,strHallID,nState))
 		 {
 			 std::string strNewIP;
 			 int nNewPort = 0;
 			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
-			 LOGINFFMT(0,"****SwitchSMS:GetSMSRunHost< %s Switch To %s Host >",strHallID.c_str(),
-				 strNewIP.c_str());
+			 //LOGINFFMT(0,"****SwitchSMS:GetSMSRunHost< %s Switch To %s Host >",strHallID.c_str(),strNewIP.c_str());
 			 if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
 			 {
 				 bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 				 LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",strHallID.c_str(),
 					 strNewIP.c_str(),nNewPort,bRet?1:0);
-
 			 }
+			 nRet = 0;
+			 return true;
 		 }
 		 else
 		 {
-			 if(nState == 2 && C_Para::GetInstance()->IsMain())// 因为sms busy切换失败
+			 // 因为只有主机才能发起切换，所有要判断是否为主
+			 // 因为sms busy切换失败,加入延时切换
+			 if(bDelaySwitch && nState == 2 && C_Para::GetInstance()->IsMain())
 			 {
 				 m_ptrLstHall->AddCondSwitchTask(strHallID,"state",101);
+				 nRet = 2;// sms正在延时切换
+				 return false;
 			 }
+			 else if(!bDelaySwitch && nState == 2 && C_Para::GetInstance()->IsMain())
+			 {
+				 nRet = 1;//sms繁忙
+				 return false;
+			 }
+			
 		 }
 	}
 	else
 	{
+		nRet = 4;// 调度软件出错
 		return false;
 	}
 }
@@ -598,11 +619,12 @@ bool CInvoke::SwitchAllSMS()
 		{
 			if(C_Para::GetInstance()->IsMain() )
 			{
-				SwitchSMS(vecHallID[i]);
+				int nState;
+				SwitchSMS(vecHallID[i],false,nState);
 			}
 			else 
 			{
-				m_ptrLstHall->SwitchSMSByStdby(vecHallID[i]);
+				m_ptrLstHall->SwitchSMSByStdby(false,vecHallID[i]);
 				LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,
 					"SwitchAllSMS:Due To This Is STDBY ,So SMS Switch call Main Switch SMS!");
 			}
@@ -643,11 +665,14 @@ void CInvoke::SwtichTakeOverSMS()
 		{
 			if(!C_Para::GetInstance()->IsMain())
 			{
-				m_ptrLstHall->SwitchSMSByStdby(vecSMS[i]);
+				// 调用主的切换接口,支持延时切换
+				m_ptrLstHall->SwitchSMSByStdby(true,vecSMS[i]);
 			}
 			else
 			{
-				SwitchSMS(vecSMS[i]);
+				//支持延时切换
+				int nState;
+				SwitchSMS(vecSMS[i],true,nState);
 			}
 		}
 	}
@@ -733,5 +758,64 @@ void CInvoke::StartTMS()
 	if(m_ptrTMS != NULL)
 	{
 		m_ptrTMS->StartTMS();
+	}
+}
+
+// 关闭指定的sms
+bool CInvoke::CloseSMS(std::string strHallID)
+{
+	LOGINFFMT(0," CloseSMS %s!",strHallID.c_str());
+	if(m_ptrLstHall != NULL)
+	{
+		return m_ptrLstHall->CloseSMS(strHallID);
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// 解决sms运行冲突，以权重做为关闭还要保留的判断条件，权重小则关闭。
+// 正在运行占16，运行数量站相应数量的权重
+bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
+{	
+	
+	int nLen = vecCI.size();
+	for(int i=0;i<nLen ;i++)
+	{
+		int nMWeight=0;
+		int nSWeight=0;
+		ConflictInfo &node = vecCI[i];
+		LOGINFFMT(0," SolveConflict %s!",node.strHallID.c_str());
+		if(node.nMainState>103)
+		{
+			nMWeight+=16;
+		}
+		if(node.nStdbyState>103)
+		{
+			nSWeight+=16;
+		}
+
+		nMWeight += node.nMainSMSSum;
+		nSWeight += node.nStdbySMSSum;
+
+		if(nSWeight > nMWeight)
+		{
+			LOGINFFMT(0," SolveConflict %s,Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+			if(m_ptrLstHall->CloseSMS(node.strHallID))
+			{
+				node.nMainSMSSum--;
+				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
+			}
+		}
+		else
+		{
+			LOGINFFMT(0," SolveConflict %s,Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+			if(m_ptrLstHall->CloseStdBySMS(node.strHallID))
+			{
+				node.nStdbySMSSum--;
+				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+			}
+		}
 	}
 }

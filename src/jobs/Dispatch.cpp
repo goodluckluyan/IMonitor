@@ -71,6 +71,7 @@ bool CDispatch::ParsePolicy(std::string strPath)
 		mapTmp[TMSTask] = "TMS";
 		mapTmp[IMonitorTask] = "IMonitor";
 		mapTmp[ETH] = "Eth";
+
  
 		std::map<int,std::string>::iterator it = mapTmp.begin();
 		for(;it != mapTmp.end();it++)
@@ -307,6 +308,12 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 					{
 						((CInvoke*)m_ptrInvoker)->ChangeToMain();
 					}
+					else if(vecStr[i] == "SolveConflict" && m_ptrInvoker)
+					{
+						((CInvoke*)m_ptrInvoker)->SolveConflict(m_vecConflict);
+						m_vecConflict.clear();
+					}
+					
 				}
 			}
 			break;
@@ -462,3 +469,9 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 	}
 	return true;
 }
+
+void CDispatch::AddConflictInfo(std::vector<ConflictInfo> &vecCI)
+{
+	m_vecConflict=vecCI;
+}
+

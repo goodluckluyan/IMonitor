@@ -441,9 +441,35 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 	}
 }
 
+//关闭从的SMS
+bool C_HallList::CloseStdBySMS(std::string strHallID)
+{
+	if(strHallID.empty())
+	{
+		return false;
+	}
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	C_Para *ptrPara = C_Para::GetInstance();
+	if(fit->second->CallStandbyCloseSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID)==0)
+	{
+		LOGINFFMT(0,"CallStandbyCloseSMS:%s OK!",strHallID.c_str());
+		return true;
+	}
+	else
+	{
+		LOGERRFMT(0,"CallStandbyCloseSMS:%s Failed!",strHallID.c_str());
+		return false;
+	}
+
+}
 
 //切换SMS nState 返回1:表示没有些hallid 2:表示sms busy 3:启动新sms失败
-bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
+bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 {
 	if(strHallID.empty())
 	{
@@ -468,31 +494,33 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 
 	LOGINFFMT(ERROR_SMSSWITCH_START,"SMS:%s Switch Start!",strHallID.c_str());
 	C_Hall * ptr = fit->second;
-	if(m_ptrDM != NULL && C_Para::GetInstance()->IsMain())
-	{
-		SMSInfo smsinfo;
-		m_ptrDM->GetSMSStat(strHallID,smsinfo);
-		
-		// 正在播放、正在导入、正在验证都禁止切换
-		if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
-			||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
-		{
-			LOGERRFMT(ERROR_SMSSWITCH_START,"Sms(%s) is busy cann't switch!",strHallID.c_str());
-			nState = 2;
-			return false;
-		}
-	}
-
+	
 	// 如果在本机运行
 	C_Para *ptrPara = C_Para::GetInstance();
 	if(ptr->IsLocal())
 	{
+		// 因为只有主机才能发起切换，所有要判断是否为主
+		if(m_ptrDM != NULL && C_Para::GetInstance()->IsMain())
+		{
+			SMSInfo smsinfo;
+			m_ptrDM->GetSMSStat(strHallID,smsinfo);
+
+			// 正在播放、正在导入、正在验证都禁止切换
+			if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
+				||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
+			{
+				LOGERRFMT(ERROR_SMSSWITCH_START,"Sms(%s) is busy cann't switch!",strHallID.c_str());
+				nState = 2;
+				return false;
+			}
+		}
+
 		bool bRet = ptr->ShutDownSMS();
 		LOGINFFMT(ERROR_SMSSWITCH_LOCALSHUTDOWN,"SMS:%s Switch local run sms shutdown!",strHallID.c_str());
 		if(C_Para::GetInstance()->IsMain())
 		{
-			// 调用备机的切换Sms`
- 			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+			// 调用备机的切换Sms
+ 			ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms!");
 		}
 		if(bRet)
@@ -513,7 +541,7 @@ bool C_HallList::SwitchSMS(std::string strHallID,int &nState)
 	{
 		if(ptrPara->IsMain())
 		{
- 			ptr->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+ 			ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch:call other switch sms!");
 		}
 		int nPid = 0;
@@ -603,7 +631,6 @@ bool C_HallList::IsHaveCondSwitchTask(std::string strHallID)
 // 添加条件等待切换任务
 bool C_HallList::AddCondSwitchTask(std::string strHallID,std::string strCond,int nVal)
 {
-//	LOG(ERROR_SMSBUSY_DELAYSWITCH,(std::string("Switch SMS while SMS busy ,so delay switch SMS!")+strHallID).c_str());
 	LOGERRFMT(ERROR_SMSBUSY_DELAYSWITCH,"Switch SMS:%s while SMS busy ,so delay switch SMS!",strHallID.c_str());
 	if(IsHaveCondSwitchTask(strHallID))
 	{
@@ -660,7 +687,7 @@ bool C_HallList::ProcessCondSwitchTask()
 		{
 			printf("Condition Switch Task :Condition OK Swtich SMS(%s)",node.strHallID.c_str());
 			int nState;
-			SwitchSMS(node.strHallID,nState);
+			SwitchSMS(false,node.strHallID,nState);
 			m_lstCondSwitch.erase(it++);
 		}
 	}
@@ -670,7 +697,7 @@ bool C_HallList::ProcessCondSwitchTask()
 }
 
 // 备机调用主机进行切换
-int C_HallList::SwitchSMSByStdby(std::string strHallID)
+int C_HallList::SwitchSMSByStdby(bool bDelaySwitch,std::string strHallID)
 {
 	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
 	if(fit == m_mapHall.end())
@@ -681,7 +708,7 @@ int C_HallList::SwitchSMSByStdby(std::string strHallID)
 	C_Hall * ptrHall = fit->second;
 	C_Para *ptrPara = C_Para::GetInstance();
 	
-	return ptrHall->CallStandbySwitchSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
+	return ptrHall->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
 
 }
 
@@ -724,4 +751,49 @@ bool C_HallList::UpdateDataBase(std::string strHallID,int nPosition)
 	}
 	
 	return true;
+}
+
+
+
+
+//关闭sms
+bool C_HallList::CloseSMS(std::string strHallID)
+{
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	std::map<std::string,C_CS*>::iterator fcit=m_mapCS.find(fit->first);
+	if(fcit==m_mapCS.end())
+	{
+		return false;
+	}
+
+	C_CS * ptrCS=fcit->second;
+	C_GuardCS guardcs(ptrCS);
+
+	C_Hall *ptr = fit->second;
+	if(ptr->IsLocal())
+	{
+		if(!ptr->ShutDownSMS())
+		{
+			return false;
+		}
+		if(C_Para::GetInstance()->GetRole()>=(int)STDBYROLE)
+		{
+			SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)MAINRUNTYPE,false);
+			m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+		}
+		else
+		{
+			SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)STDBYRUNTYPE,false);
+			m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+		}
+	}
+	else
+	{
+		return false;
+	}
 }

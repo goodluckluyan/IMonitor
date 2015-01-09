@@ -47,14 +47,14 @@ public:
 	bool GetSMSWorkState();
 
 	// 切换sms
-	bool SwitchSMS(std::string strHallID,int &nState);
+	bool SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState);
 
 
 	// 在本机启动所有sms
 	bool StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& vecHallid);
 
 	// 备机调用主机进行切换
-	int SwitchSMSByStdby(std::string strHallID);
+	int SwitchSMSByStdby(bool bDelaySwitch,std::string strHallID);
 
 	// 获取在本机运行的hallid
 	void GetAllLocalRunHallID(std::vector<std::string>& vecHallID);
@@ -74,6 +74,15 @@ public:
 	// 判断切换sms任务已经在条件任务中存在
 	bool IsHaveCondSwitchTask(std::string strHallID);
 
+	// 关闭本机的sms
+	bool CloseSMS(std::string strHallID);
+
+	// 关闭从sms
+	bool CloseStdBySMS(std::string strHallID);
+
+	// 更新数据库sms运行的位置
+	bool UpdateDataBase(std::string strHallID,int nPosition);
+
 private:
 
 	//启动tomcat
@@ -83,7 +92,6 @@ private:
 
 	bool GetPIDExeDir(int ,std::string &);
 
-	bool UpdateDataBase(std::string strHallID,int nPosition);
 
     C_CS m_csHallCurState;//保护m_mapHallCurState
 	std::map<std::string,int> m_mapHallCurState;
