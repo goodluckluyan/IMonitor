@@ -97,11 +97,11 @@ bool C_Hall::StartSMS(int &nPid)
 	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
 	if(nStartType == 1)
 	{
-		StartSMS_CurTerminal(nPid);
+		return StartSMS_CurTerminal(nPid);
 	}
 	else if(nStartType == 2)
 	{
-		StartSMS_NewTerminal(nPid);
+		return StartSMS_NewTerminal(nPid);
 	}
 }
 
@@ -355,7 +355,8 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 }
 
 // 调用对端调度软件的关闭sms接口
-int  C_Hall::CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string strHallID)
+// 解析开启或关闭结果 bSoC true：开启  false 关闭 
+int  C_Hall::CallStandbyStartOrCloseSMS(bool bSoC,std::string strOtherIP,int nPort,std::string strHallID)
 {
 	int iResult;
 	string response_c;
@@ -372,7 +373,14 @@ int  C_Hall::CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string st
 	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
 	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
 	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
-	xml += "<ns2:ExeCloseSMS><strHallID>"+strHallID+"</strHallID></ns2:ExeCloseSMS>";
+	if(bSoC)
+	{
+		xml += "<ns2:ExeStartSMS><strHallID>"+strHallID+"</strHallID></ns2:ExeStartSMS>";
+	}
+	else
+	{
+		xml += "<ns2:ExeCloseSMS><strHallID>"+strHallID+"</strHallID></ns2:ExeCloseSMS>";
+	}
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
 	string http ;
@@ -394,7 +402,7 @@ int  C_Hall::CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string st
 	}
 
 	int nRet;
-	iResult = Parser_CloseSMS(content_c,nRet );
+	iResult = Parser_StartOrCloseSMS(bSoC,content_c,nRet );
 	if(iResult!=0)
 	{
 		return iResult;
@@ -402,8 +410,9 @@ int  C_Hall::CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string st
 	return nRet;
 }
 
-// 解析切换结果
-int C_Hall::Parser_CloseSMS(std::string &content,int &nRet)
+
+// 解析开启或关闭结果 bCoS true：开启  false 关闭 
+int C_Hall::Parser_StartOrCloseSMS(bool bSoC,std::string &content,int &nRet)
 {
 	XercesDOMParser *parser = new XercesDOMParser();
 	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
@@ -413,8 +422,17 @@ int C_Hall::Parser_CloseSMS(std::string &content,int &nRet)
 	if (result < 0 || rootChild == NULL)
 		return -1;
 
+	
+	DOMElement *child ;
+	if(bSoC)
+	{
+		child = GetElementByName(rootChild->getFirstChild(), "ExeStartSMS");
+	}
+	else
+	{
+		child = GetElementByName(rootChild->getFirstChild(), "ExeCloseSMS");
+	}
 
-	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "ExeCloseSMS");
 	if(child == NULL)
 	{
 		return ERROR_PLAYER_AQ_NEEDSOAPELEM;

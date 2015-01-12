@@ -470,8 +470,6 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 		}
 	}
 
-
-	
 	return true;
 }
 
@@ -538,7 +536,6 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		{
 			nStdbyRun++;
 		}
-		
 	
 		// 都在运行这个sms
 		if(Other.stStatus.nRun == 1 && fit->second.stStatus.nRun == 1)
@@ -548,19 +545,21 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			ci.nStdbyState=Other.stStatus.nStatus;
 			ci.nType = 1;
 			ci.strHallID=Other.strId;
+			time(&ci.tmTime);
 			vecConflict.push_back(ci);
 		}
 
-		// 都没有运行这个sms
-		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
-		{
-			ConflictInfo ci;
-			ci.nMainState=fit->second.stStatus.nStatus;
-			ci.nStdbyState=Other.stStatus.nStatus;
-			ci.nType = 2;
-			ci.strHallID=Other.strId;
-			vecConflict.push_back(ci);
-		}
+		// 都没有运行这个sms, 暂不对两边都不启动进行处理。在切换时会出现这种情况。
+// 		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
+// 		{
+// 			ConflictInfo ci;
+// 			ci.nMainState=fit->second.stStatus.nStatus;
+// 			ci.nStdbyState=Other.stStatus.nStatus;
+// 			ci.nType = 2;
+// 			ci.strHallID=Other.strId;
+// 			ci.tmTime=time();
+// 			vecConflict.push_back(ci);
+// 		}
 	}
 
 	int nMainRun=0;
@@ -578,8 +577,11 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	{
 		vecConflict[i].nStdbySMSSum=nStdbyRun;
 		vecConflict[i].nMainSMSSum=nMainRun;
+//		m_maplstConfilict[vecConflict[i].strHallID].push_back(vecConflict[i]);
 	}
 
+// 	vecConflict.clear();
+// 	CheckConfile(vecConflict);
 	if(vecConflict.size()>0 && m_ptrDispatch!=NULL)
 	{
 		m_ptrDispatch->AddConflictInfo(vecConflict);
@@ -593,6 +595,36 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	}
 
 	return true;
+}
+
+// 过滤检测到的冲突，防止误报
+bool CDataManager::CheckConfile(std::vector<ConflictInfo> &vecConflict)
+{
+	std::map<std::string,std::list<ConflictInfo> >::iterator it = m_maplstConfilict.begin();
+	while(it!=m_maplstConfilict.end())
+	{
+		int nLen = it->second.size();
+		if(nLen<3)
+		{
+			it++;
+			continue;
+		}
+		
+		
+		int nInterval = it->second.back().tmTime-it->second.front().tmTime;
+		int nSmsCheckSec = C_Para::GetInstance()->m_nOtherSMSCheckDelay;
+		if(nInterval < nSmsCheckSec*(nLen+1))
+		{
+			vecConflict.push_back(it->second.front());
+			m_maplstConfilict.erase(it++);
+			continue;
+		}
+		else
+		{
+			it->second.pop_front();
+		}
+		it++;
+	}
 }
 
 //更新对端raid状态

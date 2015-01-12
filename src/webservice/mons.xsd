@@ -221,5 +221,21 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeStartSMS">
+   <complexType>
+    <sequence>
+     <element name="strHallID" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeStartSMS::strHallID -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeStartSMSResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ExeStartSMS::ret -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 

@@ -269,3 +269,19 @@ int mons__ExeCloseSMS(struct soap* cSoap,std::string strHallID,int &ret)
 		return 1;
 	}
 }
+
+int mons__ExeStartSMS(struct soap* cSoap,std::string strHallID,int &ret)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	if(ptr->StartSMS(strHallID))
+	{	
+		ret = 0;
+		return 0;
+	}
+	else
+	{
+		ret = 1;
+		return 1;
+	}
+}

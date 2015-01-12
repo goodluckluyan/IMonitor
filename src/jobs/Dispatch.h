@@ -123,6 +123,7 @@ struct ConflictInfo
 	int nMainSMSSum;
 	int nStdbyState;
 	int nStdbySMSSum;
+	time_t tmTime;
 };
 
 // 事务处理中心

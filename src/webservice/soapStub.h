@@ -393,15 +393,39 @@ public:
 };
 #endif
 
+#ifndef SOAP_TYPE_mons__ExeStartSMSResponse
+#define SOAP_TYPE_mons__ExeStartSMSResponse (60)
+/* mons:ExeStartSMSResponse */
+struct mons__ExeStartSMSResponse
+{
+public:
+	int ret;	/* SOAP 1.2 RPC return element (when namespace qualified) */	/* required element of type xsd:int */
+public:
+	int soap_type() const { return 60; } /* = unique type id SOAP_TYPE_mons__ExeStartSMSResponse */
+};
+#endif
+
+#ifndef SOAP_TYPE_mons__ExeStartSMS
+#define SOAP_TYPE_mons__ExeStartSMS (61)
+/* mons:ExeStartSMS */
+struct mons__ExeStartSMS
+{
+public:
+	std::string strHallID;	/* required element of type xsd:string */
+public:
+	int soap_type() const { return 61; } /* = unique type id SOAP_TYPE_mons__ExeStartSMS */
+};
+#endif
+
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Header
-#define SOAP_TYPE_SOAP_ENV__Header (59)
+#define SOAP_TYPE_SOAP_ENV__Header (62)
 /* SOAP Header: */
 struct SOAP_ENV__Header
 {
 public:
-	int soap_type() const { return 59; } /* = unique type id SOAP_TYPE_SOAP_ENV__Header */
+	int soap_type() const { return 62; } /* = unique type id SOAP_TYPE_SOAP_ENV__Header */
 #ifdef WITH_NOEMPTYSTRUCT
 private:
 	char dummy;	/* dummy member to enable compilation */
@@ -414,7 +438,7 @@ private:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Code
-#define SOAP_TYPE_SOAP_ENV__Code (60)
+#define SOAP_TYPE_SOAP_ENV__Code (63)
 /* SOAP Fault Code: */
 struct SOAP_ENV__Code
 {
@@ -422,7 +446,7 @@ public:
 	char *SOAP_ENV__Value;	/* optional element of type xsd:QName */
 	struct SOAP_ENV__Code *SOAP_ENV__Subcode;	/* optional element of type SOAP-ENV:Code */
 public:
-	int soap_type() const { return 60; } /* = unique type id SOAP_TYPE_SOAP_ENV__Code */
+	int soap_type() const { return 63; } /* = unique type id SOAP_TYPE_SOAP_ENV__Code */
 };
 #endif
 
@@ -431,7 +455,7 @@ public:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Detail
-#define SOAP_TYPE_SOAP_ENV__Detail (62)
+#define SOAP_TYPE_SOAP_ENV__Detail (65)
 /* SOAP-ENV:Detail */
 struct SOAP_ENV__Detail
 {
@@ -440,7 +464,7 @@ public:
 	int __type;	/* any type of element <fault> (defined below) */
 	void *fault;	/* transient */
 public:
-	int soap_type() const { return 62; } /* = unique type id SOAP_TYPE_SOAP_ENV__Detail */
+	int soap_type() const { return 65; } /* = unique type id SOAP_TYPE_SOAP_ENV__Detail */
 };
 #endif
 
@@ -449,14 +473,14 @@ public:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Reason
-#define SOAP_TYPE_SOAP_ENV__Reason (65)
+#define SOAP_TYPE_SOAP_ENV__Reason (68)
 /* SOAP-ENV:Reason */
 struct SOAP_ENV__Reason
 {
 public:
 	char *SOAP_ENV__Text;	/* optional element of type xsd:string */
 public:
-	int soap_type() const { return 65; } /* = unique type id SOAP_TYPE_SOAP_ENV__Reason */
+	int soap_type() const { return 68; } /* = unique type id SOAP_TYPE_SOAP_ENV__Reason */
 };
 #endif
 
@@ -465,7 +489,7 @@ public:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Fault
-#define SOAP_TYPE_SOAP_ENV__Fault (66)
+#define SOAP_TYPE_SOAP_ENV__Fault (69)
 /* SOAP Fault: */
 struct SOAP_ENV__Fault
 {
@@ -480,7 +504,7 @@ public:
 	char *SOAP_ENV__Role;	/* optional element of type xsd:string */
 	struct SOAP_ENV__Detail *SOAP_ENV__Detail;	/* optional element of type SOAP-ENV:Detail */
 public:
-	int soap_type() const { return 66; } /* = unique type id SOAP_TYPE_SOAP_ENV__Fault */
+	int soap_type() const { return 69; } /* = unique type id SOAP_TYPE_SOAP_ENV__Fault */
 };
 #endif
 
@@ -541,6 +565,8 @@ SOAP_FMAC5 int SOAP_FMAC6 mons__ExeSwitchSMSToOtherDelay(struct soap*, std::stri
 
 SOAP_FMAC5 int SOAP_FMAC6 mons__ExeCloseSMS(struct soap*, std::string strHallID, int &ret);
 
+SOAP_FMAC5 int SOAP_FMAC6 mons__ExeStartSMS(struct soap*, std::string strHallID, int &ret);
+
 /******************************************************************************\
  *                                                                            *
  * Server-Side Skeletons to Invoke Service Operations                         *
@@ -574,6 +600,8 @@ SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeSwitchSMSToOther(struct soap*);
 SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeSwitchSMSToOtherDelay(struct soap*);
 
 SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeCloseSMS(struct soap*);
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeStartSMS(struct soap*);
 
 #endif
 

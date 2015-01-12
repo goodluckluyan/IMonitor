@@ -98,6 +98,9 @@ public:
 private:
 	CDataManager();
 
+	bool CheckConfile(std::vector<ConflictInfo> &vecConflict);
+
+
 	DiskInfo m_df;
 
 	std::map<std::string,EthStatus> m_mapEthStatus;
@@ -118,6 +121,8 @@ private:
 	int m_nOterHostFail;
 	time_t m_tmCheckTMSNoRun;
 	int m_nCheckTMSNoRun;
+
+	std::map<std::string,std::list<ConflictInfo> > m_maplstConfilict;
 
 };
 

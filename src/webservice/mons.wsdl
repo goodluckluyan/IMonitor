@@ -238,6 +238,22 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeStartSMS">
+   <complexType>
+    <sequence>
+     <element name="strHallID" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeStartSMS::strHallID -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeStartSMSResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__ExeStartSMS::ret -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 
 </types>
@@ -338,6 +354,14 @@
  <part name="Body" element="mons:ExeCloseSMSResponse"/>
 </message>
 
+<message name="ExeStartSMSRequest">
+ <part name="Body" element="mons:ExeStartSMS"/><!-- mons__ExeStartSMS::mons__ExeStartSMS -->
+</message>
+
+<message name="ExeStartSMSResponse">
+ <part name="Body" element="mons:ExeStartSMSResponse"/>
+</message>
+
 <portType name="ServicePortType">
  <operation name="GetMontorState">
   <documentation>Service definition of function mons__GetMontorState</documentation>
@@ -398,6 +422,11 @@
   <documentation>Service definition of function mons__ExeCloseSMS</documentation>
   <input message="tns:ExeCloseSMSRequest"/>
   <output message="tns:ExeCloseSMSResponse"/>
+ </operation>
+ <operation name="ExeStartSMS">
+  <documentation>Service definition of function mons__ExeStartSMS</documentation>
+  <input message="tns:ExeStartSMSRequest"/>
+  <output message="tns:ExeStartSMSResponse"/>
  </operation>
 </portType>
 
@@ -503,6 +532,15 @@
   </output>
  </operation>
  <operation name="ExeCloseSMS">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="ExeStartSMS">
   <SOAP:operation soapAction=""/>
   <input>
      <SOAP:body parts="Body" use="literal"/>

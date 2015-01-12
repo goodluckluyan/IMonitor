@@ -441,8 +441,8 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 	}
 }
 
-//关闭从的SMS
-bool C_HallList::CloseStdBySMS(std::string strHallID)
+//开启或关闭从的SMS bSoC true：开启  false 关闭 
+bool C_HallList::StartOrCloseStdBySMS(bool bSoC,std::string strHallID)
 {
 	if(strHallID.empty())
 	{
@@ -455,18 +455,19 @@ bool C_HallList::CloseStdBySMS(std::string strHallID)
 	}
 
 	C_Para *ptrPara = C_Para::GetInstance();
-	if(fit->second->CallStandbyCloseSMS(ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID)==0)
+	if(fit->second->CallStandbyStartOrCloseSMS(bSoC,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID)==0)
 	{
-		LOGINFFMT(0,"CallStandbyCloseSMS:%s OK!",strHallID.c_str());
+		LOGINFFMT(0,"CallStandbyStartOrCloseSMS:%s(%s) OK!",strHallID.c_str(),bSoC?"Start":"Close");
 		return true;
 	}
 	else
 	{
-		LOGERRFMT(0,"CallStandbyCloseSMS:%s Failed!",strHallID.c_str());
+		LOGERRFMT(0,"CallStandbyStartOrCloseSMS:%s(%s) Failed!",strHallID.c_str(),bSoC?"Start":"Close");
 		return false;
 	}
 
 }
+
 
 //切换SMS nState 返回1:表示没有些hallid 2:表示sms busy 3:启动新sms失败
 bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
@@ -754,8 +755,6 @@ bool C_HallList::UpdateDataBase(std::string strHallID,int nPosition)
 }
 
 
-
-
 //关闭sms
 bool C_HallList::CloseSMS(std::string strHallID)
 {
@@ -796,4 +795,50 @@ bool C_HallList::CloseSMS(std::string strHallID)
 	{
 		return false;
 	}
+	return true;
+}
+
+// 在本机开启sms
+bool C_HallList::StartSMS(std::string strHallID)
+{
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	std::map<std::string,C_CS*>::iterator fcit=m_mapCS.find(fit->first);
+	if(fcit==m_mapCS.end())
+	{
+		return false;
+	}
+
+	C_CS * ptrCS=fcit->second;
+	C_GuardCS guardcs(ptrCS);
+
+	C_Hall *ptr = fit->second;
+	if(!ptr->IsLocal())
+	{
+		int nPid;
+		if(!ptr->StartSMS(nPid))
+		{
+			return false;
+		}
+		if(C_Para::GetInstance()->GetRole()>=(int)STDBYROLE)
+		{
+			SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,(int)STDBYRUNTYPE,true);
+			m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+		}
+		else
+		{
+			SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,(int)MAINRUNTYPE,true);
+			m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+		}
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
 }

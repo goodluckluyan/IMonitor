@@ -77,8 +77,11 @@ public:
 	// 关闭本机的sms
 	bool CloseSMS(std::string strHallID);
 
-	// 关闭从sms
-	bool CloseStdBySMS(std::string strHallID);
+	// 在本机开启sms
+	bool StartSMS(std::string strHallID);
+
+	// 开启或关闭从sms bSoC true：开启  false 关闭 
+	bool StartOrCloseStdBySMS(bool bSoC,std::string strHallID);
 
 	// 更新数据库sms运行的位置
 	bool UpdateDataBase(std::string strHallID,int nPosition);

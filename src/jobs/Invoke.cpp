@@ -775,6 +775,20 @@ bool CInvoke::CloseSMS(std::string strHallID)
 	}
 }
 
+// 开启指定的sms
+bool CInvoke::StartSMS(std::string strHallID)
+{
+	LOGINFFMT(0," StartSMS %s!",strHallID.c_str());
+	if(m_ptrLstHall != NULL)
+	{
+		return m_ptrLstHall->StartSMS(strHallID);
+	}
+	else
+	{
+		return false;
+	}
+}
+
 // 解决sms运行冲突，以权重做为关闭还要保留的判断条件，权重小则关闭。
 // 正在运行占16，运行数量站相应数量的权重
 bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
@@ -796,24 +810,47 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 			nSWeight+=16;
 		}
 
-		nMWeight += node.nMainSMSSum;
-		nSWeight += node.nStdbySMSSum;
-
-		if(nSWeight > nMWeight)
+		nMWeight += 8 - node.nMainSMSSum;
+		nSWeight += 8 - node.nStdbySMSSum;
+      
+		if(node.nType==1)// 两端都启动了，则关闭一方
 		{
-			LOGINFFMT(0," SolveConflict %s,Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
-			m_ptrLstHall->CloseSMS(node.strHallID);
-			node.nMainSMSSum--;
-			m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
-			
-		}
-		else
-		{
-			LOGINFFMT(0," SolveConflict %s,Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
-			m_ptrLstHall->CloseStdBySMS(node.strHallID);
-			node.nStdbySMSSum--;
-			m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+			if(nMWeight < nSWeight)// 权重小的一方关闭
+			{
+				LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+				m_ptrLstHall->CloseSMS(node.strHallID);
+				node.nMainSMSSum--;
+				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
 
+			}
+			else
+			{
+				LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+				m_ptrLstHall->StartOrCloseStdBySMS(false,node.strHallID);
+				node.nStdbySMSSum--;
+				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+
+			}
 		}
+		else if(node.nType==2) // 两端都没有启动，则在一方开启
+		{
+			if(nMWeight > nSWeight )// 权重大的一方开启
+			{
+				LOGINFFMT(0," SolveConflict(ALL NORUN %s),Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+				m_ptrLstHall->StartSMS(node.strHallID);
+				node.nMainSMSSum++;
+				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+
+			}
+			else
+			{
+				LOGINFFMT(0," SolveConflict(ALL NORUN %s),Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+				m_ptrLstHall->StartOrCloseStdBySMS(true,node.strHallID);
+				node.nStdbySMSSum++;
+				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
+
+			}
+		}
+		
 	}
 }

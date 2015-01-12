@@ -121,7 +121,7 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_std__string(struct soap*, int, int, void*, 
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Fault
-#define SOAP_TYPE_SOAP_ENV__Fault (66)
+#define SOAP_TYPE_SOAP_ENV__Fault (69)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_SOAP_ENV__Fault(struct soap*, struct SOAP_ENV__Fault *);
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_SOAP_ENV__Fault(struct soap*, const struct SOAP_ENV__Fault *);
@@ -157,7 +157,7 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Fault(struct soap*, int, int, voi
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Reason
-#define SOAP_TYPE_SOAP_ENV__Reason (65)
+#define SOAP_TYPE_SOAP_ENV__Reason (68)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_SOAP_ENV__Reason(struct soap*, struct SOAP_ENV__Reason *);
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_SOAP_ENV__Reason(struct soap*, const struct SOAP_ENV__Reason *);
@@ -193,7 +193,7 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Reason(struct soap*, int, int, vo
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Detail
-#define SOAP_TYPE_SOAP_ENV__Detail (62)
+#define SOAP_TYPE_SOAP_ENV__Detail (65)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_SOAP_ENV__Detail(struct soap*, struct SOAP_ENV__Detail *);
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_SOAP_ENV__Detail(struct soap*, const struct SOAP_ENV__Detail *);
@@ -229,7 +229,7 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Detail(struct soap*, int, int, vo
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Code
-#define SOAP_TYPE_SOAP_ENV__Code (60)
+#define SOAP_TYPE_SOAP_ENV__Code (63)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_SOAP_ENV__Code(struct soap*, struct SOAP_ENV__Code *);
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_SOAP_ENV__Code(struct soap*, const struct SOAP_ENV__Code *);
@@ -265,7 +265,7 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Code(struct soap*, int, int, void
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Header
-#define SOAP_TYPE_SOAP_ENV__Header (59)
+#define SOAP_TYPE_SOAP_ENV__Header (62)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_SOAP_ENV__Header(struct soap*, struct SOAP_ENV__Header *);
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_SOAP_ENV__Header(struct soap*, const struct SOAP_ENV__Header *);
@@ -297,6 +297,70 @@ inline void soap_delete_SOAP_ENV__Header(struct soap *soap, struct SOAP_ENV__Hea
 SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Header(struct soap*, int, int, void*, size_t, const void*, size_t);
 
 #endif
+
+#ifndef SOAP_TYPE_mons__ExeStartSMS
+#define SOAP_TYPE_mons__ExeStartSMS (61)
+#endif
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeStartSMS(struct soap*, struct mons__ExeStartSMS *);
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeStartSMS(struct soap*, const struct mons__ExeStartSMS *);
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeStartSMS(struct soap*, const char*, int, const struct mons__ExeStartSMS *, const char*);
+SOAP_FMAC3 struct mons__ExeStartSMS * SOAP_FMAC4 soap_in_mons__ExeStartSMS(struct soap*, const char*, struct mons__ExeStartSMS *, const char*);
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeStartSMS(struct soap*, const struct mons__ExeStartSMS *, const char*, const char*);
+
+#ifndef soap_write_mons__ExeStartSMS
+#define soap_write_mons__ExeStartSMS(soap, data) ( soap_free_temp(soap), soap_begin_send(soap) || (soap_serialize_mons__ExeStartSMS(soap, data),0) || soap_put_mons__ExeStartSMS(soap, data, "mons:ExeStartSMS", NULL) || soap_end_send(soap), (soap)->error )
+#endif
+
+SOAP_FMAC3 struct mons__ExeStartSMS * SOAP_FMAC4 soap_get_mons__ExeStartSMS(struct soap*, struct mons__ExeStartSMS *, const char*, const char*);
+
+#ifndef soap_read_mons__ExeStartSMS
+#define soap_read_mons__ExeStartSMS(soap, data) ( soap_begin_recv(soap) || !soap_get_mons__ExeStartSMS(soap, data, NULL, NULL) || soap_end_recv(soap), (soap)->error )
+#endif
+
+SOAP_FMAC1 struct mons__ExeStartSMS * SOAP_FMAC2 soap_instantiate_mons__ExeStartSMS(struct soap*, int, const char*, const char*, size_t*);
+
+inline struct mons__ExeStartSMS * soap_new_mons__ExeStartSMS(struct soap *soap, int n = -1) { return soap_instantiate_mons__ExeStartSMS(soap, n, NULL, NULL, NULL); }
+
+inline struct mons__ExeStartSMS * soap_new_req_mons__ExeStartSMS(struct soap *soap, std::string& strHallID) { struct mons__ExeStartSMS *_p = soap_instantiate_mons__ExeStartSMS(soap, -1, NULL, NULL, NULL); if (_p) { soap_default_mons__ExeStartSMS(soap, _p); _p->strHallID = strHallID; } return _p; }
+
+inline struct mons__ExeStartSMS * soap_new_set_mons__ExeStartSMS(struct soap *soap, std::string& strHallID) { struct mons__ExeStartSMS *_p = soap_instantiate_mons__ExeStartSMS(soap, -1, NULL, NULL, NULL); if (_p) { soap_default_mons__ExeStartSMS(soap, _p); _p->strHallID = strHallID; } return _p; }
+
+inline void soap_delete_mons__ExeStartSMS(struct soap *soap, struct mons__ExeStartSMS *p) { soap_delete(soap, p); }
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeStartSMS(struct soap*, int, int, void*, size_t, const void*, size_t);
+
+#ifndef SOAP_TYPE_mons__ExeStartSMSResponse
+#define SOAP_TYPE_mons__ExeStartSMSResponse (60)
+#endif
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeStartSMSResponse(struct soap*, struct mons__ExeStartSMSResponse *);
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeStartSMSResponse(struct soap*, const struct mons__ExeStartSMSResponse *);
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeStartSMSResponse(struct soap*, const char*, int, const struct mons__ExeStartSMSResponse *, const char*);
+SOAP_FMAC3 struct mons__ExeStartSMSResponse * SOAP_FMAC4 soap_in_mons__ExeStartSMSResponse(struct soap*, const char*, struct mons__ExeStartSMSResponse *, const char*);
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeStartSMSResponse(struct soap*, const struct mons__ExeStartSMSResponse *, const char*, const char*);
+
+#ifndef soap_write_mons__ExeStartSMSResponse
+#define soap_write_mons__ExeStartSMSResponse(soap, data) ( soap_free_temp(soap), soap_begin_send(soap) || (soap_serialize_mons__ExeStartSMSResponse(soap, data),0) || soap_put_mons__ExeStartSMSResponse(soap, data, "mons:ExeStartSMSResponse", NULL) || soap_end_send(soap), (soap)->error )
+#endif
+
+SOAP_FMAC3 struct mons__ExeStartSMSResponse * SOAP_FMAC4 soap_get_mons__ExeStartSMSResponse(struct soap*, struct mons__ExeStartSMSResponse *, const char*, const char*);
+
+#ifndef soap_read_mons__ExeStartSMSResponse
+#define soap_read_mons__ExeStartSMSResponse(soap, data) ( soap_begin_recv(soap) || !soap_get_mons__ExeStartSMSResponse(soap, data, NULL, NULL) || soap_end_recv(soap), (soap)->error )
+#endif
+
+SOAP_FMAC1 struct mons__ExeStartSMSResponse * SOAP_FMAC2 soap_instantiate_mons__ExeStartSMSResponse(struct soap*, int, const char*, const char*, size_t*);
+
+inline struct mons__ExeStartSMSResponse * soap_new_mons__ExeStartSMSResponse(struct soap *soap, int n = -1) { return soap_instantiate_mons__ExeStartSMSResponse(soap, n, NULL, NULL, NULL); }
+
+inline struct mons__ExeStartSMSResponse * soap_new_req_mons__ExeStartSMSResponse(struct soap *soap, int ret) { struct mons__ExeStartSMSResponse *_p = soap_instantiate_mons__ExeStartSMSResponse(soap, -1, NULL, NULL, NULL); if (_p) { soap_default_mons__ExeStartSMSResponse(soap, _p); _p->ret = ret; } return _p; }
+
+inline struct mons__ExeStartSMSResponse * soap_new_set_mons__ExeStartSMSResponse(struct soap *soap, int ret) { struct mons__ExeStartSMSResponse *_p = soap_instantiate_mons__ExeStartSMSResponse(soap, -1, NULL, NULL, NULL); if (_p) { soap_default_mons__ExeStartSMSResponse(soap, _p); _p->ret = ret; } return _p; }
+
+inline void soap_delete_mons__ExeStartSMSResponse(struct soap *soap, struct mons__ExeStartSMSResponse *p) { soap_delete(soap, p); }
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeStartSMSResponse(struct soap*, int, int, void*, size_t, const void*, size_t);
 
 #ifndef SOAP_TYPE_mons__ExeCloseSMS
 #define SOAP_TYPE_mons__ExeCloseSMS (58)
@@ -1133,7 +1197,7 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__MontorStateRes(struct soap*, int, int
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_PointerToSOAP_ENV__Reason
-#define SOAP_TYPE_PointerToSOAP_ENV__Reason (68)
+#define SOAP_TYPE_PointerToSOAP_ENV__Reason (71)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_PointerToSOAP_ENV__Reason(struct soap*, struct SOAP_ENV__Reason *const*);
 SOAP_FMAC3 int SOAP_FMAC4 soap_out_PointerToSOAP_ENV__Reason(struct soap*, const char *, int, struct SOAP_ENV__Reason *const*, const char *);
@@ -1156,7 +1220,7 @@ SOAP_FMAC3 struct SOAP_ENV__Reason ** SOAP_FMAC4 soap_get_PointerToSOAP_ENV__Rea
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_PointerToSOAP_ENV__Detail
-#define SOAP_TYPE_PointerToSOAP_ENV__Detail (67)
+#define SOAP_TYPE_PointerToSOAP_ENV__Detail (70)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_PointerToSOAP_ENV__Detail(struct soap*, struct SOAP_ENV__Detail *const*);
 SOAP_FMAC3 int SOAP_FMAC4 soap_out_PointerToSOAP_ENV__Detail(struct soap*, const char *, int, struct SOAP_ENV__Detail *const*, const char *);
@@ -1179,7 +1243,7 @@ SOAP_FMAC3 struct SOAP_ENV__Detail ** SOAP_FMAC4 soap_get_PointerToSOAP_ENV__Det
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_PointerToSOAP_ENV__Code
-#define SOAP_TYPE_PointerToSOAP_ENV__Code (61)
+#define SOAP_TYPE_PointerToSOAP_ENV__Code (64)
 #endif
 SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_PointerToSOAP_ENV__Code(struct soap*, struct SOAP_ENV__Code *const*);
 SOAP_FMAC3 int SOAP_FMAC4 soap_out_PointerToSOAP_ENV__Code(struct soap*, const char *, int, struct SOAP_ENV__Code *const*, const char *);

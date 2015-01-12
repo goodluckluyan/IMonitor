@@ -82,7 +82,7 @@ public:
 	void GetRunHost(std::string &strIP,int &nPort);
 
 	// 调用从机的closesms接口
-	int  CallStandbyCloseSMS(std::string strOtherIP,int nPort,std::string strHallID);
+	int  CallStandbyStartOrCloseSMS(bool bSoC,std::string strOtherIP,int nPort,std::string strHallID);
 private:
 
 	// 在当前终端启动SMS
@@ -110,7 +110,7 @@ private:
 	int Parser_SwitchSMS(std::string &content,int &nRet);
 
 	// 解析调用closesms接口的返回
-	int Parser_CloseSMS(std::string &content,int &nRet);
+	int Parser_StartOrCloseSMS(bool bSoC,std::string &content,int &nRet);
 
 	// 获取指定命令的pid
 	int Getpid(std::string strName,std::vector<int>& vecPID);

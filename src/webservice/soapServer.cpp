@@ -14,7 +14,7 @@ compiling, linking, and/or using OpenSSL is allowed.
 #endif
 #include "soapH.h"
 
-SOAP_SOURCE_STAMP("@(#) soapServer.cpp ver 2.8.18 2015-01-09 02:30:06 GMT")
+SOAP_SOURCE_STAMP("@(#) soapServer.cpp ver 2.8.18 2015-01-12 05:18:07 GMT")
 
 
 extern "C" SOAP_FMAC5 int SOAP_FMAC6 soap_serve(struct soap *soap)
@@ -80,6 +80,8 @@ extern "C" SOAP_FMAC5 int SOAP_FMAC6 soap_serve_request(struct soap *soap)
 		return soap_serve_mons__ExeSwitchSMSToOtherDelay(soap);
 	if (!soap_match_tag(soap, soap->tag, "mons:ExeCloseSMS"))
 		return soap_serve_mons__ExeCloseSMS(soap);
+	if (!soap_match_tag(soap, soap->tag, "mons:ExeStartSMS"))
+		return soap_serve_mons__ExeStartSMS(soap);
 	return soap->error = SOAP_NO_METHOD;
 }
 #endif
@@ -569,6 +571,47 @@ SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeCloseSMS(struct soap *soap)
 	 || soap_putheader(soap)
 	 || soap_body_begin_out(soap)
 	 || soap_put_mons__ExeCloseSMSResponse(soap, &soap_tmp_mons__ExeCloseSMSResponse, "mons:ExeCloseSMSResponse", NULL)
+	 || soap_body_end_out(soap)
+	 || soap_envelope_end_out(soap)
+	 || soap_end_send(soap))
+		return soap->error;
+	return soap_closesock(soap);
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeStartSMS(struct soap *soap)
+{	struct mons__ExeStartSMS soap_tmp_mons__ExeStartSMS;
+	struct mons__ExeStartSMSResponse soap_tmp_mons__ExeStartSMSResponse;
+	soap_default_mons__ExeStartSMSResponse(soap, &soap_tmp_mons__ExeStartSMSResponse);
+	soap_default_mons__ExeStartSMS(soap, &soap_tmp_mons__ExeStartSMS);
+	if (!soap_get_mons__ExeStartSMS(soap, &soap_tmp_mons__ExeStartSMS, "mons:ExeStartSMS", NULL))
+		return soap->error;
+	if (soap_body_end_in(soap)
+	 || soap_envelope_end_in(soap)
+	 || soap_end_recv(soap))
+		return soap->error;
+	soap->error = mons__ExeStartSMS(soap, soap_tmp_mons__ExeStartSMS.strHallID, soap_tmp_mons__ExeStartSMSResponse.ret);
+	if (soap->error)
+		return soap->error;
+	soap->encodingStyle = NULL;
+	soap_serializeheader(soap);
+	soap_serialize_mons__ExeStartSMSResponse(soap, &soap_tmp_mons__ExeStartSMSResponse);
+	if (soap_begin_count(soap))
+		return soap->error;
+	if (soap->mode & SOAP_IO_LENGTH)
+	{	if (soap_envelope_begin_out(soap)
+		 || soap_putheader(soap)
+		 || soap_body_begin_out(soap)
+		 || soap_put_mons__ExeStartSMSResponse(soap, &soap_tmp_mons__ExeStartSMSResponse, "mons:ExeStartSMSResponse", NULL)
+		 || soap_body_end_out(soap)
+		 || soap_envelope_end_out(soap))
+			 return soap->error;
+	};
+	if (soap_end_count(soap)
+	 || soap_response(soap, SOAP_OK)
+	 || soap_envelope_begin_out(soap)
+	 || soap_putheader(soap)
+	 || soap_body_begin_out(soap)
+	 || soap_put_mons__ExeStartSMSResponse(soap, &soap_tmp_mons__ExeStartSMSResponse, "mons:ExeStartSMSResponse", NULL)
 	 || soap_body_end_out(soap)
 	 || soap_envelope_end_out(soap)
 	 || soap_end_send(soap))

@@ -15,7 +15,7 @@ compiling, linking, and/or using OpenSSL is allowed.
 
 #include "soapH.h"
 
-SOAP_SOURCE_STAMP("@(#) soapC.cpp ver 2.8.18 2015-01-09 02:30:06 GMT")
+SOAP_SOURCE_STAMP("@(#) soapC.cpp ver 2.8.18 2015-01-12 05:18:07 GMT")
 
 
 #ifndef WITH_NOGLOBAL
@@ -194,6 +194,10 @@ SOAP_FMAC3 void * SOAP_FMAC4 soap_getelement(struct soap *soap, int *type)
 		return soap_in_int(soap, NULL, NULL, "xsd:int");
 	case SOAP_TYPE_std__string:
 		return soap_in_std__string(soap, NULL, NULL, "xsd:string");
+	case SOAP_TYPE_mons__ExeStartSMS:
+		return soap_in_mons__ExeStartSMS(soap, NULL, NULL, "mons:ExeStartSMS");
+	case SOAP_TYPE_mons__ExeStartSMSResponse:
+		return soap_in_mons__ExeStartSMSResponse(soap, NULL, NULL, "mons:ExeStartSMSResponse");
 	case SOAP_TYPE_mons__ExeCloseSMS:
 		return soap_in_mons__ExeCloseSMS(soap, NULL, NULL, "mons:ExeCloseSMS");
 	case SOAP_TYPE_mons__ExeCloseSMSResponse:
@@ -274,6 +278,14 @@ SOAP_FMAC3 void * SOAP_FMAC4 soap_getelement(struct soap *soap, int *type)
 		if (!soap_match_tag(soap, t, "xsd:int"))
 		{	*type = SOAP_TYPE_int;
 			return soap_in_int(soap, NULL, NULL, NULL);
+		}
+		if (!soap_match_tag(soap, t, "mons:ExeStartSMS"))
+		{	*type = SOAP_TYPE_mons__ExeStartSMS;
+			return soap_in_mons__ExeStartSMS(soap, NULL, NULL, NULL);
+		}
+		if (!soap_match_tag(soap, t, "mons:ExeStartSMSResponse"))
+		{	*type = SOAP_TYPE_mons__ExeStartSMSResponse;
+			return soap_in_mons__ExeStartSMSResponse(soap, NULL, NULL, NULL);
 		}
 		if (!soap_match_tag(soap, t, "mons:ExeCloseSMS"))
 		{	*type = SOAP_TYPE_mons__ExeCloseSMS;
@@ -462,6 +474,10 @@ SOAP_FMAC3 int SOAP_FMAC4 soap_putelement(struct soap *soap, const void *ptr, co
 		return soap_out_int(soap, tag, id, (const int *)ptr, "xsd:int");
 	case SOAP_TYPE_std__string:
 		return soap_out_std__string(soap, tag, id, (const std::string *)ptr, "xsd:string");
+	case SOAP_TYPE_mons__ExeStartSMS:
+		return soap_out_mons__ExeStartSMS(soap, tag, id, (const struct mons__ExeStartSMS *)ptr, "mons:ExeStartSMS");
+	case SOAP_TYPE_mons__ExeStartSMSResponse:
+		return soap_out_mons__ExeStartSMSResponse(soap, tag, id, (const struct mons__ExeStartSMSResponse *)ptr, "mons:ExeStartSMSResponse");
 	case SOAP_TYPE_mons__ExeCloseSMS:
 		return soap_out_mons__ExeCloseSMS(soap, tag, id, (const struct mons__ExeCloseSMS *)ptr, "mons:ExeCloseSMS");
 	case SOAP_TYPE_mons__ExeCloseSMSResponse:
@@ -538,6 +554,12 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_markelement(struct soap *soap, const void *ptr, 
 	{
 	case SOAP_TYPE_std__string:
 		soap_serialize_std__string(soap, (const std::string *)ptr);
+		break;
+	case SOAP_TYPE_mons__ExeStartSMS:
+		soap_serialize_mons__ExeStartSMS(soap, (const struct mons__ExeStartSMS *)ptr);
+		break;
+	case SOAP_TYPE_mons__ExeStartSMSResponse:
+		soap_serialize_mons__ExeStartSMSResponse(soap, (const struct mons__ExeStartSMSResponse *)ptr);
 		break;
 	case SOAP_TYPE_mons__ExeCloseSMS:
 		soap_serialize_mons__ExeCloseSMS(soap, (const struct mons__ExeCloseSMS *)ptr);
@@ -689,6 +711,10 @@ SOAP_FMAC3 void * SOAP_FMAC4 soap_instantiate(struct soap *soap, int t, const ch
 		return (void*)soap_instantiate_mons__ExeCloseSMSResponse(soap, -1, type, arrayType, n);
 	case SOAP_TYPE_mons__ExeCloseSMS:
 		return (void*)soap_instantiate_mons__ExeCloseSMS(soap, -1, type, arrayType, n);
+	case SOAP_TYPE_mons__ExeStartSMSResponse:
+		return (void*)soap_instantiate_mons__ExeStartSMSResponse(soap, -1, type, arrayType, n);
+	case SOAP_TYPE_mons__ExeStartSMS:
+		return (void*)soap_instantiate_mons__ExeStartSMS(soap, -1, type, arrayType, n);
 #ifndef WITH_NOGLOBAL
 	case SOAP_TYPE_SOAP_ENV__Header:
 		return (void*)soap_instantiate_SOAP_ENV__Header(soap, -1, type, arrayType, n);
@@ -883,6 +909,18 @@ SOAP_FMAC3 int SOAP_FMAC4 soap_fdelete(struct soap_clist *p)
 			SOAP_DELETE((struct mons__ExeCloseSMS*)p->ptr);
 		else
 			SOAP_DELETE_ARRAY((struct mons__ExeCloseSMS*)p->ptr);
+		break;
+	case SOAP_TYPE_mons__ExeStartSMSResponse:
+		if (p->size < 0)
+			SOAP_DELETE((struct mons__ExeStartSMSResponse*)p->ptr);
+		else
+			SOAP_DELETE_ARRAY((struct mons__ExeStartSMSResponse*)p->ptr);
+		break;
+	case SOAP_TYPE_mons__ExeStartSMS:
+		if (p->size < 0)
+			SOAP_DELETE((struct mons__ExeStartSMS*)p->ptr);
+		else
+			SOAP_DELETE_ARRAY((struct mons__ExeStartSMS*)p->ptr);
 		break;
 #ifndef WITH_NOGLOBAL
 	case SOAP_TYPE_SOAP_ENV__Header:
@@ -1790,6 +1828,225 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Header(struct soap *soap, int st,
 }
 
 #endif
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeStartSMS(struct soap *soap, struct mons__ExeStartSMS *a)
+{
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_default_std__string(soap, &a->strHallID);
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeStartSMS(struct soap *soap, const struct mons__ExeStartSMS *a)
+{
+#ifndef WITH_NOIDREF
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_serialize_std__string(soap, &a->strHallID);
+#endif
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeStartSMS(struct soap *soap, const char *tag, int id, const struct mons__ExeStartSMS *a, const char *type)
+{
+	(void)soap; (void)tag; (void)id; (void)type;
+	if (soap_element_begin_out(soap, tag, soap_embedded_id(soap, id, a, SOAP_TYPE_mons__ExeStartSMS), type))
+		return soap->error;
+	if (soap_out_std__string(soap, "strHallID", -1, &a->strHallID, ""))
+		return soap->error;
+	return soap_element_end_out(soap, tag);
+}
+
+SOAP_FMAC3 struct mons__ExeStartSMS * SOAP_FMAC4 soap_in_mons__ExeStartSMS(struct soap *soap, const char *tag, struct mons__ExeStartSMS *a, const char *type)
+{
+	size_t soap_flag_strHallID = 1;
+	if (soap_element_begin_in(soap, tag, 0, type))
+		return NULL;
+	a = (struct mons__ExeStartSMS *)soap_class_id_enter(soap, soap->id, a, SOAP_TYPE_mons__ExeStartSMS, sizeof(struct mons__ExeStartSMS), soap->type, soap->arrayType);
+	if (!a)
+		return NULL;
+	soap_default_mons__ExeStartSMS(soap, a);
+	if (soap->body && !*soap->href)
+	{
+		for (;;)
+		{	soap->error = SOAP_TAG_MISMATCH;
+			if (soap_flag_strHallID && (soap->error == SOAP_TAG_MISMATCH || soap->error == SOAP_NO_TAG))
+				if (soap_in_std__string(soap, "strHallID", &a->strHallID, "xsd:string"))
+				{	soap_flag_strHallID--;
+					continue;
+				}
+			if (soap->error == SOAP_TAG_MISMATCH)
+				soap->error = soap_ignore_element(soap);
+			if (soap->error == SOAP_NO_TAG)
+				break;
+			if (soap->error)
+				return NULL;
+		}
+		if (soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	else
+	{	a = (struct mons__ExeStartSMS *)soap_id_forward(soap, soap->href, (void*)a, 0, SOAP_TYPE_mons__ExeStartSMS, 0, sizeof(struct mons__ExeStartSMS), 0, soap_copy_mons__ExeStartSMS);
+		if (soap->body && soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	if ((soap->mode & SOAP_XML_STRICT) && (soap_flag_strHallID > 0))
+	{	soap->error = SOAP_OCCURS;
+		return NULL;
+	}
+	return a;
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeStartSMS(struct soap *soap, const struct mons__ExeStartSMS *a, const char *tag, const char *type)
+{
+	register int id = soap_embed(soap, (void*)a, NULL, 0, tag, SOAP_TYPE_mons__ExeStartSMS);
+	if (soap_out_mons__ExeStartSMS(soap, tag?tag:"mons:ExeStartSMS", id, a, type))
+		return soap->error;
+	return soap_putindependent(soap);
+}
+
+SOAP_FMAC3 struct mons__ExeStartSMS * SOAP_FMAC4 soap_get_mons__ExeStartSMS(struct soap *soap, struct mons__ExeStartSMS *p, const char *tag, const char *type)
+{
+	if ((p = soap_in_mons__ExeStartSMS(soap, tag, p, type)))
+		if (soap_getindependent(soap))
+			return NULL;
+	return p;
+}
+
+SOAP_FMAC1 struct mons__ExeStartSMS * SOAP_FMAC2 soap_instantiate_mons__ExeStartSMS(struct soap *soap, int n, const char *type, const char *arrayType, size_t *size)
+{
+	(void)type; (void)arrayType; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "soap_instantiate_mons__ExeStartSMS(%d, %s, %s)\n", n, type?type:"", arrayType?arrayType:""));
+	struct soap_clist *cp = soap_link(soap, NULL, SOAP_TYPE_mons__ExeStartSMS, n, soap_fdelete);
+	if (!cp)
+		return NULL;
+	if (n < 0)
+	{	cp->ptr = (void*)SOAP_NEW(struct mons__ExeStartSMS);
+		if (size)
+			*size = sizeof(struct mons__ExeStartSMS);
+	}
+	else
+	{	cp->ptr = (void*)SOAP_NEW_ARRAY(struct mons__ExeStartSMS, n);
+		if (size)
+			*size = n * sizeof(struct mons__ExeStartSMS);
+	}
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Instantiated location=%p\n", cp->ptr));
+	if (!cp->ptr)
+		soap->error = SOAP_EOM;
+	return (struct mons__ExeStartSMS*)cp->ptr;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeStartSMS(struct soap *soap, int st, int tt, void *p, size_t len, const void *q, size_t n)
+{
+	(void)soap; (void)tt; (void)st; (void)len; (void)n; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Copying struct mons__ExeStartSMS %p -> %p\n", q, p));
+	*(struct mons__ExeStartSMS*)p = *(struct mons__ExeStartSMS*)q;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeStartSMSResponse(struct soap *soap, struct mons__ExeStartSMSResponse *a)
+{
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_default_int(soap, &a->ret);
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeStartSMSResponse(struct soap *soap, const struct mons__ExeStartSMSResponse *a)
+{
+#ifndef WITH_NOIDREF
+	(void)soap; (void)a; /* appease -Wall -Werror */
+#endif
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeStartSMSResponse(struct soap *soap, const char *tag, int id, const struct mons__ExeStartSMSResponse *a, const char *type)
+{
+	(void)soap; (void)tag; (void)id; (void)type;
+	if (soap_element_begin_out(soap, tag, soap_embedded_id(soap, id, a, SOAP_TYPE_mons__ExeStartSMSResponse), type))
+		return soap->error;
+	if (soap_out_int(soap, "ret", -1, &a->ret, ""))
+		return soap->error;
+	return soap_element_end_out(soap, tag);
+}
+
+SOAP_FMAC3 struct mons__ExeStartSMSResponse * SOAP_FMAC4 soap_in_mons__ExeStartSMSResponse(struct soap *soap, const char *tag, struct mons__ExeStartSMSResponse *a, const char *type)
+{
+	size_t soap_flag_ret = 1;
+	if (soap_element_begin_in(soap, tag, 0, type))
+		return NULL;
+	a = (struct mons__ExeStartSMSResponse *)soap_id_enter(soap, soap->id, a, SOAP_TYPE_mons__ExeStartSMSResponse, sizeof(struct mons__ExeStartSMSResponse), 0, NULL, NULL, NULL);
+	if (!a)
+		return NULL;
+	soap_default_mons__ExeStartSMSResponse(soap, a);
+	if (soap->body && !*soap->href)
+	{
+		for (;;)
+		{	soap->error = SOAP_TAG_MISMATCH;
+			if (soap_flag_ret && soap->error == SOAP_TAG_MISMATCH)
+				if (soap_in_int(soap, "ret", &a->ret, "xsd:int"))
+				{	soap_flag_ret--;
+					continue;
+				}
+			if (soap->error == SOAP_TAG_MISMATCH)
+				soap->error = soap_ignore_element(soap);
+			if (soap->error == SOAP_NO_TAG)
+				break;
+			if (soap->error)
+				return NULL;
+		}
+		if (soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	else
+	{	a = (struct mons__ExeStartSMSResponse *)soap_id_forward(soap, soap->href, (void*)a, 0, SOAP_TYPE_mons__ExeStartSMSResponse, 0, sizeof(struct mons__ExeStartSMSResponse), 0, NULL);
+		if (soap->body && soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	if ((soap->mode & SOAP_XML_STRICT) && (soap_flag_ret > 0))
+	{	soap->error = SOAP_OCCURS;
+		return NULL;
+	}
+	return a;
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeStartSMSResponse(struct soap *soap, const struct mons__ExeStartSMSResponse *a, const char *tag, const char *type)
+{
+	register int id = soap_embed(soap, (void*)a, NULL, 0, tag, SOAP_TYPE_mons__ExeStartSMSResponse);
+	if (soap_out_mons__ExeStartSMSResponse(soap, tag?tag:"mons:ExeStartSMSResponse", id, a, type))
+		return soap->error;
+	return soap_putindependent(soap);
+}
+
+SOAP_FMAC3 struct mons__ExeStartSMSResponse * SOAP_FMAC4 soap_get_mons__ExeStartSMSResponse(struct soap *soap, struct mons__ExeStartSMSResponse *p, const char *tag, const char *type)
+{
+	if ((p = soap_in_mons__ExeStartSMSResponse(soap, tag, p, type)))
+		if (soap_getindependent(soap))
+			return NULL;
+	return p;
+}
+
+SOAP_FMAC1 struct mons__ExeStartSMSResponse * SOAP_FMAC2 soap_instantiate_mons__ExeStartSMSResponse(struct soap *soap, int n, const char *type, const char *arrayType, size_t *size)
+{
+	(void)type; (void)arrayType; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "soap_instantiate_mons__ExeStartSMSResponse(%d, %s, %s)\n", n, type?type:"", arrayType?arrayType:""));
+	struct soap_clist *cp = soap_link(soap, NULL, SOAP_TYPE_mons__ExeStartSMSResponse, n, soap_fdelete);
+	if (!cp)
+		return NULL;
+	if (n < 0)
+	{	cp->ptr = (void*)SOAP_NEW(struct mons__ExeStartSMSResponse);
+		if (size)
+			*size = sizeof(struct mons__ExeStartSMSResponse);
+	}
+	else
+	{	cp->ptr = (void*)SOAP_NEW_ARRAY(struct mons__ExeStartSMSResponse, n);
+		if (size)
+			*size = n * sizeof(struct mons__ExeStartSMSResponse);
+	}
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Instantiated location=%p\n", cp->ptr));
+	if (!cp->ptr)
+		soap->error = SOAP_EOM;
+	return (struct mons__ExeStartSMSResponse*)cp->ptr;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeStartSMSResponse(struct soap *soap, int st, int tt, void *p, size_t len, const void *q, size_t n)
+{
+	(void)soap; (void)tt; (void)st; (void)len; (void)n; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Copying struct mons__ExeStartSMSResponse %p -> %p\n", q, p));
+	*(struct mons__ExeStartSMSResponse*)p = *(struct mons__ExeStartSMSResponse*)q;
+}
 
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeCloseSMS(struct soap *soap, struct mons__ExeCloseSMS *a)
 {

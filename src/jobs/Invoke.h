@@ -84,6 +84,9 @@ public:
 	// 关闭sms，解决冲突时使用
 	bool CloseSMS(std::string strHallID);
 
+	// 开启sms，解决冲突时使用
+	bool StartSMS(std::string strHallID);
+
 	// 解决sms运行冲突
 	bool SolveConflict(std::vector<ConflictInfo> &vecCI);
 
