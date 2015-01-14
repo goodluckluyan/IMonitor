@@ -156,14 +156,6 @@ bool CInvoke::AddInitTask()
 	C_TaskList * ptrTaskList = C_TaskList::GetInstance();
 	C_RunPara * ptrRunPara = C_RunPara::GetInstance();
 
-	// 添加对对端调度程序的检测的定时任务
-	if(0 == pPara->m_nOtherMonitorCheckDelay)
-	{
-		pPara->m_nOtherMonitorCheckDelay = 3;
-	}
-	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
-		ptrRunPara->GetCurTime() + pPara->m_nOtherMonitorCheckDelay);
-	 
 	// 添加磁盘检测定时任务
 	if(0 != pPara->m_nDiskCheckDelay)
 	{
@@ -229,6 +221,15 @@ bool CInvoke::AddInitTask()
 		ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS,NULL,
 			ptrRunPara->GetCurTime() + pPara->m_nOtherEWCheckDelay);
 	}
+
+    // 只所以把添加检测对端调度程序放在后边，是为了防止过早的进行恢复接管操作
+	// 添加对对端调度程序的检测的定时任务，必须要有检测对端调度程序的任务。
+	if(0 == pPara->m_nOtherMonitorCheckDelay)
+	{
+		pPara->m_nOtherMonitorCheckDelay = 3;
+	}
+	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
+		ptrRunPara->GetCurTime() + pPara->m_nOtherMonitorCheckDelay);
 	
 
 	// 添加调度任务

@@ -550,6 +550,8 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		}
 
 		// 都没有运行这个sms, 暂不对两边都不启动进行处理。在切换时会出现这种情况。
+		// 要处理两边都没有启动的情况，要过滤掉切换时出现的情况。比较繁琐，要多次上报才会处理(已做)并且要在切换时通知本函数
+		// 不要进行冲突检测。（未做）
 // 		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
 // 		{
 // 			ConflictInfo ci;

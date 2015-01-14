@@ -230,28 +230,34 @@ int mons__ExeSwitchSMSToOther(struct soap* cSoap,std::string strHallID,int &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
-	if(ptr->SwitchSMS(strHallID,false,ret))
+	int nState;
+	if(ptr->SwitchSMS(strHallID,false,nState))
 	{	
-		return 0;
+		ret = nState;
 	}
 	else
 	{
-		return 1;
+		ret = nState;
 	}
+	return 0;
 }
 
 int mons__ExeSwitchSMSToOtherDelay(struct soap* cSoap,std::string strHallID,int &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
-	if(ptr->SwitchSMS(strHallID,true,ret))
+	int nState;
+	if(ptr->SwitchSMS(strHallID,true,nState))
 	{	
-		return 0;
+		ret = nState;
 	}
 	else
 	{
-		return 1;
+		ret = nState;
 	}
+	
+	return 0;
+	
 }
 
 int mons__ExeCloseSMS(struct soap* cSoap,std::string strHallID,int &ret)
@@ -261,13 +267,12 @@ int mons__ExeCloseSMS(struct soap* cSoap,std::string strHallID,int &ret)
 	if(ptr->CloseSMS(strHallID))
 	{	
 		ret = 0;
-		return 0;
 	}
 	else
 	{
 		ret = 1;
-		return 1;
 	}
+	return 0;
 }
 
 int mons__ExeStartSMS(struct soap* cSoap,std::string strHallID,int &ret)
@@ -276,12 +281,11 @@ int mons__ExeStartSMS(struct soap* cSoap,std::string strHallID,int &ret)
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	if(ptr->StartSMS(strHallID))
 	{	
-		ret = 0;
-		return 0;
+		ret = 0;		
 	}
 	else
 	{
 		ret = 1;
-		return 1;
 	}
+	return 0;
 }

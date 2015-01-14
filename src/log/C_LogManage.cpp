@@ -53,10 +53,11 @@ char* C_LogManage::ft_Printf(const char *fmt, ...)
 
 	char * buff =new char[nSize+1];
 	va_start(ptr,fmt);
-	::vsnprintf(buff,sizeof(buff),fmt,ptr);
+	::vsnprintf(buff,nSize+1,fmt,ptr);
 	va_end(ptr);
 	return buff;
 }
+
 
 int C_LogManage::WriteLogFmt(int iLevel, int iModule, int iSubModule,c_u_int errorCode, const char *fmt, ...)
 {

@@ -194,6 +194,10 @@ int C_ThreadManage::GetIdlThread(C_ThreadData **pThreadData)
 				m_cs.LeaveCS() ;
 				return 0;
 			}
+// 			else
+// 			{
+// 				printf("Current Thread State:%d\n",(int)(*m_itIdl)->GetState());
+// 			}
 
 			m_itIdl ++;
 

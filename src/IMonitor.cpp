@@ -233,6 +233,7 @@ int main(int argc, char** argv)
 		} 
 	}
 
+	// 不要改变析构顺序，否则会出现无法结束线程管理类的情况
 	Invoker.DeInit();
 	C_TaskList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
