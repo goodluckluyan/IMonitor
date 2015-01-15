@@ -53,6 +53,7 @@ int  CInvoke::Init()
 			}
 		}
 	}
+	
 
 	// Æô¶¯TMS
 	if(m_ptrTMS == NULL)

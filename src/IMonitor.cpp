@@ -58,6 +58,7 @@ void InitSigFun(C_LogManage *pLogManage)
 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
 		printf("add signal Number:SIGALRM\n");	
 	}
+//  防止关闭终端后，程序在后台运行，所有不处理SIGHUP信号，使用默认处理方式即结束进程
 // 	if(signal(SIGHUP,sig_fun) == SIG_ERR)
 // 	{
 // 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
@@ -133,6 +134,30 @@ int main(int argc, char** argv)
 		return -1;	
 	}
 
+	// 启动延时，为了解决主从机之间竞态条件的出现，防止启动sms的冲突。
+	srand(time(NULL));
+	int ws = 0;
+	if(pPara->GetRole()!=MAINROLE)
+	{
+		ws = 20+rand()%10;
+	}
+	else
+	{
+		ws= rand()%10;
+	}
+	printf("IMinitor Is Booting ,Please Wait (%ds)/....",ws);
+	for(int i=ws;i>=0;i--)
+	{
+		if(i>=10)
+			printf("\b\b\b\b(%d)",i);
+		else
+			printf("\b\b\b(%d)",i);
+
+		sleep(1);
+		fflush(0);
+	}
+
+
 	//初始化运行时参数设置---时间设置。
 	C_RunPara *pRunPara = C_RunPara::GetInstance();
 	pRunPara->Init(); 
@@ -174,6 +199,7 @@ int main(int argc, char** argv)
 	{
 		return -1; 
 	} 
+	
 
 	// 创建执行体
 	CInvoke Invoker;
