@@ -7,13 +7,19 @@
 
 bool g_bQuit = false;
 int g_LogLevel = 0;
+int g_nRunType = 0; // 1为守护进程 0为交互模式
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 
 int  CInvoke::Init()
 {
-	PrintProductInfo();
+	// 运行在交互模式
+	if(0 == g_nRunType)
+	{
+		PrintProductInfo();
+	}
+	
 
 	// 数据管理模块
 	CDataManager *pDM = CDataManager::GetInstance();
@@ -116,12 +122,12 @@ int  CInvoke::Init()
 		m_ptrDisk = new CheckDisk();
 		if(!m_ptrDisk->InitAndCheck())
 		{
-			printf("Initial Fail! Check Raid Status Fail!\n");
+			LOGFAT(0,"Initial Fail! Check Raid Status Fail!\n");
 			return -1;
 		}
 		else
 		{
-			printf("Raid Check Done.\n");
+			LOGINFFMT(0,"Raid Check Done.\n");
 		}
 	}
 
@@ -131,12 +137,12 @@ int  CInvoke::Init()
 		m_ptrNet = new Test_NetCard();
 		if(!m_ptrNet->InitAndCheck())
 		{
-			printf("Initial Fail! Check Eth Status Fail!\n");
+			LOGFAT(0,"Initial Fail! Check Eth Status Fail!\n");
 			return -1;
 		}
 		else
 		{
-			printf("Eth Check Done.\n");
+			LOGINFFMT(0,"Eth Check Done.\n");
 		}
 	}
 }
@@ -239,8 +245,13 @@ bool CInvoke::AddInitTask()
 	// 添加条件切换处理任务
 	ptrTaskList->AddTask(TASK_NUMBER_CONDSWITCH_ROUTINE,NULL,-1);
 
-	// 添加处理用户输入命令
-	ptrTaskList->AddTask(TASK_NUMBER_PROCESS_USERINPUT,NULL,0);
+	// 运行在交互模式
+	if(0 == g_nRunType)
+	{
+		// 添加处理用户输入命令
+		ptrTaskList->AddTask(TASK_NUMBER_PROCESS_USERINPUT,NULL,0);
+	}
+
 
 }
 
@@ -644,11 +655,11 @@ bool CInvoke::SwitchAllSMS()
 void CInvoke::Exit()
 {
 	LOGFAT(ERROR_POLICYTRI_EXIT,"Fault Of Policys Trigger Exit!");
-	printf("Fault Of Policys Trigger Exit! 5 Sec Waiting \n");
+	//printf("Fault Of Policys Trigger Exit! 5 Sec Waiting \n");
 	for(int i = 5;i > 0 ;i--)
 	{
 		sleep(1);
-		printf("%d sec ....\n",i);
+		//printf("%d sec ....\n",i);
 	}
 	
 	g_bQuit = true;

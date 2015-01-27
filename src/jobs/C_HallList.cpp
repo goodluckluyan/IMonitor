@@ -69,7 +69,7 @@ int C_HallList::Init()
 	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
 		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
 	{
-		printf("mysql open failed!\n");
+		LOG(0,"mysql open failed!\n");
 		return false;
 	}
 
@@ -235,7 +235,7 @@ bool C_HallList::ExeShell_Fork(std::string strPath,std::string strShell)
 
 		char buf[128]={'\0'};
 		snprintf(buf,sizeof(buf),"/bin/bash %s%s",strPath.c_str(),strShell.c_str());
-		printf("%s\n",buf);
+		LOGINFFMT(0,"%s\n",buf);
 		system(buf);
 		exit(0);
 	}
@@ -251,7 +251,7 @@ int C_HallList::GetPID(std::string strName,std::vector<int>& vecPID)
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
-		printf("popen fail\n");
+		LOG(0,"popen fail\n");
 		return -1;
 	}
 	char tmpbuf[128]={'\0'};
@@ -635,7 +635,7 @@ bool C_HallList::AddCondSwitchTask(std::string strHallID,std::string strCond,int
 	LOGERRFMT(ERROR_SMSBUSY_DELAYSWITCH,"Switch SMS:%s while SMS busy ,so delay switch SMS!",strHallID.c_str());
 	if(IsHaveCondSwitchTask(strHallID))
 	{
-		printf("Delay switch SMS(%s) task has been!\n ",strHallID.c_str());
+		LOGINFFMT(0,"Delay switch SMS(%s) task has been!\n ",strHallID.c_str());
 		return false;
 	}
 
@@ -686,7 +686,7 @@ bool C_HallList::ProcessCondSwitchTask()
 		
 		if(bCond)
 		{
-			printf("Condition Switch Task :Condition OK Swtich SMS(%s)",node.strHallID.c_str());
+			LOGINFFMT(0,"Condition Switch Task :Condition OK Swtich SMS(%s)",node.strHallID.c_str());
 			int nState;
 			SwitchSMS(false,node.strHallID,nState);
 			m_lstCondSwitch.erase(it++);

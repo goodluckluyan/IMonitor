@@ -11,6 +11,10 @@
 #include "para/C_Para.h"
 #include "webservice/C_SoapServer.h"
 
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+
 extern bool g_bWebServiceQuit;
 C_ThreadManage* C_ThreadManage::m_pInstance = NULL;
 int Webservicefunc(C_ThreadData *pThreadData)
@@ -44,7 +48,7 @@ void * Threadfunc(void* pvPara)
 		{
 			if(Webservicefunc(pThreadData) != 0)
 			{
-				printf("Webservicefunc failed!\n");//Add ErrorCtrl and log;
+				LOG(0,"Webservicefunc failed!\n");//Add ErrorCtrl and log;
 			}
 			if(pThreadData->m_bQuit)
 			{
@@ -72,7 +76,7 @@ void * Threadfunc(void* pvPara)
 				char a[1024];
 				memset(a, 0, 1024);
 				sprintf(a,"线程的任务编号没有找到位执行相关的处理函数 CommandNumber:%d", pThreadData->m_pTask->m_iCommandNumber); 
-				printf("%s\n",a);
+				//printf("%s\n",a);
 				iResult = pLogManage->CreateLogNumber(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TASK_NUMBER_NO_FIND);
 				pLogManage->WriteLog(iResult,a);
 				pThreadData->m_pTask->ReInit();			
@@ -89,7 +93,7 @@ void * Threadfunc(void* pvPara)
 			char a[1024];
 			memset(a, 0, 1024);
 			sprintf(a,"线程的任务类型错误。 CommandNumber:%d ", pThreadData->m_pTask->m_iCommandNumber); 
-			printf("%s\n",a);
+			//printf("%s\n",a);
 			iResult = pLogManage->CreateLogNumber(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TASK_TYPE);
 			pLogManage->WriteLog(iResult,a);
 			pThreadData->m_pTask->ReInit();					
@@ -132,7 +136,7 @@ void  C_ThreadManage::DeInit()
 {
 	g_bWebServiceQuit = true;
 	pthread_join(m_hWebserviceThread,NULL);
-	printf("WebService Thread Exit!\n");
+	LOGINFFMT(0,"WebService Thread Exit!\n");
 
 
 	int nLen = m_ThreadDataList.size();
@@ -168,7 +172,7 @@ void  C_ThreadManage::DeInit()
 		}
 	}
 	m_ThreadDataList.clear();
-	printf("Thread Pool Exit!\n");
+	LOGINFFMT(0,"Thread Pool Exit!\n");
 	
 	
 

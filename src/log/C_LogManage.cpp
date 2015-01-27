@@ -189,14 +189,14 @@ int C_LogManage::CheckLogPath(std::string &strBootPath)
 	{
 		err = errno;
 		sprintf(strTmp,"CheckLogPath() Error! errno:%d erorInfo:%s\n",err,strerror(err));
-		printf(strTmp);
+		//printf(strTmp);
 		C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_BOOT_PATH, strTmp);
 		return ERROR_GET_LOG_BOOT_PATH;
 	}
 	if(S_ISDIR(StatBuf.st_mode) == 0)
 	{
 		sprintf(strTmp,"CheckLogPath() Error! %s is not path!\n", strBootPath.c_str());
-		printf(strTmp);
+		//printf(strTmp);
 		C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_BOOT_PATH, strTmp);
 		return ERROR_GET_LOG_BOOT_PATH;
 	}
@@ -218,7 +218,7 @@ int C_LogManage::CheckLogPath(std::string &strBootPath)
 				err = errno;
 				sprintf(strTmp,"CheckLogPath() Error! mkdir(%s) error! errno:%d,errorInfo:%s \n",
 				       strSubPath.c_str(),err,strerror(err));
-				printf(strTmp);
+				//printf(strTmp);
 				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_CREATE_LOG_PATH, strTmp);
 				return ERROR_CREATE_LOG_PATH;
 			}
@@ -228,7 +228,7 @@ int C_LogManage::CheckLogPath(std::string &strBootPath)
 				err = errno;
 				sprintf(strTmp,"CheckLogPath() Error! stat(%s) error! errno:%d,errorInfo:%s \n",
 				       strSubPath.c_str(),err,strerror(err));
-				printf(strTmp);
+				//printf(strTmp);
 				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_PATH, strTmp);
 				return ERROR_GET_LOG_PATH;
 		} 
@@ -255,7 +255,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 				err = errno;
 				sprintf(strTmp,"DeletePreLog() Error! opendir(%s) error! errno:%d,errorInfo:%s \n",
 				       strPath.c_str(),err,strerror(err));
-				printf(strTmp);
+				//printf(strTmp);
 				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
 				return ERROR_DELETE_PRE_LOG;
 	}
@@ -268,7 +268,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 			err = errno;
 			sprintf(strTmp,"DeletePreLog() Error! stat(%s) error! errno:%d erorInfo:%s\n",
 			strName.c_str(),err,strerror(err));
-				printf(strTmp);
+				//printf(strTmp);
 				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
 				return ERROR_DELETE_PRE_LOG;
 		}
@@ -277,9 +277,9 @@ int C_LogManage::DeletePreLog(string &strPath)
 				if(unlink(strName.c_str())!= 0)
 				{
 						err = errno;
-						printf("DeletePreLog() Error! unlink(%s) error! errno:%d erorInfo:%s\n",
-						strName.c_str(),err,strerror(err));
-				printf(strTmp);
+						//printf("DeletePreLog() Error! unlink(%s) error! errno:%d erorInfo:%s\n",
+						//strName.c_str(),err,strerror(err));
+				//printf(strTmp);
 				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
 				return ERROR_DELETE_PRE_LOG;
 				}

@@ -18,6 +18,11 @@
 #endif
 #endif
 
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+
+
 #define ETHTOOL_GLINK        0x0000000a /* Get link status (ethtool_value) */
 
 typedef enum { IFSTATUS_UP, IFSTATUS_DOWN, IFSTATUS_ERR } interface_status_t;
@@ -63,7 +68,7 @@ int GetIFInfo(std::vector<std::string> &vecEth)
 
 	if(ioctl(fd,SIOCGIFCONF,&ifc) < 0)
 	{
-		printf("get if info error: %s",strerror(errno));
+		LOG(0,"get if info error: %s",strerror(errno));
 		return -1;
 	}
 
@@ -86,7 +91,7 @@ int GetIFInfo(std::vector<std::string> &vecEth)
 			continue;
 		}
 
-		printf("%s:%s\n",ifr->ifr_name,inet_ntoa(((struct sockaddr_in*)&(ifr->ifr_addr))->sin_addr));
+		LOGINFFMT(0,"%s:%s\n",ifr->ifr_name,inet_ntoa(((struct sockaddr_in*)&(ifr->ifr_addr))->sin_addr));
 		vecEth.push_back(ifr->ifr_name);
 		ifr++;
 	}
@@ -203,7 +208,7 @@ int Read_NetDataBytes(const char * eth_name  , char rwMode , unsigned long long&
 			result = sscanf( buf,"%llu\n", &bytes );
 			if(result == 0)//sscanf ß∞‹£¨‘Ú∑µªÿ0
 			{
-				printf( "Error:sscanf %s\n" , path );
+				LOG(0, "Error:sscanf %s\n" , path );
 				//return -1;
 			}
 		}
@@ -297,7 +302,7 @@ int Test_NetCard::Init()
 		}
 		else
 		{
-			printf( "Init Error:eth=%s ,Send nInitTx_bytes\n" , m_vecEth[nIndex].c_str() );
+			LOG(0, "Init Error:eth=%s ,Send nInitTx_bytes\n" , m_vecEth[nIndex].c_str() );
 			//return -11;
 		}
 	}
@@ -313,7 +318,7 @@ bool Test_NetCard::ReadEthinfoTable(std::map<std::string,int>& mapEthBaseInfo)
 	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
 		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
 	{
-		printf("mysql open failed!\n");
+		LOG(0,"mysql open failed!\n");
 		return false;
 	}
 
@@ -325,7 +330,7 @@ bool Test_NetCard::ReadEthinfoTable(std::map<std::string,int>& mapEthBaseInfo)
 	int nRows = 0 ;
 	if((nRows = query.numRow()) == 0)
 	{
-		printf("CDataManager Initial failed,ethinfo talbe no rows!\n");
+		LOG(0,"CDataManager Initial failed,ethinfo talbe no rows!\n");
 		return false;
 	}
 
@@ -525,7 +530,7 @@ bool Test_NetCard::InitAndCheck()
 		int nConnStatus = 0;
 		if(Check_EthLinkStatus(m_vecEth[i].c_str(),nConnStatus) == -1)
 		{
-			printf("Get EthLink Status Fail!\n");
+			LOG(0,"Get EthLink Status Fail!\n");
 			bRet = false;
 			break;
 		}
@@ -533,7 +538,7 @@ bool Test_NetCard::InitAndCheck()
 		{
 			if(nConnStatus != 1)
 			{
-				printf("%s Connect Status Down!\n",m_vecEth[i].c_str());
+				LOGINFFMT(0,"%s Connect Status Down!\n",m_vecEth[i].c_str());
 				break;
 			}
 		}

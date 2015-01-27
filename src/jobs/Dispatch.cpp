@@ -7,6 +7,9 @@
 #include "Invoke.h"
 
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+
 
 using namespace xercesc;
 CDispatch::CDispatch(void * ptrInvoker)
@@ -39,7 +42,7 @@ bool CDispatch::Init(std::string strPath)
 
 	if(access(strPath.c_str(),R_OK) < 0)
 	{
-		printf("CDispatch Init Read %s Failed!",strPath.c_str());
+		LOGERRFMT(0,"CDispatch Init Read %s Failed!",strPath.c_str());
 		xercesc::XMLPlatformUtils::Terminate();
 		return false;
 	}
@@ -259,7 +262,7 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 				for(int i = 0;i < vecStr.size();i++)
 				{
 					LOG(ERROR_DEVSTATUS_FAULT,vecStr[i]);
-					printf(vecStr[i].c_str());
+					//printf(vecStr[i].c_str());
 				}
 			}
 			break;

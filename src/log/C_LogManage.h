@@ -42,17 +42,17 @@ public:
 	{
 		if(iLevel > 3)
 		{
-			printf("日志级别设置错误。\n");
+			//printf("日志级别设置错误。\n");
 			return -1;
 		}
 		if(iModule <16 || iModule >26)
 		{
-			printf("日志模块编号设置错误。\n");
+			//printf("日志模块编号设置错误。\n");
 			return -1;
 		}
 		if((iModule != 22 && iSubModule != 0) || iSubModule >4 || iSubModule <0)
 		{
-			printf("子模块设置错误\n");
+			//printf("子模块设置错误\n");
 			return-1;
 		}
 			

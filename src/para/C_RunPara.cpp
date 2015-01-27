@@ -735,7 +735,7 @@ int ReadTmsDBData4Str( const std::string& sFieldName , std::string& retValue )
 	{
 		//strError = "打开数据库错误。";
 		strError = "Open DataBase Error.";
-		printf( "Error:%s\n" , strError.c_str() );
+		//printf( "Error:%s\n" , strError.c_str() );
 		return iResult;
 	}
 	char tmp[DATALEN]="";
@@ -747,7 +747,7 @@ int ReadTmsDBData4Str( const std::string& sFieldName , std::string& retValue )
 		mySql.close();	
 		//strError = "查询数据库错误";
 		strError = "Query DataBase Error.";
-		printf( "Error:%s\n" , strError.c_str() );
+		//printf( "Error:%s\n" , strError.c_str() );
 		return iResult;
 	}
 	recordset.seekRow(0);
@@ -758,7 +758,7 @@ int ReadTmsDBData4Str( const std::string& sFieldName , std::string& retValue )
 		{
 			//strError = "查询数据为NULL";
 			strError = "Query Data Is NULL.";
-			printf( "Error:%s\n" , strError.c_str() );
+			//printf( "Error:%s\n" , strError.c_str() );
 			iResult = -1;
 		}
 		else
@@ -770,7 +770,7 @@ int ReadTmsDBData4Str( const std::string& sFieldName , std::string& retValue )
 	{
 		//strError = "查询数据不存在";
 		strError = "Query Data Not Exist.";
-		printf( "Error:%s\n" , strError.c_str() );
+		//printf( "Error:%s\n" , strError.c_str() );
 		mySql.close();	
 		iResult = -1;
 	}
@@ -787,7 +787,7 @@ int ReadTmsDBData4Int( const std::string& sFieldName , int& retValue )
 	{
 		//strError = "打开数据库错误。";
 		strError = "Open DataBase Error.";
-		printf( "Error:%s\n" , strError.c_str() );
+		//printf( "Error:%s\n" , strError.c_str() );
 		return iResult;
 	}
 	char tmp[DATALEN]="";
@@ -799,7 +799,7 @@ int ReadTmsDBData4Int( const std::string& sFieldName , int& retValue )
 		mySql.close();	
 		//strError = "查询数据库错误";
 		strError = "Query DataBase Error.";
-		printf( "Error:%s\n" , strError.c_str() );
+		//printf( "Error:%s\n" , strError.c_str() );
 		return iResult;
 	}
 	recordset.seekRow(0);
@@ -810,7 +810,7 @@ int ReadTmsDBData4Int( const std::string& sFieldName , int& retValue )
 		{
 			//strError = "查询数据为NULL";
 			strError = "Query Data Is NULL.";
-			printf( "Error:%s\n" , strError.c_str() );
+			//printf( "Error:%s\n" , strError.c_str() );
 			iResult = -1;
 		}
 		else
@@ -822,7 +822,7 @@ int ReadTmsDBData4Int( const std::string& sFieldName , int& retValue )
 	{
 		//strError = "查询数据不存在";
 		strError = "Query Data Not Exist.";
-		printf( "Error:%s\n" , strError.c_str() );
+		//printf( "Error:%s\n" , strError.c_str() );
 		mySql.close();	
 		iResult = -1;
 	}

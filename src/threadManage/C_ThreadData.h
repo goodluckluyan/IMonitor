@@ -121,7 +121,7 @@ public:
 			}
 			iResult = pLogManage->CreateLogNumber(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TIMEOUT);
 			pLogManage->WriteLog(iResult,tmp);
-			printf("%s\n",tmp);
+			//printf("%s\n",tmp);
 			iResult = 0;
 		}
 		m_CS.LeaveCS();

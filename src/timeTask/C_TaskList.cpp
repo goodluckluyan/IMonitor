@@ -8,6 +8,11 @@
 #include "log/C_LogManage.h"
 #include "C_ErrorDef.h"
 
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_TIMETASK,0,errid,msg)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_TIMETASK,0,errid,fmt,##__VA_ARGS__)
+
+
+
 C_TaskList *C_TaskList::m_pInstance = NULL;
 C_TaskList* C_TaskList::GetInstance()
 {
@@ -164,7 +169,7 @@ int C_TaskList::RunTasks(int iCurTime)
 			iResult = pThreadManage->GetIdlThread(&pThreadData);
 			if(iResult != 0)
 			{
-				printf("Busy! No idle thread used !");
+				LOGINFFMT(0,"Busy! No idle thread used !");
 				return -1;
 			}
 			pThreadData->m_iRunType = 1;

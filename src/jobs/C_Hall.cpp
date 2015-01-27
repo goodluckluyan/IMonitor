@@ -124,7 +124,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 	}
 	else if(pid == 0)
 	{
-		printf("Fork Process(%d) Start SMS ... \n",getpid());
+		LOGINFFMT(0,"Fork Process(%d) Start SMS ... \n",getpid());
 		int nPos = m_SMS.strExepath.rfind('/');
 		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	
 		std::string strDir = m_SMS.strExepath.substr(0,nPos);
@@ -157,7 +157,7 @@ int C_Hall::Getpid(std::string strName,std::vector<int>& vecPID)
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
-		printf("popen fail\n");
+		LOG(0,"popen fail\n");
 		return -1;
 	}
 	char tmpbuf[128]={'\0'};
@@ -207,7 +207,7 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
  	snprintf(buf,sizeof(buf),"gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
 		,m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());
 //	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
-	printf("%s\n",buf);
+	LOGINFFMT(0,"%s\n",buf);
 	system(buf);
 	
 	//µÈ´ý3Ãë
@@ -233,7 +233,7 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 			{
 				exepid = vecNowPID[i];
 				bRun = true;
-				printf("Fork Process(%d) Start SMS_%s ... \n",exepid,m_SMS.strId.c_str());
+				LOGINFFMT(0,"Fork Process(%d) Start SMS_%s ... \n",exepid,m_SMS.strId.c_str());
 				break;
 			}
 		}
@@ -242,7 +242,7 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 		time(&tm2);
 		if( tm2-tm1 > 5)
 		{
-			printf("waiting 5 sec ,but SMS not run..\n");
+			LOG(0,"waiting 5 sec ,but SMS not run..\n");
 			break;
 		}
 	}
@@ -267,7 +267,7 @@ bool C_Hall::ShutDownSMS()
 		int nRet = kill(m_pid,9);
 		if(nRet == 0)
 		{
-			printf("Kill Local SMS(%d) Done!\n",m_pid);
+			LOGINFFMT(0,"Kill Local SMS(%d) Done!\n",m_pid);
 		}
 		return nRet == 0 ? true: false;
 	}

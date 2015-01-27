@@ -6,6 +6,7 @@
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGFATFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_FATAL,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 CMonitorSensor::CMonitorSensor()
 {
@@ -65,14 +66,14 @@ int CMonitorSensor::SendAndRecvResponse(const std::string &request, std::string 
 	int result = tcp.TcpConnect(m_strIP.c_str(), m_nPort);
 	if(result < 0)
 	{	
-		printf("CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
+		LOGFATFMT(0,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
 		return  ERROR_SENSOR_TCP_CONNECT;
 	}
 
 	result = tcp.BlockSend(request.c_str(), request.size());
 	if(result < 0)
 	{
-		printf("CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail !\n",request.c_str());
+		LOGFATFMT(0,"CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail !\n",request.c_str());
 		return  ERROR_SENSOR_TCP_SEND;
 	}
 
@@ -135,7 +136,6 @@ int CMonitorSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 // 获取另一台主机的调度程序的状态
 bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 {
-	//printf("GetOtherMonitorState Called!\n");
 	std::string strStateType ;
 	m_csMap.EnterCS();
 	std::map<int,std::string>::iterator it = m_mapStateType.find(nStateType);
@@ -178,7 +178,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 	int result = GetHttpContent(strResponse, retXml);
 	if(retXml.empty())
 	{
-		printf("GetOtherMonitorState:Parse Fail! xml is empty!\n");
+		LOGFATFMT(0,"GetOtherMonitorState:Parse Fail! xml is empty!\n");
 		return false;
 	}
 
@@ -321,7 +321,6 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 				bMain = atoi(str_state.c_str()) == 1 ?true : false;
 			}
 			XMLString::release(&pmain);
-			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 
 		// 读取iState节点
@@ -343,7 +342,6 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 				nState = atoi(str_state.c_str());
 			}
 			XMLString::release(&pstate);
-			//printf("%s,%s\n",str_name.c_str(),str_state.c_str());
 		}
 
 	}
@@ -685,7 +683,6 @@ bool  CMonitorSensor::ParseOtherMonitorEthState(std::string &retXml,std::vector<
 
 	try
 	{
-		//printf("%s\n",retXml.c_str());
 		ptrParser->parse(*ptrInputsource);
 		DOMDocument* ptrDoc = ptrParser->getDocument();	
 

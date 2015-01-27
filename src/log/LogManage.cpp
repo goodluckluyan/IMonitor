@@ -13,6 +13,7 @@
 #include <string>
 #include "para/C_RunPara.h"
 extern int g_LogLevel ;
+extern int g_nRunType;
 using namespace std;
 
 char* LogManage::logLevelStr[] = 
@@ -112,7 +113,8 @@ void LogManage::WriteLog(int logLevel, const char* inLogContent)
 		::fflush(m_pFile);
 	}
 	
-	if(logLevel >= g_LogLevel && logLevel >= 0 && logLevel <= 3)
+	//运行在交互模式下则输出
+	if(g_nRunType == 0 && logLevel >= g_LogLevel && logLevel >= 0 && logLevel <= 3)
 	{
 		char * ptrPntMsg = NULL;
 		ptrPntMsg = ft_Printf("%s%s:%s\n", logLevelStr[logLevel], theTime, msgData);

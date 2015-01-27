@@ -825,7 +825,7 @@ int CTMSSensor::ForkExeSh(std::string strExe)
 
 		char buf[128]={'\0'};
 		snprintf(buf,sizeof(buf),"sudo /bin/bash %s",strExe.c_str());
-		printf("%s\n",buf);
+		LOGFMT(LOG_INFO,"%s\n",buf);
 		system(buf);
 		exit(0);
 	}
