@@ -11,9 +11,9 @@
 #include "log/C_LogManage.h"
 #include "C_HallList.h"
 
-#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
-#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 const std::string smsname = "oristar_sms_server";
 
 // using namespace std;
@@ -495,27 +495,27 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 
 	LOGINFFMT(ERROR_SMSSWITCH_START,"SMS:%s Switch Start!",strHallID.c_str());
 	C_Hall * ptr = fit->second;
+
+	// 因为只有主机才能发起切换，所有要判断是否为主
+	if(m_ptrDM != NULL && C_Para::GetInstance()->IsMain())
+	{
+		SMSInfo smsinfo;
+		m_ptrDM->GetSMSStat(strHallID,smsinfo);
+
+		// 正在播放、正在导入、正在验证都禁止切换
+		if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
+			||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
+		{
+			LOGERRFMT(ERROR_SMSSWITCH_START,"Sms(%s) is busy cann't switch!",strHallID.c_str());
+			nState = 2;
+			return false;
+		}
+	}
 	
 	// 如果在本机运行
 	C_Para *ptrPara = C_Para::GetInstance();
 	if(ptr->IsLocal())
 	{
-		// 因为只有主机才能发起切换，所有要判断是否为主
-		if(m_ptrDM != NULL && C_Para::GetInstance()->IsMain())
-		{
-			SMSInfo smsinfo;
-			m_ptrDM->GetSMSStat(strHallID,smsinfo);
-
-			// 正在播放、正在导入、正在验证都禁止切换
-			if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
-				||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
-			{
-				LOGERRFMT(ERROR_SMSSWITCH_START,"Sms(%s) is busy cann't switch!",strHallID.c_str());
-				nState = 2;
-				return false;
-			}
-		}
-
 		bool bRet = ptr->ShutDownSMS();
 		LOGINFFMT(ERROR_SMSSWITCH_LOCALSHUTDOWN,"SMS:%s Switch local run sms shutdown!",strHallID.c_str());
 		if(C_Para::GetInstance()->IsMain())

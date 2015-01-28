@@ -352,7 +352,7 @@ u_int CppMySQL3DB::lastRowId()
 int MySqlDB_WriteErrorLog( int& errorCode ,const std::string& strError )
 {
 	int ret = 0;
-	int iLevel=LOG_FATAL, iModule=LOG_MODEL_DB, iSubModule=0;
+	int iLevel=ULOG_FATAL, iModule=LOG_MODEL_DB, iSubModule=0;
 	//int errorCode = 0;
 	ret = C_LogManage::GetInstance()->WriteLog( iLevel,  iModule, iSubModule, errorCode, strError);
 	return ret;

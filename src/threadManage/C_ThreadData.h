@@ -53,7 +53,7 @@ public:
 		}
 		else
 		{
-			C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_STATE,"Ïß³Ì×´Ì¬´íÎó");
+			C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_STATE,"Ïß³Ì×´Ì¬´íÎó");
 			//printf("suspend error pThreadData:%x\n",(unsigned int)this);
 		}
 		m_ThreadCS.LeaveCS();
@@ -119,7 +119,7 @@ public:
 			{
 				sprintf(tmp, "Thread Timeout threadId:%u m_iRunType:%d ",(unsigned int)m_hThread, m_iRunType);
 			}
-			iResult = pLogManage->CreateLogNumber(LOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TIMEOUT);
+			iResult = pLogManage->CreateLogNumber(ULOG_FATAL,LOG_MODEL_THREADMGR,0,ERROR_THREAD_TIMEOUT);
 			pLogManage->WriteLog(iResult,tmp);
 			//printf("%s\n",tmp);
 			iResult = 0;

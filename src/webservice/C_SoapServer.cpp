@@ -61,7 +61,7 @@ void* MonitorSoapServerMain(void *port)
 		{//gsoap can not provide services
 			soap_destroy(&csoapExtern);
 			soap_end(&csoapExtern);
-			C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_WEBS, 0, 0, "The client more than MaxClientAmount.");
+			C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_WEBS, 0, 0, "The client more than MaxClientAmount.");
 			continue;
 		}
 
@@ -82,7 +82,7 @@ void* MonitorSoapServerMain(void *port)
 			free(csoapSon[i]);
 			csoapSon[i] = NULL;
 		
-			C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_WEBS, 0, 0, "GetIdlThread failed.");
+			C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_WEBS, 0, 0, "GetIdlThread failed.");
 
 			continue;
 		}

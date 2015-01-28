@@ -102,7 +102,7 @@ int C_LogManage::WriteLog(int iLevel, int iModule, int iSubModule,c_u_int errorC
 			{
 				if((*it)->pLogManage == NULL)
 				{
-					C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_MEMORY_NOT_INIT,
+					C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_MEMORY_NOT_INIT,
 						     "内存访问错误 pLogManage 没有被初试化！");
 					return ERROR_MEMORY_NOT_INIT;
 				}
@@ -136,7 +136,7 @@ int C_LogManage::SetLogLevel(int iLevel, int iModele, int iSubModule)
 		{
 			if((*it)->pLogManage == NULL)
 			{
-					C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_MEMORY_NOT_INIT,
+					C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_MEMORY_NOT_INIT,
 						     "内存访问错误 pLogManage 没有被初试化！");
 					return ERROR_MEMORY_NOT_INIT;
 			}
@@ -144,7 +144,7 @@ int C_LogManage::SetLogLevel(int iLevel, int iModele, int iSubModule)
 			return 0;
 		}
 	}
-	C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_NOT_FIND_LOG_TYPE,
+	C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_NOT_FIND_LOG_TYPE,
 						     "与模块编号和子模块编号对应的日志类没有找到！");
 					return ERROR_NOT_FIND_LOG_TYPE;
 }
@@ -190,14 +190,14 @@ int C_LogManage::CheckLogPath(std::string &strBootPath)
 		err = errno;
 		sprintf(strTmp,"CheckLogPath() Error! errno:%d erorInfo:%s\n",err,strerror(err));
 		//printf(strTmp);
-		C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_BOOT_PATH, strTmp);
+		C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_BOOT_PATH, strTmp);
 		return ERROR_GET_LOG_BOOT_PATH;
 	}
 	if(S_ISDIR(StatBuf.st_mode) == 0)
 	{
 		sprintf(strTmp,"CheckLogPath() Error! %s is not path!\n", strBootPath.c_str());
 		//printf(strTmp);
-		C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_BOOT_PATH, strTmp);
+		C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_BOOT_PATH, strTmp);
 		return ERROR_GET_LOG_BOOT_PATH;
 	}
 	mode_t tmpMode = StatBuf.st_mode;
@@ -219,7 +219,7 @@ int C_LogManage::CheckLogPath(std::string &strBootPath)
 				sprintf(strTmp,"CheckLogPath() Error! mkdir(%s) error! errno:%d,errorInfo:%s \n",
 				       strSubPath.c_str(),err,strerror(err));
 				//printf(strTmp);
-				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_CREATE_LOG_PATH, strTmp);
+				C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_CREATE_LOG_PATH, strTmp);
 				return ERROR_CREATE_LOG_PATH;
 			}
 		}
@@ -229,7 +229,7 @@ int C_LogManage::CheckLogPath(std::string &strBootPath)
 				sprintf(strTmp,"CheckLogPath() Error! stat(%s) error! errno:%d,errorInfo:%s \n",
 				       strSubPath.c_str(),err,strerror(err));
 				//printf(strTmp);
-				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_PATH, strTmp);
+				C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_GET_LOG_PATH, strTmp);
 				return ERROR_GET_LOG_PATH;
 		} 
 		else
@@ -256,7 +256,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 				sprintf(strTmp,"DeletePreLog() Error! opendir(%s) error! errno:%d,errorInfo:%s \n",
 				       strPath.c_str(),err,strerror(err));
 				//printf(strTmp);
-				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
+				C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
 				return ERROR_DELETE_PRE_LOG;
 	}
 	while((dirp = readdir(dp)) != NULL)
@@ -269,7 +269,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 			sprintf(strTmp,"DeletePreLog() Error! stat(%s) error! errno:%d erorInfo:%s\n",
 			strName.c_str(),err,strerror(err));
 				//printf(strTmp);
-				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
+				C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
 				return ERROR_DELETE_PRE_LOG;
 		}
 		if(S_ISREG(StatBuf.st_mode)!= 0 &&  StatBuf.st_mtime < pRunPara->GetZeroTime())
@@ -280,7 +280,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 						//printf("DeletePreLog() Error! unlink(%s) error! errno:%d erorInfo:%s\n",
 						//strName.c_str(),err,strerror(err));
 				//printf(strTmp);
-				C_AdditionalLog::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
+				C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_DELETE_PRE_LOG, strTmp);
 				return ERROR_DELETE_PRE_LOG;
 				}
 		}

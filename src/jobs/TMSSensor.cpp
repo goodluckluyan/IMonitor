@@ -28,7 +28,7 @@
 using namespace std;
 using namespace xercesc;
 
-
+extern int g_nRunType;
 CTMSSensor::CTMSSensor():
 m_ptrDM(NULL)
 ,m_nPid(-1)
@@ -78,20 +78,20 @@ int CTMSSensor::GetTMSPID()
 	FILE *fp = popen(command,"r");
 	if(fp==NULL)
 	{
-		LOGFMT(LOG_ERROR,"failed to popen %s:%s\n",command,strerror(errno));
+		LOGFMT(ULOG_ERROR,"failed to popen %s:%s\n",command,strerror(errno));
 		state = -1;
 		return 0;//////////////return -1;
 	}
 	
 	if(fgets(buf,sizeof(buf)-1,fp)!=NULL)
 	{
-		LOGFMT(LOG_INFO,"[ Tms20_DeviceService ] Pid = %s",buf);
+		LOGFMT(ULOG_INFO,"[ Tms20_DeviceService ] Pid = %s",buf);
 		int result(0);
 		result = sscanf( buf,"%d", &m_nPid );
 		if(result == 0)//sscanf失败，则返回0
 		{
 			string error = "Error:pidof -s  Tms20_DeviceService\n";
-			LOGFMT(LOG_ERROR, "%s" , error.c_str() );
+			LOGFMT(ULOG_ERROR, "%s" , error.c_str() );
 			state = -1;
 		}
 	}
@@ -125,16 +125,16 @@ bool CTMSSensor::SwitchTMS()
 
 	if(C_Para::GetInstance()->IsMain())
 	{
-		LOGFMT(LOG_INFO,"Call Standby SwitchTMS Interface !");
+		LOGFMT(ULOG_INFO,"Call Standby SwitchTMS Interface !");
 		if( CallStandbySwitchTMS())
 		{
 			bRet &= true;
-			LOGFMT(LOG_INFO,"Call Standby SwitchTMS Interface OK!");
+			LOGFMT(ULOG_INFO,"Call Standby SwitchTMS Interface OK!");
 		}
 		else
 		{
 			bRet &= false;
-			LOGFMT(LOG_ERROR,"Call Standby SwitchTMS Interface Fail!");
+			LOGFMT(ULOG_ERROR,"Call Standby SwitchTMS Interface Fail!");
 		}
 	}
 	return bRet;
@@ -156,7 +156,7 @@ bool CTMSSensor::ShutDownTMS()
 			int nRet = Getpid("Tms20_DeviceService",vecPID);
 			if(nRet == 0 && vecPID.size()==0)
 			{
-				LOGFMT(LOG_INFO,"Kill Local TMS(%d) Done!\n",m_nPid);
+				LOGFMT(ULOG_INFO,"Kill Local TMS(%d) Done!\n",m_nPid);
 				bRet = true;
 				break;
 			}
@@ -176,7 +176,7 @@ bool CTMSSensor::StartTMS()
 {
 	if(!C_Para::GetInstance()->IsMain())
 	{
-		LOGFMT(LOG_ERROR,"Standby Host can't start TMS!\n");
+		LOGFMT(ULOG_ERROR,"Standby Host can't start TMS!\n");
 		return false;
 	}
 
@@ -206,14 +206,14 @@ bool CTMSSensor::StartTMS()
 			{
 				break;
 			}
-			LOGFMT(LOG_ERROR,"StartTMS GetTMSWorkState Fail!");
+			LOGFMT(ULOG_ERROR,"StartTMS GetTMSWorkState Fail!");
 			i++;
 		}
 
 		// 三次获取状态失败才开启TMS
 		if(i<3)
 		{
-			LOGFMT(LOG_ERROR,"StartTMS:TMS Run Normal On Other Host ,Can't Local Run!");
+			LOGFMT(ULOG_ERROR,"StartTMS:TMS Run Normal On Other Host ,Can't Local Run!");
 			return false;
 		}
 		
@@ -229,11 +229,11 @@ bool CTMSSensor::StartTMS()
 		 }
 
 		int nStartType =ptr->m_nStartSMSType;
-		if(nStartType == 1)
+		if(1 == nStartType || 1 == g_nRunType)
 		{
 			StartTMS_CurTerminal(strTMSPath);
 		}
-		else if(nStartType == 2)
+		else if(2 == nStartType &&0 == g_nRunType)
 		{
 			StartTMS_NewTerminal(strTMSPath);
 		}
@@ -269,7 +269,7 @@ int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
-		LOGFMT(LOG_ERROR,"%s popen fail",acExe);
+		LOGFMT(ULOG_ERROR,"%s popen fail",acExe);
 		return -1;
 	}
 	char tmpbuf[128]={'\0'};
@@ -313,7 +313,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 	char buf[256]={'\0'};
 	snprintf(buf,sizeof(buf),"gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"",
 		"TMS",strDir.c_str(),strTMSPath.c_str());
-	LOGFMT(LOG_INFO,"%s\n",buf);
+	LOGFMT(ULOG_INFO,"%s\n",buf);
 	system(buf);
 
 	//等待3秒
@@ -339,7 +339,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 			{
 				exepid = vecNowPID[i];
 				bRun = true;
-				LOGFMT(LOG_INFO,"Fork Process(%d) Start TMS ... \n",exepid);
+				LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",exepid);
 				break;
 			}
 		}
@@ -348,7 +348,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 		time(&tm2);
 		if( tm2-tm1 > 5)
 		{
-			LOGFMT(LOG_INFO,"waiting 5 sec ,but TMS not run..\n");
+			LOGFMT(ULOG_INFO,"waiting 5 sec ,but TMS not run..\n");
 			break;
 		}
 	}
@@ -376,8 +376,8 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 	}
 	else if(pid == 0)
 	{
-		LOGFMT(LOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
-		if(execl(strTMSPath.c_str(),"Tms20_DeviceService","",NULL) < 0)
+		LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
+		if(execl(strTMSPath.c_str(),"Tms20_DeviceService&","",NULL) < 0)
 		{
 			perror("execl error");
 			exit(0);
@@ -423,7 +423,7 @@ bool CTMSSensor::CallStandbySwitchTMS()
 
 	if(retXml.empty())
 	{
-		LOGFMT(LOG_ERROR,"CallStandbySwitchTMS:Parse Fail! xml is empty!\n");
+		LOGFMT(ULOG_ERROR,"CallStandbySwitchTMS:Parse Fail! xml is empty!\n");
 		return false;
 	}
 
@@ -459,7 +459,7 @@ bool CTMSSensor::GetTMSWorkState()
 		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
 	{
 		// 写错误日志
-		LOGFMT(LOG_ERROR,"GetTMSState InvokerWebServer Fail(%d)!",nInvokeRes);
+		LOGFMT(ULOG_ERROR,"GetTMSState InvokerWebServer Fail(%d)!",nInvokeRes);
 		return false;
 	}
 
@@ -469,7 +469,7 @@ bool CTMSSensor::GetTMSWorkState()
 
 	if(retXml.empty())
 	{
-		LOGFMT(LOG_ERROR,"GetTMSState:Parse Fail! xml is empty!\n");
+		LOGFMT(ULOG_ERROR,"GetTMSState:Parse Fail! xml is empty!\n");
 		return false;
 	}
 
@@ -513,7 +513,7 @@ bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,u
 		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
 	{
 		// 写错误日志
-		LOGFMT(LOG_ERROR,"NotifyTMSSMSSwitch InvokerWebServer Fail(%d)!",nInvokeRes);
+		LOGFMT(ULOG_ERROR,"NotifyTMSSMSSwitch InvokerWebServer Fail(%d)!",nInvokeRes);
 		return false;
 	}
 
@@ -523,7 +523,7 @@ bool CTMSSensor::NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,u
 
 	if(retXml.empty())
 	{
-		LOGFMT(LOG_ERROR,"NotifyTMSSMSSwitch:Parse Fail! xml is empty!");
+		LOGFMT(ULOG_ERROR,"NotifyTMSSMSSwitch:Parse Fail! xml is empty!");
 		return false;
 	}
 
@@ -557,14 +557,14 @@ bool  CTMSSensor::ParseXmlFromTMSState(std::string &retXml,int &nRet)
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("tmsState"));
 		if(ptrNodeList == NULL)
 		{
-			LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
+			LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
 			return false;
 		}
 		else 
 		{
 			if(ptrNodeList->getLength() == 0)
 			{
-				LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
+				LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
 				return false;
 			}
 			DOMNode* ptrNode = ptrNodeList->item(0);
@@ -582,7 +582,7 @@ bool  CTMSSensor::ParseXmlFromTMSState(std::string &retXml,int &nRet)
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -617,14 +617,14 @@ bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if(ptrNodeList == NULL)
 		{
-			LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMS:ret");
+			LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMS:ret");
 			return false;
 		}
 		else 
 		{
 			if(ptrNodeList->getLength() == 0)
 			{
-				LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMS:ret");
+				LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMS:ret");
 				return false;
 			}
 			DOMNode* ptrNode = ptrNodeList->item(0);
@@ -642,7 +642,7 @@ bool  CTMSSensor::ParseXmlFromTMS(std::string &retXml,int &nRet)
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -676,7 +676,7 @@ bool  CTMSSensor::ParseXmlFromOtherMonitor(std::string &retXml,int &nRet)
 		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if(ptrNodeList == NULL)
 		{
-			LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
+			LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseOtherMonitorState:没有找到bMain节点");
 			return false;
 		}
 		else
@@ -695,7 +695,7 @@ bool  CTMSSensor::ParseXmlFromOtherMonitor(std::string &retXml,int &nRet)
 	{
 		char* message =  XMLString::transcode( e.getMessage() );
 		XMLString::release( &message );
-		LOGIDFMT(LOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
+		LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
 		delete ptrParser;
 		ptrInputsource = NULL;
 		delete ptrInputsource;
@@ -733,14 +733,14 @@ int CTMSSensor::SendAndRecvResponse(bool bTMSWS,const std::string &request, std:
 	result = tcp.TcpConnect(strIP.c_str(), m_nTMSWBPort,delayTime);
 	if(result < 0)
 	{	
-		LOGFMT(LOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nTMSWBPort);
+		LOGFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nTMSWBPort);
 		return  ERROR_SENSOR_TCP_CONNECT;
 	}
 
 	result = tcp.BlockSend(request.c_str(), request.size());
 	if(result < 0)
 	{
-		LOGFMT(LOG_ERROR,"CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail(%s:%d) !\n",request.c_str(),
+		LOGFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail(%s:%d) !\n",request.c_str(),
 			m_strIP.c_str(),m_nTMSWBPort);
 		return  ERROR_SENSOR_TCP_SEND;
 	}
@@ -825,7 +825,7 @@ int CTMSSensor::ForkExeSh(std::string strExe)
 
 		char buf[128]={'\0'};
 		snprintf(buf,sizeof(buf),"sudo /bin/bash %s",strExe.c_str());
-		LOGFMT(LOG_INFO,"%s\n",buf);
+		LOGFMT(ULOG_INFO,"%s\n",buf);
 		system(buf);
 		exit(0);
 	}
@@ -843,7 +843,7 @@ bool CTMSSensor::UpdateDataBaseTMSPos(int nPosition)
 	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
 		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
 	{
-		LOGIDFMT(LOG_ERROR,0,"mysql open failed!");
+		LOGIDFMT(ULOG_ERROR,0,"mysql open failed!");
 		return false;
 	}
 
@@ -855,12 +855,12 @@ bool CTMSSensor::UpdateDataBaseTMSPos(int nPosition)
 		int nResult = mysql.execSQL(sql);
 		if(nResult != -1)
 		{
-			LOGFMT(LOG_INFO,"CTMSSensor:update system_config database OK<%s>",sql);
+			LOGFMT(ULOG_INFO,"CTMSSensor:update system_config database OK<%s>",sql);
 			break;
 		}
 		else
 		{
-			LOGFMT(LOG_ERROR,"CTMSSensor:update system_config database FAILED<%s>",sql);
+			LOGFMT(ULOG_ERROR,"CTMSSensor:update system_config database FAILED<%s>",sql);
 		}
 		i++;
 		sleep(1);
@@ -868,7 +868,7 @@ bool CTMSSensor::UpdateDataBaseTMSPos(int nPosition)
 
 	if(i == 3)
 	{
-		LOGFMT(LOG_ERROR,"CTMSSensor Update TMS RUN Position failed!<%s>",sql);
+		LOGFMT(ULOG_ERROR,"CTMSSensor Update TMS RUN Position failed!<%s>",sql);
 		return false;
 	}
 

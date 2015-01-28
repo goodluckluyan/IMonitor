@@ -6,10 +6,10 @@
 #include"DataManager.h"
 #include"log/C_LogManage.h"
 
-#define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGINF(msg)	  C_LogManage::GetInstance()->WriteLog(LOG_INFO,LOG_MODEL_JOBS,0,0,msg)
-#define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
-#define  LOGDEBFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_DEBUG,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+#define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGINF(msg)	  C_LogManage::GetInstance()->WriteLog(ULOG_INFO,LOG_MODEL_JOBS,0,0,msg)
+#define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+#define  LOGDEBFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_DEBUG,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
 						
 
 CDataManager *CDataManager::m_pinstance=NULL;

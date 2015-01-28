@@ -12,6 +12,9 @@
 #include <fcntl.h>
 #include <syslog.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 #include "threadManage/C_ThreadData.h"
 #include "threadManage/C_ThreadManage.h"
 #include "para/C_Para.h"
@@ -29,8 +32,8 @@ bool g_bReread = false;
 static void sig_fun(int iSigNum);
 
 
-#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,errid,msg)
-#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_OTHER,0,errid,fmt,##__VA_ARGS__)
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,errid,msg)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_OTHER,0,errid,fmt,##__VA_ARGS__)
 
 
 void sig_fun(int iSigNum)
@@ -38,7 +41,7 @@ void sig_fun(int iSigNum)
 	C_LogManage *pLogManage = C_LogManage::GetInstance();
 	char strInfo[1024];
 	sprintf(strInfo, "revc a signal number:%d ", iSigNum);
-	pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,strInfo);
+	pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,strInfo);
 
 	void *stack_p[20];
 	char **stack_info;
@@ -47,7 +50,7 @@ void sig_fun(int iSigNum)
 	stack_info = backtrace_symbols( stack_p, size);
 	for(int i=0; i<size; ++i)
 	{ 
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,stack_info[i]); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,stack_info[i]); 
 	}
 	free(stack_info);
 	if(0 == g_nRunType)
@@ -71,56 +74,56 @@ void InitSigFun(C_LogManage *pLogManage)
 {
 	if(signal(SIGINT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGINT"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGINT"); 
 	}
 	if(signal(SIGALRM,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
 	}
 //  防止关闭终端后，程序在后台运行，所有不处理SIGHUP信号，使用默认处理方式即结束进程
 // 	if(signal(SIGHUP,sig_fun) == SIG_ERR)
 // 	{
-// 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
+// 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
 // 	}  
 	if(signal(SIGPIPE,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 
 	}  
 	if(signal(SIGPOLL,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPOLL"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPOLL"); 
 	} 
 	if(signal(SIGPROF,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPROF"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPROF"); 
 	}
 	if(signal(SIGSTKFLT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGSTKFLT"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGSTKFLT"); 
 	} 
 // 	if(signal(SIGTERM,sig_fun) == SIG_ERR)
 // 	{
-// 		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGTERM"); 
+// 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_WEBSERVICE_CREATE_TRREAD,"add signal Number:SIGTERM"); 
 // 	}
 	if(signal(SIGUSR1,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR1"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR1"); 
 	}
 	if(signal(SIGUSR2,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR2"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGUSR2"); 
 	} 
 	if(signal(SIGVTALRM,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGVTALRM"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGVTALRM"); 
 	}  
 	if(signal(SIGIO,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGIO"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGIO"); 
 	} 
 	if(signal(SIGABRT,sig_fun) == SIG_ERR)
 	{
-		pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGABRT"); 
+		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGABRT"); 
 	}
 
 	// 忽略子进程结束时发送的SIGCLD信号 ，防止僵尸进程
@@ -219,7 +222,7 @@ int already_running(void)
 {
 	int fd;
 	char buf[16];
-	fd = open("/var/run/imonitor.pid",O_RDWR|O_CREAT,LOCKMODE);
+	fd = open("/var/run/oristar_imonitor.pid",O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 
 	struct flock lock;
 	lock.l_type=F_WRLCK;
@@ -340,7 +343,7 @@ int main(int argc, char** argv)
 
 		return -4; //Add Log and Erorr Ctrl;
 	}
-	pLogManage->WriteLog(LOG_FATAL,LOG_MODEL_OTHER,0, INFO_IMonitor_START_RUN,"IMonitor system start run!!!");	
+	pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0, INFO_IMonitor_START_RUN,"IMonitor system start run!!!");	
 
 	// 启动延时，为了解决主从机之间竞态条件的出现，防止启动sms的冲突。
 	srand(time(NULL));
@@ -460,7 +463,7 @@ int main(int argc, char** argv)
 	C_LogManage::DestoryInstance();
 	C_RunPara::DestoryInstance();
 	C_Para::DestoryInstance();
-	LOGINFFMT("IMonitor Exit!\n");
+	LOGINFFMT(0,"IMonitor Exit!\n");
 	return 0;
 }
 

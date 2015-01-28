@@ -15,12 +15,13 @@
 #include "C_ErrorDef.h"
 #include "log/C_LogManage.h"
 
-#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
-#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
-
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 #define BUFFLEN  2048
+
+extern int g_nRunType;
 using namespace std;
 using namespace xercesc;
 C_Hall::C_Hall(SMSInfo &stSms)
@@ -95,11 +96,11 @@ void C_Hall::GetRunHost(std::string &strIP,int &nPort)
 bool C_Hall::StartSMS(int &nPid)
 {
 	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
-	if(nStartType == 1)
+	if(nStartType == 1 || 1 == g_nRunType)
 	{
 		return StartSMS_CurTerminal(nPid);
 	}
-	else if(nStartType == 2)
+	else if(nStartType == 2 && 0 == g_nRunType)
 	{
 		return StartSMS_NewTerminal(nPid);
 	}
@@ -129,6 +130,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	
 		std::string strDir = m_SMS.strExepath.substr(0,nPos);
 		chdir(strDir.c_str());
+		strEXE += "&";
 		if(!strEXE.empty() && execl(m_SMS.strExepath.c_str(),strEXE.c_str(),
 		m_SMS.strConfpath.c_str(),NULL) < 0)
 		{

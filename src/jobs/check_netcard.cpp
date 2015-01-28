@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "para/C_Para.h"
 #include"database/CppMySQL3DB.h"
+#include "log/C_LogManage.h"
 
 #ifndef WIN32
 #define O_BINARY       0x8000  
@@ -18,9 +19,9 @@
 #endif
 #endif
 
-#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
-#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 
 #define ETHTOOL_GLINK        0x0000000a /* Get link status (ethtool_value) */
@@ -68,7 +69,7 @@ int GetIFInfo(std::vector<std::string> &vecEth)
 
 	if(ioctl(fd,SIOCGIFCONF,&ifc) < 0)
 	{
-		LOG(0,"get if info error: %s",strerror(errno));
+		LOGERRFMT(0,"get if info error: %s",strerror(errno));
 		return -1;
 	}
 
@@ -208,14 +209,14 @@ int Read_NetDataBytes(const char * eth_name  , char rwMode , unsigned long long&
 			result = sscanf( buf,"%llu\n", &bytes );
 			if(result == 0)//sscanfÊ§°Ü£¬Ôò·µ»Ø0
 			{
-				LOG(0, "Error:sscanf %s\n" , path );
+				LOGERRFMT(0, "Error:sscanf %s\n" , path );
 				//return -1;
 			}
 		}
 	}
 	else
 	{
-		perror("Open statistics ");
+		LOGERRFMT(0,"Open statistics ");
 		return -1;
 	}
 
@@ -302,7 +303,7 @@ int Test_NetCard::Init()
 		}
 		else
 		{
-			LOG(0, "Init Error:eth=%s ,Send nInitTx_bytes\n" , m_vecEth[nIndex].c_str() );
+			LOGERRFMT(0, "Init Error:eth=%s ,Send nInitTx_bytes\n" , m_vecEth[nIndex].c_str() );
 			//return -11;
 		}
 	}

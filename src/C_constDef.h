@@ -64,11 +64,11 @@ const int SMS_STATE_CPL_FINISHED = 404; // 验证成功
 const int SMS_STATE_CPL_FINISHED_ERROR = 405; // 验证失败
 
 //日志级别。
-const int LOG_DEBUG	= 0;
-const int LOG_INFO	= 1;
-const int LOG_ERROR	= 2;
-const int LOG_FATAL	= 3;
-const int DEFAULT_LOG_LEVEL = 0;
+const int ULOG_DEBUG	= 0;
+const int ULOG_INFO	= 1;
+const int ULOG_ERROR	= 2;
+const int ULOG_FATAL	= 3;
+const int UDEFAULT_LOG_LEVEL = 0;
 
 //日志所属模块
 const int LOG_MODEL_THREADMGR = 1;

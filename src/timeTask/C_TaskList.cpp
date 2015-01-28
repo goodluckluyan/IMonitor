@@ -8,8 +8,8 @@
 #include "log/C_LogManage.h"
 #include "C_ErrorDef.h"
 
-#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_TIMETASK,0,errid,msg)
-#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_TIMETASK,0,errid,fmt,##__VA_ARGS__)
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_TIMETASK,0,errid,msg)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_TIMETASK,0,errid,fmt,##__VA_ARGS__)
 
 
 
@@ -95,7 +95,7 @@ int C_TaskList::GetIdleTask(C_Task **ppTask)
 			return 0;
 		}			
 	}
-	C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_TIMETASK,0,ERROR_TASK_LIST_FULL,"任务对列已满，无空闲任务。");
+	C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_TIMETASK,0,ERROR_TASK_LIST_FULL,"任务对列已满，无空闲任务。");
 	return C_LogManage::GetInstance()->CreateLogNumber(3,18,0,ERROR_TASK_LIST_FULL); 
 	
 }

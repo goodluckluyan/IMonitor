@@ -49,6 +49,6 @@ int C_AdditionalLog::Init()
 {
 	string str;
 	C_RunPara::GetInstance()->GetExePath(str);
-	m_pLog = new LogManage(DEFAULT_LOG_LEVEL, 1024*10240, str.c_str(), "Tms20_DeviceService");
+	m_pLog = new LogManage(UDEFAULT_LOG_LEVEL, 1024*10240, str.c_str(), "Tms20_DeviceService");
 	return 0;
 }

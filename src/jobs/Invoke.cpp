@@ -8,8 +8,8 @@
 bool g_bQuit = false;
 int g_LogLevel = 0;
 int g_nRunType = 0; // 1为守护进程 0为交互模式
-#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(LOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
-#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(LOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
+#define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 
 int  CInvoke::Init()
@@ -422,10 +422,10 @@ void CInvoke::PrintLogLevel()
 {
 	printf("#-----------------------------------------------------------------------------#\n");
 	printf("# log Usage:																  #\n");
-	printf("# log	-0:print log level LOG_DEBUG\n");
-	printf("# log	-1:print log level LOG_INFO\n");
-	printf("# log	-2:print log level LOG_ERROR\n");
-	printf("# log	-3:print log level LOG_FATAL\n");
+	printf("# log	-0:print log level ULOG_DEBUG\n");
+	printf("# log	-1:print log level ULOG_INFO\n");
+	printf("# log	-2:print log level ULOG_ERROR\n");
+	printf("# log	-3:print log level ULOG_FATAL\n");
 	printf("#-----------------------------------------------------------------------------#\n");
 }
 
@@ -515,22 +515,22 @@ int CInvoke::Controller ()
 			if(vecParam[1] == "0")
 			{
 				g_LogLevel = 0;
-				printf("Log Level Change To 0:LOG_DEBUG\n");
+				printf("Log Level Change To 0:ULOG_DEBUG\n");
 			}
 			else if(vecParam[1] == "1")
 			{
 				g_LogLevel = 1;
-				printf("Log Level Change To 1:LOG_INFO\n");
+				printf("Log Level Change To 1:ULOG_INFO\n");
 			}
 			else if(vecParam[1] == "2")
 			{
 				g_LogLevel = 2;
-				printf("Log Level Change To 2:LOG_ERROR\n");
+				printf("Log Level Change To 2:ULOG_ERROR\n");
 			}
 			else if(vecParam[1] == "3")
 			{
 				g_LogLevel = 3;
-				printf("Log Level Change To 3:LOG_FATAL\n");
+				printf("Log Level Change To 3:ULOG_FATAL\n");
 			}
 			else
 			{
