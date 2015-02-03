@@ -74,6 +74,7 @@ public:
 	{
 		return iLogNumber & 0x0000FFFF;
 	}
+	int SetLogLevel(int iLevel);
 	int SetLogLevel(int iLevel, int iModele, int iSubModule);
 	//初始化日志目录 首先调用CheckLogPath，然后调用
 	int InitLogPath(std::string &strBootPath);

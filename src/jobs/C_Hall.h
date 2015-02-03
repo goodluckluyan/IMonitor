@@ -85,6 +85,9 @@ public:
 	int  CallStandbyStartOrCloseSMS(bool bSoC,std::string strOtherIP,int nPort,std::string strHallID);
 private:
 
+	// 检测本进程是否在运行
+	int ISSMSRun();
+
 	// 在当前终端启动SMS
 	bool StartSMS_CurTerminal(int &nPid);
 

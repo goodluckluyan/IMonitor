@@ -704,9 +704,10 @@ void CInvoke::StartALLSMS(bool bCheckOtherSMSRun)
 			return;
 		}
 
-		// 只有主机需要通过调用web接口的方式通知tms sms的位置，因为这时tms已在主机上启动。
+		// 只有主机需要通过调用web接口的方式通知tms sms的位置，因为这时tms已经在主机上启动。
 		int nRole=C_Para::GetInstance()->GetRole();
-		if(nRole==MAINROLE || nRole == TMPMAINROLE)
+		LOGINFFMT(0,"Role is %d Now",nRole);
+		if(nRole == ONLYMAINROLE || nRole == MAINROLE/*TMPMAINROLE*/)
 		{
 			for(int i = 0;i < vecHallID.size();i++)
 			{
@@ -716,8 +717,13 @@ void CInvoke::StartALLSMS(bool bCheckOtherSMSRun)
 				if(!strNewIP.empty() && nNewPort > 0)
 				{
 					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
-					LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
+					LOGINFFMT(0,"StartALLSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
 						strNewIP.c_str(),nNewPort,bRet?1:0);
+				}
+				else
+				{
+					LOGINFFMT(0,"StartALLSMS Get New SMS(%s) Run IP(%s) Port(%d) Err",
+						vecHallID[i].c_str(),strNewIP.c_str(),nNewPort);
 				}
 			}
 		}

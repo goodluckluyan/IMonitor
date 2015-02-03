@@ -29,6 +29,7 @@
 extern bool g_bQuit;
 extern int g_nRunType; // 1为守护进程 0为交互模式
 bool g_bReread = false;
+int g_RunState = 0; // 0为正在启动，1 为运行正常
 static void sig_fun(int iSigNum);
 
 
@@ -62,11 +63,13 @@ void sig_fun(int iSigNum)
 }
 void sigterm(int signo)
 {
+  syslog(LOG_ERR,"catch TERM Signal !");
   g_bQuit = true;
 }
 
 void sighup(int signo)
 {
+	syslog(LOG_ERR,"catch HUP Signal !");
 	g_bReread = true;
 }
 
@@ -85,7 +88,7 @@ void InitSigFun(C_LogManage *pLogManage)
 // 	{
 // 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
 // 	}  
-	if(signal(SIGPIPE,sig_fun) == SIG_ERR)
+	if(signal(SIGPIPE,SIG_IGN) == SIG_ERR)
 	{
 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGPIPE"); 
 	}  
@@ -138,7 +141,7 @@ void daemonize(const char *cmd)
 	struct sigaction	sa;
 
 	// Clear file creation mask.
-	umask(0);
+	umask(660);
 
 	
 	// Get maximum number of file descriptors.
@@ -184,11 +187,11 @@ void daemonize(const char *cmd)
 	
 	//  Change the current working directory to the root so
 	//  we won't prevent file systems from being unmounted. 
-	if (chdir("/") < 0)
-	{
-		printf("%s: can't change directory to /");
-		exit(-1);
-	}
+// 	if (chdir("/") < 0)
+// 	{
+// 		printf("%s: can't change directory to /");
+// 		exit(-1);
+// 	}
 
 	
 	// Close all open file descriptors.
@@ -350,11 +353,11 @@ int main(int argc, char** argv)
 	int ws = 0;
 	if(pPara->GetRole()!=MAINROLE)
 	{
-		ws = 20+rand()%10;
+		ws = 6+rand()%5;
 	}
 	else
 	{
-		ws= rand()%10;
+		ws= 2+rand()%3;
 	}
 
 	LOGINFFMT(0,"IMinitor Is Booting ,Please Wait (%ds)/....",ws);
@@ -417,6 +420,7 @@ int main(int argc, char** argv)
 	char strInfo[1024];
 	while(!g_bQuit)
 	{
+		g_RunState = 1;
 		iMillisecond = pRunPara->GetCurMillisecond(bDateSet);
 		++iCountTime;
 		iCountTime = iCountTime% 3000;
@@ -453,6 +457,8 @@ int main(int argc, char** argv)
 		{
 			pPara->ReadPara();
 			g_bReread = false;
+			LOGINFFMT(LOG_ERR,"RereadPara Set Log Level:%d",C_Para::GetInstance()->m_nWirteLogLevel);
+			C_LogManage::GetInstance()->SetLogLevel(C_Para::GetInstance()->m_nWirteLogLevel);
 		}
 	}
 

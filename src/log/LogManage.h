@@ -41,7 +41,7 @@
 class LogManage
 {
 public:
-	LogManage(int inLevel, int inMaxLogFileSize, const char *inLogDir, const char *inBaseLogName);
+	LogManage(int inLevel, unsigned long inMaxLogFileSize, const char *inLogDir, const char *inBaseLogName);
 	~LogManage();
 
 	void WriteLog(int logLevel, const char *inLogContent);
@@ -95,12 +95,12 @@ private:
 	volatile int		 m_logLevel;
 	char	 m_logDir[MAX_DIR_LENGTH];
 	char	 m_baseLogName[MAX_BASE_LOGNAME_LEN];
-	int		 m_maxLogFileSize;
+	unsigned long		 m_maxLogFileSize;
 
 	//char* GetLogName();
 	//char* GetLogDir();
 
-	int	RenameLogFile(const char* inFileName);
+	int	RenameLogFile(char* inFileName);
 	//Bool16	DoesFileExist(const char *inPath);
 	//char*	GetLogPath(char *extension);
 	int	ft_fPrintf(const char *fmt, ...);

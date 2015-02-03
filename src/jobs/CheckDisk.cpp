@@ -198,7 +198,7 @@ int CheckDisk::GetDickInfoLog(std::string ppath)
 {
 	int iResult;
 	char cmd[256]={'\0'};
-	snprintf(cmd,sizeof(cmd),"sudo /usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -LDInfo -LALL -aAll > %s",ppath.c_str());
+	snprintf(cmd,sizeof(cmd),"/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -LDInfo -LALL -aAll > %s",ppath.c_str());
 	iResult = system( cmd);
 	sleep(3);
 //	if (iResult != 0)
@@ -206,7 +206,7 @@ int CheckDisk::GetDickInfoLog(std::string ppath)
 //		return CHECKDISK_ERROR_NO_INFOLOG;
 //	}
 
-	snprintf(cmd,sizeof(cmd), "sudo /usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -PDList -aAll >> %s",ppath.c_str());
+	snprintf(cmd,sizeof(cmd), "/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -PDList -aAll >> %s",ppath.c_str());
 	iResult = system(cmd);
 //	if (iResult != 0)
 //	{

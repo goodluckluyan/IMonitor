@@ -70,8 +70,8 @@ bool CTMSSensor ::Init(std::string strIP,int nPort,int nTMSWSPort)
 int CTMSSensor::GetTMSPID()
 {	
 	int state = 0;
-	char buf[20] = {0};
-	char command[] = "pidof  -s  Tms20_DeviceService";
+	char buf[256] = {0};
+	char command[] = "ps -ef|grep Tms20_DeviceService|grep -v 'grep Tms20_DeviceService'|awk '{print $2}'";//"pidof  -s  Tms20_DeviceService";
 
 	m_nPid = 0; //-1;
 	
@@ -87,7 +87,11 @@ int CTMSSensor::GetTMSPID()
 	{
 		LOGFMT(ULOG_INFO,"[ Tms20_DeviceService ] Pid = %s",buf);
 		int result(0);
-		result = sscanf( buf,"%d", &m_nPid );
+		int pid = atoi(buf);
+		if( pid != m_nPid)
+		{
+			m_nPid = pid;
+		}
 		if(result == 0)//sscanf失败，则返回0
 		{
 			string error = "Error:pidof -s  Tms20_DeviceService\n";
@@ -264,8 +268,8 @@ bool CTMSSensor::StartTMS()
 // 获取指定进程的pid
 int CTMSSensor::Getpid(std::string strName,std::vector<int>& vecPID)
 {	
-	char acExe[64]={'\0'};
-	snprintf(acExe,sizeof(acExe),"pidof %s",strName.c_str());
+	char acExe[256]={'\0'};
+	snprintf(acExe,sizeof(acExe),"ps -ef|grep %s|grep -v 'grep %s'|awk '{print $2}'",strName.c_str(),strName.c_str());
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
@@ -311,7 +315,7 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 	}
 
 	char buf[256]={'\0'};
-	snprintf(buf,sizeof(buf),"gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"",
+	snprintf(buf,sizeof(buf),"sudo gnome-terminal --title=\"%s\" --working-directory=%s -e \"%s\"",
 		"TMS",strDir.c_str(),strTMSPath.c_str());
 	LOGFMT(ULOG_INFO,"%s\n",buf);
 	system(buf);
@@ -326,8 +330,8 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 		sleep(1);
 		std::vector<int> vecNowPID;
 		if(Getpid(strEXE,vecNowPID) < 0)
-			//if(Getpid("top",vecNowPID) < 0)
 		{
+			LOGFMT(LOG_LERROR,"StartTMS_NewTerminal Getpid Failed !");
 			return false;
 		}
 
@@ -368,6 +372,13 @@ bool CTMSSensor::StartTMS_NewTerminal(std::string strTMSPath)
 // 启动tms在当前终端
 bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 {
+
+	struct rlimit rl;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+	{
+		return false;
+	}
+
 	pid_t pid;
 	if((pid = fork()) < 0)
 	{
@@ -376,6 +387,17 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 	}
 	else if(pid == 0)
 	{
+
+		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
+		if(rl.rlim_max == RLIM_INFINITY)
+		{
+			rl.rlim_max = 1024;
+		}
+		for(int i = 3 ;i < rl.rlim_max;i++)
+		{
+			close(i);
+		}
+
 		LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
 		if(execl(strTMSPath.c_str(),"Tms20_DeviceService&","",NULL) < 0)
 		{

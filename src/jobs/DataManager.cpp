@@ -368,6 +368,14 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
+	
+	// 正在启动
+	if(0 == nState)
+	{
+	   return true;
+	}
+
+	// 获取状态失败
 	if(-1 == nState)
 	{
 		time_t tm;
@@ -422,7 +430,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
 		// 发现主机出现时，把临时主改回备
-		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE)
+		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE )
 		{	
 			stError er;
 			std::vector<stError> vecRE;
@@ -434,7 +442,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 			}
 		}
-		else
+		else if(nState == MAINROLE)
 		{
 			stError er;
 			std::vector<stError> vecRE;

@@ -246,8 +246,8 @@ bool C_HallList::ExeShell_Fork(std::string strPath,std::string strShell)
 
 int C_HallList::GetPID(std::string strName,std::vector<int>& vecPID)
 {	
-	char acExe[64]={'\0'};
-	snprintf(acExe,64,"pidof %s",strName.c_str());
+	char acExe[256]={'\0'};
+	snprintf(acExe,sizeof(acExe),"ps -ef|grep %s|grep -v \"grep %s\"|awk '{print $2}'",strName.c_str(),strName.c_str());
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{

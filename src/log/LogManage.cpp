@@ -8,10 +8,11 @@
  * @date 2008-11-20
  *
  */
-
+#include <sys/stat.h>
 #include "LogManage.h"
 #include <string>
 #include "para/C_RunPara.h"
+
 extern int g_LogLevel ;
 extern int g_nRunType;
 using namespace std;
@@ -24,7 +25,7 @@ char* LogManage::logLevelStr[] =
 	"FATAL"
 };
 
-LogManage::LogManage(int inLevel, int inMaxLogFileSize, const char *inLogDir, const char *inBaseLogName)
+LogManage::LogManage(int inLevel, unsigned long inMaxLogFileSize, const char *inLogDir, const char *inBaseLogName)
 :m_pFile(NULL),
 m_logLevel(inLevel),
 m_maxLogFileSize(inMaxLogFileSize)
@@ -148,7 +149,10 @@ int LogManage::CheckRollLog()
         return LOG_OK;
 
     //now check size based log rolling
-    unsigned long theCurrentPos = ::ftell(m_pFile);
+    //unsigned long theCurrentPos = ::ftell(m_pFile);
+	struct stat filestate;
+    stat(m_logFullPath,&filestate);
+	unsigned long theCurrentPos = filestate.st_size;
 
     //max_transfer_log_size being 0 is a signal to ignore the setting.
     if ((m_maxLogFileSize != 0) && (theCurrentPos > ((unsigned long)m_maxLogFileSize)))
@@ -176,7 +180,7 @@ int LogManage::RollLog()
     return result;
 }
 
-int LogManage::RenameLogFile(const char* inFileName)
+int LogManage::RenameLogFile(char* inFileName)
 {
 	int	theErr;
 	char	newLogFullPath[MAX_LOGFILE_FULLPATH_LENGTH];
@@ -189,7 +193,7 @@ int LogManage::RenameLogFile(const char* inFileName)
 
 	//loop until we find a unique name to rename this file
     //and append the log number and suffix	
-	for(int x = 0; (theErr == 0) && (x<=1000); x++)
+	for(int x = 0; x<=1000; x++)
 	{
 		if (x  == 1000) //we don't have any digits left, so just reuse the "---" until tomorrow...
 		{
@@ -205,20 +209,34 @@ int LogManage::RenameLogFile(const char* inFileName)
 		//assume that when ::access returns -1, it is because
 		//the file doesn't exist. Once that happens, we have a unique name
 		theErr = ::access(newLogFullPath, 0);
+		if(theErr == 0)
+		{
+			struct stat filestate;
+			stat(newLogFullPath,&filestate);
+			if(filestate.st_size < m_maxLogFileSize)
+			{
+				break;
+			}
+		}
+		else
+		{
+			break;
+		}
     }
 	
-
+		
 	//rename the file. Use posix rename function
-	int result = ::rename(inFileName, newLogFullPath);
+	//int result = ::rename(inFileName, newLogFullPath);
+	strcpy(inFileName,newLogFullPath);
 
-	if (result == -1)
-	{
-		return LOG_FAIL;
-	}
-	else
-	{
+// 	if (result == -1)
+// 	{
+// 		return LOG_FAIL;
+// 	}
+// 	else
+//	{
 		return LOG_OK;
-	}
+//	}
 }
 
 int LogManage::EnableLog()
@@ -232,7 +250,7 @@ int LogManage::EnableLog()
 	//create a new file if it does not exist
 	//open a log file if it exists and set the pointer to the end of the file
 	m_pFile = ::fopen(m_logFullPath, "a+");//open for "append"
-
+	
 	if (NULL != m_pFile)
 	{
 		/*delete  by wangzhongping at 2102-7-29
@@ -244,6 +262,7 @@ int LogManage::EnableLog()
 		string str;
 		C_RunPara::GetInstance()->GetCurDate(str);
 		strcpy(m_logCreateTime,str.c_str());
+	
 		//add end
 		return LOG_OK;
 	}

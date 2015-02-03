@@ -117,6 +117,12 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 		return false;
 	}
 
+	struct rlimit rl;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+	{
+		return false;
+	}
+
 	pid_t pid ;
 	if((pid = fork()) < 0)
 	{
@@ -125,7 +131,18 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 	}
 	else if(pid == 0)
 	{
-		LOGINFFMT(0,"Fork Process(%d) Start SMS ... \n",getpid());
+
+		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
+		if(rl.rlim_max == RLIM_INFINITY)
+		{
+			rl.rlim_max = 1024;
+		}
+		for(int i = 3 ;i < rl.rlim_max;i++)
+		{
+			close(i);
+		}
+
+		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
 		int nPos = m_SMS.strExepath.rfind('/');
 		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	
 		std::string strDir = m_SMS.strExepath.substr(0,nPos);
@@ -139,7 +156,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 		}
 	}
 
-	//等待1秒
+	//等待2秒
 	sleep(2);
 
 	if(pid > 0)
@@ -154,8 +171,8 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 // 获取指定命令的pid
 int C_Hall::Getpid(std::string strName,std::vector<int>& vecPID)
 {	
-	char acExe[64]={'\0'};
-	snprintf(acExe,sizeof(acExe),"pidof %s",strName.c_str());
+	char acExe[256]={'\0'};
+	snprintf(acExe,sizeof(acExe),"ps -ef|grep %s|grep -v \"grep %s\"|awk '{print $2}'",strName.c_str(),strName.c_str());
 	FILE *pp = popen(acExe,"r");
 	if(!pp)
 	{
@@ -202,11 +219,12 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 	std::vector<int> vecCurPID;
 	if(Getpid(strEXE,vecCurPID) < 0)
 	{
+		LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
 		return false;
 	}
 	
 	char buf[256]={'\0'};
- 	snprintf(buf,sizeof(buf),"gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
+ 	snprintf(buf,sizeof(buf),"sudo gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
 		,m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());
 //	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
 	LOGINFFMT(0,"%s\n",buf);
@@ -222,8 +240,8 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 		sleep(1);
 		std::vector<int> vecNowPID;
 		if(Getpid(strEXE,vecNowPID) < 0)
-		//if(Getpid("top",vecNowPID) < 0)
 		{
+			LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
 			return false;
 		}
 
@@ -280,6 +298,27 @@ bool C_Hall::ShutDownSMS()
 
 }
 
+int C_Hall::ISSMSRun()
+{
+	char buf[64]={'\0'};
+	snprintf(buf,sizeof(buf),"ps %d|grep %d|awk '{print $1}'",(int)m_pid,(int)m_pid);
+	
+	FILE *pp = popen(buf,"r");
+	if(!pp)
+	{
+		LOG(0,"popen fail\n");
+		return -1;
+	}
+	char tmpbuf[128]={'\0'};
+	std::vector<std::string> vecBuf;
+	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+	{
+		vecBuf.push_back(tmpbuf);
+	}
+	pclose(pp);
+	LOGINFFMT(0,"%s (%d)",buf,vecBuf.size());
+	return vecBuf.size()>0;
+}
 
 //获取SMS 运行状态
 int C_Hall::GetSMSWorkState( int &state, string &info)
@@ -292,17 +331,22 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 
 	if(IsLocal())
 	{
-		std::vector<int> vecPID;
-		Getpid(m_SMS.strExepath,vecPID);
-		if(vecPID.size() == 0)
+		int n = -1;
+		if(!ISSMSRun())
 		{
-			LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
-			int nPID;
-			StartSMS(nPID);
-		}
-		else
-		{
-			m_pid = vecPID[0];
+			int i = 0;
+			while(!ISSMSRun() && i<3)
+			{
+				i++;
+			}
+			
+			if(3==i)
+			{
+				LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
+				int nPID;
+				StartSMS(nPID);
+			}
+			
 		}
 	}
 	

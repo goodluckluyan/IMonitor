@@ -148,6 +148,24 @@ int C_LogManage::SetLogLevel(int iLevel, int iModele, int iSubModule)
 						     "与模块编号和子模块编号对应的日志类没有找到！");
 					return ERROR_NOT_FIND_LOG_TYPE;
 }
+
+int C_LogManage::SetLogLevel(int iLevel)
+{
+	list<PLOG_STRUCT>::iterator it = m_listLog.begin();
+	for(; it != m_listLog.end(); ++it)
+	{
+
+		if((*it)->pLogManage == NULL)
+		{
+			C_AdditionalLog::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_LOGMGR,0,ERROR_MEMORY_NOT_INIT,
+				"内存访问错误 pLogManage 没有被初试化！");
+			return ERROR_MEMORY_NOT_INIT;
+		}
+		(*it)->pLogManage->SetLogLevel(iLevel);
+
+	}
+	return 0;
+}
 int C_LogManage::InitLogPath(std::string &strBootPath)
 {
 	m_strBootPath = strBootPath;

@@ -7,10 +7,12 @@
 #include "jobs/Invoke.h"
 using namespace std;
 
+extern int g_RunState;
 int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 {
+	int nRole = C_Para::GetInstance()->GetRole();
 	ret.bMain = C_Para::GetInstance()->IsMain();
-	ret.iState = 0;
+	ret.iState = 0 == g_RunState ? 0 :nRole;
 	return 0;
 }
 
