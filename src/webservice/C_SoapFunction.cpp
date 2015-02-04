@@ -12,6 +12,8 @@ int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 {
 	int nRole = C_Para::GetInstance()->GetRole();
 	ret.bMain = C_Para::GetInstance()->IsMain();
+
+	// 如果正在启动时状态为0，启动完成后状态为本机现在的角色
 	ret.iState = 0 == g_RunState ? 0 :nRole;
 	return 0;
 }

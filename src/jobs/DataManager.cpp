@@ -369,7 +369,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
 	
-	// 正在启动
+	// 对端机正在启动不作处理
 	if(0 == nState)
 	{
 	   return true;
@@ -426,10 +426,11 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 		return true;
 	}   
 
+	// 启动正常后，nState的状态为对端机所处的角色
 	// 两端都是主
 	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
-		// 发现主机出现时，把临时主改回备
+		//本机为备机时 发现主机出现时，把临时主改回备
 		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE )
 		{	
 			stError er;
@@ -442,6 +443,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 			}
 		}
+		// 真正存在两个真正的主时做如下处理
 		else if(nState == MAINROLE)
 		{
 			stError er;

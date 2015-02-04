@@ -88,7 +88,7 @@ int CTMSSensor::GetTMSPID()
 		LOGFMT(ULOG_INFO,"[ Tms20_DeviceService ] Pid = %s",buf);
 		int result(0);
 		int pid = atoi(buf);
-		if( pid != m_nPid)
+		if( 0 != pid && pid != m_nPid)
 		{
 			m_nPid = pid;
 		}
@@ -396,6 +396,17 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 		for(int i = 3 ;i < rl.rlim_max;i++)
 		{
 			close(i);
+		}
+
+		// 为了防止TMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
+		// 因为TMS会继承调度软件的信号处理方式,调度软件的信号处理方法是忽略。
+		struct sigaction sa;
+		sa.sa_handler=SIG_DFL;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		if(sigaction(SIGCHLD,&sa,NULL)<0)
+		{
+		       LOGFMT(ULOG_ERROR,"cannot Set SIGCHLD Signal Catchfun! ");
 		}
 
 		LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
