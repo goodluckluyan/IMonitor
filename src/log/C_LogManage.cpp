@@ -306,6 +306,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 	return 0;
 }
 
+#define LOGMAXSIZE 5000000
 int C_LogManage::CreateLogStruct(std::string &strPath)
 {
 	int nWriteLogLevel = C_Para::GetInstance()->m_nWirteLogLevel;
@@ -316,49 +317,49 @@ int C_LogManage::CreateLogStruct(std::string &strPath)
 	pLog->iModule = LOG_MODEL_THREADMGR;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "ThreadManage";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "ThreadManage");
+	pLog->pLogManage = new LogManage(nWriteLogLevel, LOGMAXSIZE, strTmpPath.c_str(), "ThreadManage");
 	m_listLog.push_back(pLog);
 	
 	pLog = new LOG_STRUCT;
 	pLog->iModule = LOG_MODEL_TIMETASK;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "TimeTask";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "TimeTask");
+	pLog->pLogManage = new LogManage(nWriteLogLevel, LOGMAXSIZE, strTmpPath.c_str(), "TimeTask");
 	m_listLog.push_back(pLog);		
 	
 	pLog = new LOG_STRUCT;
 	pLog->iModule = LOG_MODEL_DB;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "DataBase";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "DataBase");
+	pLog->pLogManage = new LogManage(nWriteLogLevel,LOGMAXSIZE, strTmpPath.c_str(), "DataBase");
 	m_listLog.push_back(pLog);		
 	
 	pLog = new LOG_STRUCT;
 	pLog->iModule = LOG_MODEL_WEBS;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "Webservice";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "Webservice");
+	pLog->pLogManage = new LogManage(nWriteLogLevel, LOGMAXSIZE, strTmpPath.c_str(), "Webservice");
 	m_listLog.push_back(pLog);
 
 	pLog = new LOG_STRUCT;
 	pLog->iModule = LOG_MODEL_JOBS;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "jobs";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "jobs");
+	pLog->pLogManage = new LogManage(nWriteLogLevel, LOGMAXSIZE, strTmpPath.c_str(), "jobs");
 	m_listLog.push_back(pLog);
 	
 	pLog = new LOG_STRUCT;
 	pLog->iModule = LOG_MODEL_OTHER;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "Other";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "Other");
+	pLog->pLogManage = new LogManage(nWriteLogLevel, LOGMAXSIZE, strTmpPath.c_str(), "Other");
 	m_listLog.push_back(pLog);
 	
 	pLog = new LOG_STRUCT;
 	pLog->iModule = LOG_MODEL_LOGMGR;
 	pLog->iSubModule = 0;
 	pLog->strLogName = strPath + "LogMgr";
-	pLog->pLogManage = new LogManage(nWriteLogLevel, 1024*10240, strTmpPath.c_str(), "LogMgr");
+	pLog->pLogManage = new LogManage(nWriteLogLevel, LOGMAXSIZE, strTmpPath.c_str(), "LogMgr");
 	m_listLog.push_back(pLog);
 	return 0;		
 }

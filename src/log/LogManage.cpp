@@ -9,6 +9,7 @@
  *
  */
 #include <sys/stat.h>
+#include <syslog.h>
 #include "LogManage.h"
 #include <string>
 #include "para/C_RunPara.h"
@@ -149,10 +150,10 @@ int LogManage::CheckRollLog()
         return LOG_OK;
 
     //now check size based log rolling
-    //unsigned long theCurrentPos = ::ftell(m_pFile);
-	struct stat filestate;
-    stat(m_logFullPath,&filestate);
-	unsigned long theCurrentPos = filestate.st_size;
+    unsigned long theCurrentPos = ::ftell(m_pFile);
+// 	struct stat filestate;
+//  fstat(fileno(m_pFile),&filestate);
+// 	unsigned long theCurrentPos = filestate.st_size;
 
     //max_transfer_log_size being 0 is a signal to ignore the setting.
     if ((m_maxLogFileSize != 0) && (theCurrentPos > ((unsigned long)m_maxLogFileSize)))
@@ -213,6 +214,7 @@ int LogManage::RenameLogFile(char* inFileName)
 		{
 			struct stat filestate;
 			stat(newLogFullPath,&filestate);
+			syslog(LOG_INFO,"%s : %d",newLogFullPath,filestate.st_size);
 			if(filestate.st_size < m_maxLogFileSize)
 			{
 				break;

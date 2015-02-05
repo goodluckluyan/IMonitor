@@ -25,6 +25,7 @@ struct stConditionSwitch
 	std::string strHallID;
 	std::string strCond;
 	int nVal;
+	int nTriaggerCnt;
 };
 
 

@@ -142,6 +142,17 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 			close(i);
 		}
 
+		// 为了防止SMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
+		// 因为SMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
+		struct sigaction sa;
+		sa.sa_handler=SIG_DFL;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		if(sigaction(SIGCHLD,&sa,NULL)<0)
+		{
+			LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
+		}
+
 		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
 		int nPos = m_SMS.strExepath.rfind('/');
 		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	

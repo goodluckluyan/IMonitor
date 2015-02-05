@@ -27,9 +27,9 @@
 #include "execinfo.h"
 
 extern bool g_bQuit;
-extern int g_nRunType; // 1为守护进程 0为交互模式
-bool g_bReread = false;
-int g_RunState = 0; // 0为正在启动，1 为运行正常
+extern int g_nRunType;  // 1为守护进程 0为交互模式
+bool g_bReread = false; // 是否重读配置文件
+int g_RunState = 0;     // 0为正在启动，1 为运行正常
 static void sig_fun(int iSigNum);
 
 
@@ -58,8 +58,6 @@ void sig_fun(int iSigNum)
 	{
 		fflush(NULL);
 	}
-	
-
 }
 void sigterm(int signo)
 {
@@ -262,6 +260,7 @@ int main(int argc, char** argv)
 		   daemonize("oristar_imonitor");
 		   g_nRunType = 1;
 		
+		   // 注册SIGTERM信号处理程序
 		   struct sigaction sa;
 		   sa.sa_handler = sigterm;
 		   sigemptyset(&sa.sa_mask);
@@ -272,7 +271,8 @@ int main(int argc, char** argv)
 			   syslog(LOG_ERR,"can't catch SIGTERM:%s",strerror(errno));
 			   exit(1);
 		   }
-
+			
+		   // 注册SIGHUP信号处理程序
 		   sa.sa_handler = sighup;
 		   sigemptyset(&sa.sa_mask);
 		   sigaddset(&sa.sa_mask,SIGTERM);
@@ -448,10 +448,10 @@ int main(int argc, char** argv)
 		}
 
 		//add thread check 
-		if((++iCountTime) == 20)
-		{
-			//pThreadManage->CheckTimeoutThread();
-		} 
+// 		if((++iCountTime) == 20)
+// 		{
+// 			pThreadManage->CheckTimeoutThread();
+// 		} 
 
 		if(g_bReread)
 		{

@@ -683,8 +683,21 @@ bool C_HallList::ProcessCondSwitchTask()
 		{
 			bCond = node.nVal == fit->second ? true :false;
 		}
-		
+
+		// 防止状态不稳定时所做的切换，连续出现3次时才做切换
 		if(bCond)
+		{
+			node.nTriaggerCnt++;
+			LOGINFFMT(0,"Condition Switch Task :Condition OK(%d) Swtich SMS(%s)",
+				node.nTriaggerCnt,node.strHallID.c_str());
+
+		}
+		else
+		{
+			node.nTriaggerCnt = 0;
+		}
+
+		if(node.nTriaggerCnt>=3)
 		{
 			LOGINFFMT(0,"Condition Switch Task :Condition OK Swtich SMS(%s)",node.strHallID.c_str());
 			int nState;
