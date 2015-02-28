@@ -94,6 +94,7 @@ int CTMSSensor::GetTMSPID()
 			m_nPid = pid;
 		}
 		m_csPID.LeaveCS();
+
 // 		if(result == 0)//sscanfÊ§°Ü£¬Ôò·µ»Ø0
 // 		{
 // 			string error = "Error:pidof -s  Tms20_DeviceService\n";
@@ -106,6 +107,7 @@ int CTMSSensor::GetTMSPID()
 		state = -1;
 	}
 	pclose(fp);
+
 
 	m_ptrDM = CDataManager::GetInstance();
 	if(m_ptrDM != NULL)
@@ -154,6 +156,7 @@ bool CTMSSensor::ShutDownTMS()
 	m_csPID.EnterCS();
 	int nPid = m_nPid;
 	m_csPID.LeaveCS();
+
 	if(nPid > 0)
 	{
 		int i=0;
@@ -171,7 +174,6 @@ bool CTMSSensor::ShutDownTMS()
 			}
 			i++;
 		}
-		
 		return bRet;
 	}
 	else

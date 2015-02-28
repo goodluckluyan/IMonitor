@@ -335,6 +335,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\utility\C_TcpSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\utility\C_TcpSocket.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\utility\C_TcpTransport.cpp"
 				>
 			</File>
@@ -400,6 +408,14 @@
 			</File>
 			<File
 				RelativePath="..\..\jobs\Dispatch.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\jobs\HashCheck.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\jobs\HashCheck.h"
 				>
 			</File>
 			<File
@@ -483,11 +499,35 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\contentcheck\C_Satellite.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\contentcheck\C_Satellite.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\contentcheck\C_SatXmlParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\contentcheck\C_SatXmlParser.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\contentcheck\content.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\contentcheck\content.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\contentcheck\crc32.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\contentcheck\crc32.h"
 				>
 			</File>
 			<File
@@ -548,6 +588,10 @@
 			</File>
 			<File
 				RelativePath="..\..\contentcheck\sha1.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\contentcheck\socket_err.h"
 				>
 			</File>
 		</Filter>

@@ -136,4 +136,36 @@ c_u_int ERROR_GETSMSSTATUS_FAIL = 0x0011;
 // web访问地址设置错误，非本机地址。
 c_u_int ERROR_WEB_VISIT_ADDRESS = 0x0001;
 
+//ERROR
+const int SOCKET_WIN_ENVIRONMENT_ERROR   = 0x0001;   //Windows环境错误
+const int SOCKET_NULL_FD                 = 0x0002;   //空的socket文件描述符号
+const int SOCKET_CALL_SYSAPI_ERR         = 0x0003;	//调用系统API错误
+const int SOCKET_PARAR_ERR               = 0x0004;  	//输入参数错误
+
+
+//========SOCKET SERVER端错误码==============================//
+const int SERVER_SOCK_INI_ERR            = 0x1000;	//server端socket初始化错误
+const int SERVER_SOCK_BIND_ERR           = 0x1001;	//server端bind错误
+const int SERVER_SOCK_LISTEN_ERR         = 0x1002;	//server端listen错误
+const int SERVER_SOCK_ACCEPT_ERR         = 0x1003;	//server端accept错误
+
+//========SOCKET CLIENT端错误码==============================//
+const int CLIENT_SOCK_INI_ERR            = 0x2000;	//client端socket初始化错误
+const int CLIENT_SOCK_BIND_ERR           = 0x2001;	//client端bind错误
+const int CLIENT_SOCK_CONNECT_ERR        = 0x2003;	//client端connect错误
+const int CLIENT_SOCK_CONNECT_TIMEOUT    = 0x2004;	//client端connect超时
+
+//========SOCKET CONNECTION错误码==============================//
+const int CONN_READ_PARA_ERR             = 0x3000;	//连接读操作参数输入错误
+const int CONN_READ_CALL_ERR             = 0x3001;	//连接读操作调用错误
+const int CONN_READ_SELECT_ERR           = 0x3002;	//连接读操作select错误
+const int CONN_READ_TIMEOUT              = 0x3003;	//连接读操作超时
+const int CONN_READ_RECV_FAIL            = 0x3004;	//连接读操作recv错误
+const int CONN_WRITE_PARA_ERR            = 0x3005;	//连接写操作参数输入错误
+const int CONN_WRITE_CALL_ERR            = 0x3006;	//连接写操作调用错误
+const int CONN_WRITE_SELECT_ERR          = 0x3007;	//连接写操作elect错误
+const int CONN_WRITE_TIMEOUT             = 0x3008;	//连接写操作超时
+const int CONN_WRITE_SEND_FAIL           = 0x3009;	//连接写操作send错误
+const int CONN_PEER_TERMINATOR           = 0x300a;	//连接对端关闭
+
 #endif  

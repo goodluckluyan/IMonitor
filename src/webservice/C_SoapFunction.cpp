@@ -293,3 +293,20 @@ int mons__ExeStartSMS(struct soap* cSoap,std::string strHallID,int &ret)
 	}
 	return 0;
 }
+
+int mons__ExeDcpHashCheck(struct soap* cSoap,std::string path,std::string PklUuid,std::string& errorInfo)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	ptr->DcpHashCheck(path,PklUuid,errorInfo);
+	return 0;
+}
+
+
+int mons__ExeGetHashCheckPercent(struct soap* cSoap,std::string PklUuid,int& Result,std::string& errorInfo)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	ptr->GetHashCheckPercent(PklUuid,Result,errorInfo);
+	return 0;
+}

@@ -90,10 +90,10 @@ int CheckDisk::ReadMegaSASInfo()
 	{
 		return iResult;
 	}
-	else if(diskinfo_temp.diskDrives.size() != atoi(diskinfo_temp.diskNumOfDrives.c_str()))
-	{
-		return -1;
-	}
+// 	else if(diskinfo_temp.diskDrives.size() != atoi(diskinfo_temp.diskNumOfDrives.c_str()))
+// 	{
+// 		return -1;
+// 	}
 
 	diskInfo = diskinfo_temp;
 	DiskSize = diskinfo_temp.diskSize;

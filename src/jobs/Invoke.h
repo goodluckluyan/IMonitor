@@ -12,6 +12,7 @@
 #include "check_netcard.h"
 #include "MonitorSensor.h"
 #include "TMSSensor.h"
+#include "HashCheck.h"
 
 
 #define SAFE_DELETE(ptr) if(ptr != NULL) {delete ptr ; ptr = NULL;}
@@ -25,6 +26,7 @@ public:
 	  ,m_ptrMonitor(NULL)
 	  ,m_ptrDispatch(NULL)
 	  ,m_ptrTMS(NULL)
+	  ,m_ptrHash(NULL)
 	  {
 	  }
 
@@ -90,6 +92,10 @@ public:
 	// 解决sms运行冲突
 	bool SolveConflict(std::vector<ConflictInfo> &vecCI);
 
+	void DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo);
+
+	int GetHashCheckPercent(std::string strPklUuid,int &nResult,std::string &strErrInfo);
+
 private:
 	// 打印帮助信息
 	void PrintProductInfo();
@@ -111,6 +117,7 @@ private:
 	CDispatch *m_ptrDispatch;
 	CMonitorSensor * m_ptrMonitor;
 	CTMSSensor * m_ptrTMS;
+	CHashCheck * m_ptrHash;
 };
 
 #endif

@@ -28,6 +28,8 @@
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/XMLString.hpp>
 #include "threadManage/C_CS.h"
+
+
 struct stNotifySmsSwitchInfo
 {
 	std::string strHallId;
@@ -133,6 +135,8 @@ private:
 	int m_nPort;
 	int m_nTMSWBPort;
 	C_CS m_csPID;
+
+
 
 };
 

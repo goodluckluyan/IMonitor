@@ -145,6 +145,11 @@ int  CInvoke::Init()
 			LOGINFFMT(0,"Eth Check Done.\n");
 		}
 	}
+
+	if(m_ptrHash == NULL)
+	{
+		m_ptrHash = new CHashCheck;
+	}
 }
 
 void CInvoke::DeInit()
@@ -155,6 +160,7 @@ void CInvoke::DeInit()
 	SAFE_DELETE(m_ptrMonitor);
 	SAFE_DELETE(m_ptrTMS);
 	SAFE_DELETE(m_ptrDispatch);
+	SAFE_DELETE(m_ptrHash);
 }
 
 bool CInvoke::AddInitTask()
@@ -245,6 +251,9 @@ bool CInvoke::AddInitTask()
 	// 添加条件切换处理任务
 	ptrTaskList->AddTask(TASK_NUMBER_CONDSWITCH_ROUTINE,NULL,-1);
 
+	// 添加hash校验处理任务
+	ptrTaskList->AddTask(TASK_NUMBER_HASHCHECK_ROUTINE,NULL,-1);
+
 	// 运行在交互模式
 	if(0 == g_nRunType)
 	{
@@ -320,6 +329,9 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		break;
 	case TASK_NUMBER_CONDSWITCH_ROUTINE:
 		m_ptrLstHall->ProcessCondSwitchTask();
+		break;
+	case TASK_NUMBER_HASHCHECK_ROUTINE:
+		m_ptrHash->ProcessHashTask();
 		break;
 	case TASK_NUMBER_GET_DISK_STATUS:
 		m_ptrDisk->ReadMegaSASInfo();
@@ -871,5 +883,29 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 			}
 		}
 		
+	}
+}
+
+void CInvoke::DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo)
+{
+	if(m_ptrHash != NULL)
+	{
+		stHashTaskInfo st;
+		st.strPath = strPath;
+		st.strUUID = strPklUuid;
+		m_ptrHash->AddHaskTask(st);
+	}
+}
+
+int CInvoke::GetHashCheckPercent(std::string strPklUuid,int &nResult,std::string &strErrInfo)
+{
+	if(m_ptrHash != NULL)
+	{
+		m_ptrHash->GetDcpHashCheckResult(strPklUuid,nResult,strErrInfo);
+		return 0;
+	}
+	else
+	{
+		return 1;
 	}
 }

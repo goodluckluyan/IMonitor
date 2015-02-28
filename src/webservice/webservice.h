@@ -70,3 +70,7 @@ int mons__ExeSwitchSMSToOther(std::string strHallID,int &ret);
 int mons__ExeSwitchSMSToOtherDelay(std::string strHallID,int &ret);
 int mons__ExeCloseSMS(std::string strHallID,int &ret);
 int mons__ExeStartSMS(std::string strHallID,int &ret);
+
+int mons__ExeDcpHashCheck(std::string path,std::string PklUuid,std::string& errorInfo);
+int mons__ExeGetHashCheckPercent(std::string PklUuid,int& Result,std::string& errorInfo);
+
