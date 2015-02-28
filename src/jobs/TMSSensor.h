@@ -27,7 +27,7 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/XMLString.hpp>
-
+#include "threadManage/C_CS.h"
 struct stNotifySmsSwitchInfo
 {
 	std::string strHallId;
@@ -132,6 +132,7 @@ private:
 	std::string m_strIP;
 	int m_nPort;
 	int m_nTMSWBPort;
+	C_CS m_csPID;
 
 };
 

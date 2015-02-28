@@ -73,7 +73,7 @@ int CTMSSensor::GetTMSPID()
 	char buf[256] = {0};
 	char command[] = "ps -ef|grep Tms20_DeviceService|grep -v 'grep Tms20_DeviceService'|awk '{print $2}'";//"pidof  -s  Tms20_DeviceService";
 
-	m_nPid = 0; //-1;
+//	m_nPid = 0; //-1;
 	
 	FILE *fp = popen(command,"r");
 	if(fp==NULL)
@@ -88,16 +88,18 @@ int CTMSSensor::GetTMSPID()
 		LOGFMT(ULOG_INFO,"[ Tms20_DeviceService ] Pid = %s",buf);
 		int result(0);
 		int pid = atoi(buf);
+		m_csPID.EnterCS();
 		if( 0 != pid && pid != m_nPid)
 		{
 			m_nPid = pid;
 		}
-		if(result == 0)//sscanf失败，则返回0
-		{
-			string error = "Error:pidof -s  Tms20_DeviceService\n";
-			LOGFMT(ULOG_ERROR, "%s" , error.c_str() );
-			state = -1;
-		}
+		m_csPID.LeaveCS();
+// 		if(result == 0)//sscanf失败，则返回0
+// 		{
+// 			string error = "Error:pidof -s  Tms20_DeviceService\n";
+// 			LOGFMT(ULOG_ERROR, "%s" , error.c_str() );
+// 			state = -1;
+// 		}
 	}
 	else
 	{
@@ -149,18 +151,21 @@ bool CTMSSensor::SwitchTMS()
 bool CTMSSensor::ShutDownTMS()
 {
 	bool bRet = false;
-	if(m_nPid > 0)
+	m_csPID.EnterCS();
+	int nPid = m_nPid;
+	m_csPID.LeaveCS();
+	if(nPid > 0)
 	{
 		int i=0;
 		while(i<3)
 		{
-			kill(m_nPid,9);
+			kill(nPid,9);
 			sleep(1);
 			std::vector<int> vecPID;
 			int nRet = Getpid("Tms20_DeviceService",vecPID);
 			if(nRet == 0 && vecPID.size()==0)
 			{
-				LOGFMT(ULOG_INFO,"Kill Local TMS(%d) Done!\n",m_nPid);
+				LOGFMT(ULOG_INFO,"Kill Local TMS(%d) Done!\n",nPid);
 				bRet = true;
 				break;
 			}
