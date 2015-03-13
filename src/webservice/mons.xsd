@@ -237,5 +237,40 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeDcpHashCheck">
+   <complexType>
+    <sequence>
+     <element name="path" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeDcpHashCheck::path -->
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeDcpHashCheck::PklUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeDcpHashCheckResponse">
+   <complexType>
+    <sequence>
+     <element name="errorInfo" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeDcpHashCheck::errorInfo -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="ExeGetHashCheckPercent">
+   <complexType>
+    <sequence>
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeGetHashCheckPercent::PklUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="HashCheckPercent">
+   <complexType>
+    <sequence>
+     <element name="Result" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__HashCheckPercent::Result -->
+     <element name="nPercent" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__HashCheckPercent::nPercent -->
+     <element name="errorInfo" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__HashCheckPercent::errorInfo -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 

@@ -303,10 +303,43 @@ int mons__ExeDcpHashCheck(struct soap* cSoap,std::string path,std::string PklUui
 }
 
 
-int mons__ExeGetHashCheckPercent(struct soap* cSoap,std::string PklUuid,int& Result,std::string& errorInfo)
+int mons__ExeGetHashCheckPercent(struct soap* cSoap,std::string PklUuid,struct mons__HashCheckPercent& stResult)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
-	ptr->GetHashCheckPercent(PklUuid,Result,errorInfo);
+	ptr->GetHashCheckPercent(PklUuid,stResult.Result,stResult.nPercent,stResult.errorInfo);
+	return 0;
+}
+
+int mons__CopyDcp(struct soap* cSoap,std::string PklUuid,std::string srcPath,std::string desPath,
+				  struct mons__FileOperationResult &result)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	ptr->CopyDcp(PklUuid,srcPath,desPath,result.Result,result.errorInfo);
+	return 0;
+}
+
+int mons__GetCopyDcpProgress(struct soap* cSoap,std::string PklUuid,struct mons__FileOperationResult &result)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	ptr->GetCopyDcpProgress(PklUuid,result.Result,result.errorInfo);
+	return 0;
+}
+
+int mons__DeleteDcp(struct soap* cSoap,std::string PklUuid,std::string Path,struct mons__FileOperationResult &result)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	ptr->DeleteDcp(PklUuid,Path,result.Result,result.errorInfo);
+	return 0;
+}
+
+int mons__GetDeleteDcpProgress(struct soap* cSoap,std::string PklUuid,struct mons__FileOperationResult &result)
+{
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	ptr->GetDeleteDcpProgress(PklUuid,result.Result,result.errorInfo);
 	return 0;
 }

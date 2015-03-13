@@ -15,7 +15,7 @@ compiling, linking, and/or using OpenSSL is allowed.
 
 #include "soapH.h"
 
-SOAP_SOURCE_STAMP("@(#) soapC.cpp ver 2.8.18 2015-01-12 05:18:07 GMT")
+SOAP_SOURCE_STAMP("@(#) soapC.cpp ver 2.8.18 2015-03-02 07:44:15 GMT")
 
 
 #ifndef WITH_NOGLOBAL
@@ -194,6 +194,14 @@ SOAP_FMAC3 void * SOAP_FMAC4 soap_getelement(struct soap *soap, int *type)
 		return soap_in_int(soap, NULL, NULL, "xsd:int");
 	case SOAP_TYPE_std__string:
 		return soap_in_std__string(soap, NULL, NULL, "xsd:string");
+	case SOAP_TYPE_mons__ExeGetHashCheckPercent:
+		return soap_in_mons__ExeGetHashCheckPercent(soap, NULL, NULL, "mons:ExeGetHashCheckPercent");
+	case SOAP_TYPE_mons__HashCheckPercent:
+		return soap_in_mons__HashCheckPercent(soap, NULL, NULL, "mons:HashCheckPercent");
+	case SOAP_TYPE_mons__ExeDcpHashCheck:
+		return soap_in_mons__ExeDcpHashCheck(soap, NULL, NULL, "mons:ExeDcpHashCheck");
+	case SOAP_TYPE_mons__ExeDcpHashCheckResponse:
+		return soap_in_mons__ExeDcpHashCheckResponse(soap, NULL, NULL, "mons:ExeDcpHashCheckResponse");
 	case SOAP_TYPE_mons__ExeStartSMS:
 		return soap_in_mons__ExeStartSMS(soap, NULL, NULL, "mons:ExeStartSMS");
 	case SOAP_TYPE_mons__ExeStartSMSResponse:
@@ -278,6 +286,22 @@ SOAP_FMAC3 void * SOAP_FMAC4 soap_getelement(struct soap *soap, int *type)
 		if (!soap_match_tag(soap, t, "xsd:int"))
 		{	*type = SOAP_TYPE_int;
 			return soap_in_int(soap, NULL, NULL, NULL);
+		}
+		if (!soap_match_tag(soap, t, "mons:ExeGetHashCheckPercent"))
+		{	*type = SOAP_TYPE_mons__ExeGetHashCheckPercent;
+			return soap_in_mons__ExeGetHashCheckPercent(soap, NULL, NULL, NULL);
+		}
+		if (!soap_match_tag(soap, t, "mons:HashCheckPercent"))
+		{	*type = SOAP_TYPE_mons__HashCheckPercent;
+			return soap_in_mons__HashCheckPercent(soap, NULL, NULL, NULL);
+		}
+		if (!soap_match_tag(soap, t, "mons:ExeDcpHashCheck"))
+		{	*type = SOAP_TYPE_mons__ExeDcpHashCheck;
+			return soap_in_mons__ExeDcpHashCheck(soap, NULL, NULL, NULL);
+		}
+		if (!soap_match_tag(soap, t, "mons:ExeDcpHashCheckResponse"))
+		{	*type = SOAP_TYPE_mons__ExeDcpHashCheckResponse;
+			return soap_in_mons__ExeDcpHashCheckResponse(soap, NULL, NULL, NULL);
 		}
 		if (!soap_match_tag(soap, t, "mons:ExeStartSMS"))
 		{	*type = SOAP_TYPE_mons__ExeStartSMS;
@@ -474,6 +498,14 @@ SOAP_FMAC3 int SOAP_FMAC4 soap_putelement(struct soap *soap, const void *ptr, co
 		return soap_out_int(soap, tag, id, (const int *)ptr, "xsd:int");
 	case SOAP_TYPE_std__string:
 		return soap_out_std__string(soap, tag, id, (const std::string *)ptr, "xsd:string");
+	case SOAP_TYPE_mons__ExeGetHashCheckPercent:
+		return soap_out_mons__ExeGetHashCheckPercent(soap, tag, id, (const struct mons__ExeGetHashCheckPercent *)ptr, "mons:ExeGetHashCheckPercent");
+	case SOAP_TYPE_mons__HashCheckPercent:
+		return soap_out_mons__HashCheckPercent(soap, tag, id, (const struct mons__HashCheckPercent *)ptr, "mons:HashCheckPercent");
+	case SOAP_TYPE_mons__ExeDcpHashCheck:
+		return soap_out_mons__ExeDcpHashCheck(soap, tag, id, (const struct mons__ExeDcpHashCheck *)ptr, "mons:ExeDcpHashCheck");
+	case SOAP_TYPE_mons__ExeDcpHashCheckResponse:
+		return soap_out_mons__ExeDcpHashCheckResponse(soap, tag, id, (const struct mons__ExeDcpHashCheckResponse *)ptr, "mons:ExeDcpHashCheckResponse");
 	case SOAP_TYPE_mons__ExeStartSMS:
 		return soap_out_mons__ExeStartSMS(soap, tag, id, (const struct mons__ExeStartSMS *)ptr, "mons:ExeStartSMS");
 	case SOAP_TYPE_mons__ExeStartSMSResponse:
@@ -554,6 +586,18 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_markelement(struct soap *soap, const void *ptr, 
 	{
 	case SOAP_TYPE_std__string:
 		soap_serialize_std__string(soap, (const std::string *)ptr);
+		break;
+	case SOAP_TYPE_mons__ExeGetHashCheckPercent:
+		soap_serialize_mons__ExeGetHashCheckPercent(soap, (const struct mons__ExeGetHashCheckPercent *)ptr);
+		break;
+	case SOAP_TYPE_mons__HashCheckPercent:
+		soap_serialize_mons__HashCheckPercent(soap, (const struct mons__HashCheckPercent *)ptr);
+		break;
+	case SOAP_TYPE_mons__ExeDcpHashCheck:
+		soap_serialize_mons__ExeDcpHashCheck(soap, (const struct mons__ExeDcpHashCheck *)ptr);
+		break;
+	case SOAP_TYPE_mons__ExeDcpHashCheckResponse:
+		soap_serialize_mons__ExeDcpHashCheckResponse(soap, (const struct mons__ExeDcpHashCheckResponse *)ptr);
 		break;
 	case SOAP_TYPE_mons__ExeStartSMS:
 		soap_serialize_mons__ExeStartSMS(soap, (const struct mons__ExeStartSMS *)ptr);
@@ -715,6 +759,14 @@ SOAP_FMAC3 void * SOAP_FMAC4 soap_instantiate(struct soap *soap, int t, const ch
 		return (void*)soap_instantiate_mons__ExeStartSMSResponse(soap, -1, type, arrayType, n);
 	case SOAP_TYPE_mons__ExeStartSMS:
 		return (void*)soap_instantiate_mons__ExeStartSMS(soap, -1, type, arrayType, n);
+	case SOAP_TYPE_mons__ExeDcpHashCheckResponse:
+		return (void*)soap_instantiate_mons__ExeDcpHashCheckResponse(soap, -1, type, arrayType, n);
+	case SOAP_TYPE_mons__ExeDcpHashCheck:
+		return (void*)soap_instantiate_mons__ExeDcpHashCheck(soap, -1, type, arrayType, n);
+	case SOAP_TYPE_mons__HashCheckPercent:
+		return (void*)soap_instantiate_mons__HashCheckPercent(soap, -1, type, arrayType, n);
+	case SOAP_TYPE_mons__ExeGetHashCheckPercent:
+		return (void*)soap_instantiate_mons__ExeGetHashCheckPercent(soap, -1, type, arrayType, n);
 #ifndef WITH_NOGLOBAL
 	case SOAP_TYPE_SOAP_ENV__Header:
 		return (void*)soap_instantiate_SOAP_ENV__Header(soap, -1, type, arrayType, n);
@@ -921,6 +973,30 @@ SOAP_FMAC3 int SOAP_FMAC4 soap_fdelete(struct soap_clist *p)
 			SOAP_DELETE((struct mons__ExeStartSMS*)p->ptr);
 		else
 			SOAP_DELETE_ARRAY((struct mons__ExeStartSMS*)p->ptr);
+		break;
+	case SOAP_TYPE_mons__ExeDcpHashCheckResponse:
+		if (p->size < 0)
+			SOAP_DELETE((struct mons__ExeDcpHashCheckResponse*)p->ptr);
+		else
+			SOAP_DELETE_ARRAY((struct mons__ExeDcpHashCheckResponse*)p->ptr);
+		break;
+	case SOAP_TYPE_mons__ExeDcpHashCheck:
+		if (p->size < 0)
+			SOAP_DELETE((struct mons__ExeDcpHashCheck*)p->ptr);
+		else
+			SOAP_DELETE_ARRAY((struct mons__ExeDcpHashCheck*)p->ptr);
+		break;
+	case SOAP_TYPE_mons__HashCheckPercent:
+		if (p->size < 0)
+			SOAP_DELETE((struct mons__HashCheckPercent*)p->ptr);
+		else
+			SOAP_DELETE_ARRAY((struct mons__HashCheckPercent*)p->ptr);
+		break;
+	case SOAP_TYPE_mons__ExeGetHashCheckPercent:
+		if (p->size < 0)
+			SOAP_DELETE((struct mons__ExeGetHashCheckPercent*)p->ptr);
+		else
+			SOAP_DELETE_ARRAY((struct mons__ExeGetHashCheckPercent*)p->ptr);
 		break;
 #ifndef WITH_NOGLOBAL
 	case SOAP_TYPE_SOAP_ENV__Header:
@@ -1828,6 +1904,474 @@ SOAP_FMAC3 void SOAP_FMAC4 soap_copy_SOAP_ENV__Header(struct soap *soap, int st,
 }
 
 #endif
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeGetHashCheckPercent(struct soap *soap, struct mons__ExeGetHashCheckPercent *a)
+{
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_default_std__string(soap, &a->PklUuid);
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeGetHashCheckPercent(struct soap *soap, const struct mons__ExeGetHashCheckPercent *a)
+{
+#ifndef WITH_NOIDREF
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_serialize_std__string(soap, &a->PklUuid);
+#endif
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeGetHashCheckPercent(struct soap *soap, const char *tag, int id, const struct mons__ExeGetHashCheckPercent *a, const char *type)
+{
+	(void)soap; (void)tag; (void)id; (void)type;
+	if (soap_element_begin_out(soap, tag, soap_embedded_id(soap, id, a, SOAP_TYPE_mons__ExeGetHashCheckPercent), type))
+		return soap->error;
+	if (soap_out_std__string(soap, "PklUuid", -1, &a->PklUuid, ""))
+		return soap->error;
+	return soap_element_end_out(soap, tag);
+}
+
+SOAP_FMAC3 struct mons__ExeGetHashCheckPercent * SOAP_FMAC4 soap_in_mons__ExeGetHashCheckPercent(struct soap *soap, const char *tag, struct mons__ExeGetHashCheckPercent *a, const char *type)
+{
+	size_t soap_flag_PklUuid = 1;
+	if (soap_element_begin_in(soap, tag, 0, type))
+		return NULL;
+	a = (struct mons__ExeGetHashCheckPercent *)soap_class_id_enter(soap, soap->id, a, SOAP_TYPE_mons__ExeGetHashCheckPercent, sizeof(struct mons__ExeGetHashCheckPercent), soap->type, soap->arrayType);
+	if (!a)
+		return NULL;
+	soap_default_mons__ExeGetHashCheckPercent(soap, a);
+	if (soap->body && !*soap->href)
+	{
+		for (;;)
+		{	soap->error = SOAP_TAG_MISMATCH;
+			if (soap_flag_PklUuid && (soap->error == SOAP_TAG_MISMATCH || soap->error == SOAP_NO_TAG))
+				if (soap_in_std__string(soap, "PklUuid", &a->PklUuid, "xsd:string"))
+				{	soap_flag_PklUuid--;
+					continue;
+				}
+			if (soap->error == SOAP_TAG_MISMATCH)
+				soap->error = soap_ignore_element(soap);
+			if (soap->error == SOAP_NO_TAG)
+				break;
+			if (soap->error)
+				return NULL;
+		}
+		if (soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	else
+	{	a = (struct mons__ExeGetHashCheckPercent *)soap_id_forward(soap, soap->href, (void*)a, 0, SOAP_TYPE_mons__ExeGetHashCheckPercent, 0, sizeof(struct mons__ExeGetHashCheckPercent), 0, soap_copy_mons__ExeGetHashCheckPercent);
+		if (soap->body && soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	if ((soap->mode & SOAP_XML_STRICT) && (soap_flag_PklUuid > 0))
+	{	soap->error = SOAP_OCCURS;
+		return NULL;
+	}
+	return a;
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeGetHashCheckPercent(struct soap *soap, const struct mons__ExeGetHashCheckPercent *a, const char *tag, const char *type)
+{
+	register int id = soap_embed(soap, (void*)a, NULL, 0, tag, SOAP_TYPE_mons__ExeGetHashCheckPercent);
+	if (soap_out_mons__ExeGetHashCheckPercent(soap, tag?tag:"mons:ExeGetHashCheckPercent", id, a, type))
+		return soap->error;
+	return soap_putindependent(soap);
+}
+
+SOAP_FMAC3 struct mons__ExeGetHashCheckPercent * SOAP_FMAC4 soap_get_mons__ExeGetHashCheckPercent(struct soap *soap, struct mons__ExeGetHashCheckPercent *p, const char *tag, const char *type)
+{
+	if ((p = soap_in_mons__ExeGetHashCheckPercent(soap, tag, p, type)))
+		if (soap_getindependent(soap))
+			return NULL;
+	return p;
+}
+
+SOAP_FMAC1 struct mons__ExeGetHashCheckPercent * SOAP_FMAC2 soap_instantiate_mons__ExeGetHashCheckPercent(struct soap *soap, int n, const char *type, const char *arrayType, size_t *size)
+{
+	(void)type; (void)arrayType; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "soap_instantiate_mons__ExeGetHashCheckPercent(%d, %s, %s)\n", n, type?type:"", arrayType?arrayType:""));
+	struct soap_clist *cp = soap_link(soap, NULL, SOAP_TYPE_mons__ExeGetHashCheckPercent, n, soap_fdelete);
+	if (!cp)
+		return NULL;
+	if (n < 0)
+	{	cp->ptr = (void*)SOAP_NEW(struct mons__ExeGetHashCheckPercent);
+		if (size)
+			*size = sizeof(struct mons__ExeGetHashCheckPercent);
+	}
+	else
+	{	cp->ptr = (void*)SOAP_NEW_ARRAY(struct mons__ExeGetHashCheckPercent, n);
+		if (size)
+			*size = n * sizeof(struct mons__ExeGetHashCheckPercent);
+	}
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Instantiated location=%p\n", cp->ptr));
+	if (!cp->ptr)
+		soap->error = SOAP_EOM;
+	return (struct mons__ExeGetHashCheckPercent*)cp->ptr;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeGetHashCheckPercent(struct soap *soap, int st, int tt, void *p, size_t len, const void *q, size_t n)
+{
+	(void)soap; (void)tt; (void)st; (void)len; (void)n; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Copying struct mons__ExeGetHashCheckPercent %p -> %p\n", q, p));
+	*(struct mons__ExeGetHashCheckPercent*)p = *(struct mons__ExeGetHashCheckPercent*)q;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__HashCheckPercent(struct soap *soap, struct mons__HashCheckPercent *a)
+{
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_default_int(soap, &a->Result);
+	soap_default_int(soap, &a->nPercent);
+	soap_default_std__string(soap, &a->errorInfo);
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__HashCheckPercent(struct soap *soap, const struct mons__HashCheckPercent *a)
+{
+#ifndef WITH_NOIDREF
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_serialize_std__string(soap, &a->errorInfo);
+#endif
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__HashCheckPercent(struct soap *soap, const char *tag, int id, const struct mons__HashCheckPercent *a, const char *type)
+{
+	(void)soap; (void)tag; (void)id; (void)type;
+	if (soap_element_begin_out(soap, tag, soap_embedded_id(soap, id, a, SOAP_TYPE_mons__HashCheckPercent), type))
+		return soap->error;
+	if (soap_out_int(soap, "Result", -1, &a->Result, ""))
+		return soap->error;
+	if (soap_out_int(soap, "nPercent", -1, &a->nPercent, ""))
+		return soap->error;
+	if (soap_out_std__string(soap, "errorInfo", -1, &a->errorInfo, ""))
+		return soap->error;
+	return soap_element_end_out(soap, tag);
+}
+
+SOAP_FMAC3 struct mons__HashCheckPercent * SOAP_FMAC4 soap_in_mons__HashCheckPercent(struct soap *soap, const char *tag, struct mons__HashCheckPercent *a, const char *type)
+{
+	size_t soap_flag_Result = 1;
+	size_t soap_flag_nPercent = 1;
+	size_t soap_flag_errorInfo = 1;
+	if (soap_element_begin_in(soap, tag, 0, type))
+		return NULL;
+	a = (struct mons__HashCheckPercent *)soap_class_id_enter(soap, soap->id, a, SOAP_TYPE_mons__HashCheckPercent, sizeof(struct mons__HashCheckPercent), soap->type, soap->arrayType);
+	if (!a)
+		return NULL;
+	soap_default_mons__HashCheckPercent(soap, a);
+	if (soap->body && !*soap->href)
+	{
+		for (;;)
+		{	soap->error = SOAP_TAG_MISMATCH;
+			if (soap_flag_Result && soap->error == SOAP_TAG_MISMATCH)
+				if (soap_in_int(soap, "Result", &a->Result, "xsd:int"))
+				{	soap_flag_Result--;
+					continue;
+				}
+			if (soap_flag_nPercent && soap->error == SOAP_TAG_MISMATCH)
+				if (soap_in_int(soap, "nPercent", &a->nPercent, "xsd:int"))
+				{	soap_flag_nPercent--;
+					continue;
+				}
+			if (soap_flag_errorInfo && (soap->error == SOAP_TAG_MISMATCH || soap->error == SOAP_NO_TAG))
+				if (soap_in_std__string(soap, "errorInfo", &a->errorInfo, "xsd:string"))
+				{	soap_flag_errorInfo--;
+					continue;
+				}
+			if (soap->error == SOAP_TAG_MISMATCH)
+				soap->error = soap_ignore_element(soap);
+			if (soap->error == SOAP_NO_TAG)
+				break;
+			if (soap->error)
+				return NULL;
+		}
+		if (soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	else
+	{	a = (struct mons__HashCheckPercent *)soap_id_forward(soap, soap->href, (void*)a, 0, SOAP_TYPE_mons__HashCheckPercent, 0, sizeof(struct mons__HashCheckPercent), 0, soap_copy_mons__HashCheckPercent);
+		if (soap->body && soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	if ((soap->mode & SOAP_XML_STRICT) && (soap_flag_Result > 0 || soap_flag_nPercent > 0 || soap_flag_errorInfo > 0))
+	{	soap->error = SOAP_OCCURS;
+		return NULL;
+	}
+	return a;
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__HashCheckPercent(struct soap *soap, const struct mons__HashCheckPercent *a, const char *tag, const char *type)
+{
+	register int id = soap_embed(soap, (void*)a, NULL, 0, tag, SOAP_TYPE_mons__HashCheckPercent);
+	if (soap_out_mons__HashCheckPercent(soap, tag?tag:"mons:HashCheckPercent", id, a, type))
+		return soap->error;
+	return soap_putindependent(soap);
+}
+
+SOAP_FMAC3 struct mons__HashCheckPercent * SOAP_FMAC4 soap_get_mons__HashCheckPercent(struct soap *soap, struct mons__HashCheckPercent *p, const char *tag, const char *type)
+{
+	if ((p = soap_in_mons__HashCheckPercent(soap, tag, p, type)))
+		if (soap_getindependent(soap))
+			return NULL;
+	return p;
+}
+
+SOAP_FMAC1 struct mons__HashCheckPercent * SOAP_FMAC2 soap_instantiate_mons__HashCheckPercent(struct soap *soap, int n, const char *type, const char *arrayType, size_t *size)
+{
+	(void)type; (void)arrayType; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "soap_instantiate_mons__HashCheckPercent(%d, %s, %s)\n", n, type?type:"", arrayType?arrayType:""));
+	struct soap_clist *cp = soap_link(soap, NULL, SOAP_TYPE_mons__HashCheckPercent, n, soap_fdelete);
+	if (!cp)
+		return NULL;
+	if (n < 0)
+	{	cp->ptr = (void*)SOAP_NEW(struct mons__HashCheckPercent);
+		if (size)
+			*size = sizeof(struct mons__HashCheckPercent);
+	}
+	else
+	{	cp->ptr = (void*)SOAP_NEW_ARRAY(struct mons__HashCheckPercent, n);
+		if (size)
+			*size = n * sizeof(struct mons__HashCheckPercent);
+	}
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Instantiated location=%p\n", cp->ptr));
+	if (!cp->ptr)
+		soap->error = SOAP_EOM;
+	return (struct mons__HashCheckPercent*)cp->ptr;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__HashCheckPercent(struct soap *soap, int st, int tt, void *p, size_t len, const void *q, size_t n)
+{
+	(void)soap; (void)tt; (void)st; (void)len; (void)n; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Copying struct mons__HashCheckPercent %p -> %p\n", q, p));
+	*(struct mons__HashCheckPercent*)p = *(struct mons__HashCheckPercent*)q;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeDcpHashCheck(struct soap *soap, struct mons__ExeDcpHashCheck *a)
+{
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_default_std__string(soap, &a->path);
+	soap_default_std__string(soap, &a->PklUuid);
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeDcpHashCheck(struct soap *soap, const struct mons__ExeDcpHashCheck *a)
+{
+#ifndef WITH_NOIDREF
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_serialize_std__string(soap, &a->path);
+	soap_serialize_std__string(soap, &a->PklUuid);
+#endif
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeDcpHashCheck(struct soap *soap, const char *tag, int id, const struct mons__ExeDcpHashCheck *a, const char *type)
+{
+	(void)soap; (void)tag; (void)id; (void)type;
+	if (soap_element_begin_out(soap, tag, soap_embedded_id(soap, id, a, SOAP_TYPE_mons__ExeDcpHashCheck), type))
+		return soap->error;
+	if (soap_out_std__string(soap, "path", -1, &a->path, ""))
+		return soap->error;
+	if (soap_out_std__string(soap, "PklUuid", -1, &a->PklUuid, ""))
+		return soap->error;
+	return soap_element_end_out(soap, tag);
+}
+
+SOAP_FMAC3 struct mons__ExeDcpHashCheck * SOAP_FMAC4 soap_in_mons__ExeDcpHashCheck(struct soap *soap, const char *tag, struct mons__ExeDcpHashCheck *a, const char *type)
+{
+	size_t soap_flag_path = 1;
+	size_t soap_flag_PklUuid = 1;
+	if (soap_element_begin_in(soap, tag, 0, type))
+		return NULL;
+	a = (struct mons__ExeDcpHashCheck *)soap_class_id_enter(soap, soap->id, a, SOAP_TYPE_mons__ExeDcpHashCheck, sizeof(struct mons__ExeDcpHashCheck), soap->type, soap->arrayType);
+	if (!a)
+		return NULL;
+	soap_default_mons__ExeDcpHashCheck(soap, a);
+	if (soap->body && !*soap->href)
+	{
+		for (;;)
+		{	soap->error = SOAP_TAG_MISMATCH;
+			if (soap_flag_path && (soap->error == SOAP_TAG_MISMATCH || soap->error == SOAP_NO_TAG))
+				if (soap_in_std__string(soap, "path", &a->path, "xsd:string"))
+				{	soap_flag_path--;
+					continue;
+				}
+			if (soap_flag_PklUuid && (soap->error == SOAP_TAG_MISMATCH || soap->error == SOAP_NO_TAG))
+				if (soap_in_std__string(soap, "PklUuid", &a->PklUuid, "xsd:string"))
+				{	soap_flag_PklUuid--;
+					continue;
+				}
+			if (soap->error == SOAP_TAG_MISMATCH)
+				soap->error = soap_ignore_element(soap);
+			if (soap->error == SOAP_NO_TAG)
+				break;
+			if (soap->error)
+				return NULL;
+		}
+		if (soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	else
+	{	a = (struct mons__ExeDcpHashCheck *)soap_id_forward(soap, soap->href, (void*)a, 0, SOAP_TYPE_mons__ExeDcpHashCheck, 0, sizeof(struct mons__ExeDcpHashCheck), 0, soap_copy_mons__ExeDcpHashCheck);
+		if (soap->body && soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	if ((soap->mode & SOAP_XML_STRICT) && (soap_flag_path > 0 || soap_flag_PklUuid > 0))
+	{	soap->error = SOAP_OCCURS;
+		return NULL;
+	}
+	return a;
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeDcpHashCheck(struct soap *soap, const struct mons__ExeDcpHashCheck *a, const char *tag, const char *type)
+{
+	register int id = soap_embed(soap, (void*)a, NULL, 0, tag, SOAP_TYPE_mons__ExeDcpHashCheck);
+	if (soap_out_mons__ExeDcpHashCheck(soap, tag?tag:"mons:ExeDcpHashCheck", id, a, type))
+		return soap->error;
+	return soap_putindependent(soap);
+}
+
+SOAP_FMAC3 struct mons__ExeDcpHashCheck * SOAP_FMAC4 soap_get_mons__ExeDcpHashCheck(struct soap *soap, struct mons__ExeDcpHashCheck *p, const char *tag, const char *type)
+{
+	if ((p = soap_in_mons__ExeDcpHashCheck(soap, tag, p, type)))
+		if (soap_getindependent(soap))
+			return NULL;
+	return p;
+}
+
+SOAP_FMAC1 struct mons__ExeDcpHashCheck * SOAP_FMAC2 soap_instantiate_mons__ExeDcpHashCheck(struct soap *soap, int n, const char *type, const char *arrayType, size_t *size)
+{
+	(void)type; (void)arrayType; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "soap_instantiate_mons__ExeDcpHashCheck(%d, %s, %s)\n", n, type?type:"", arrayType?arrayType:""));
+	struct soap_clist *cp = soap_link(soap, NULL, SOAP_TYPE_mons__ExeDcpHashCheck, n, soap_fdelete);
+	if (!cp)
+		return NULL;
+	if (n < 0)
+	{	cp->ptr = (void*)SOAP_NEW(struct mons__ExeDcpHashCheck);
+		if (size)
+			*size = sizeof(struct mons__ExeDcpHashCheck);
+	}
+	else
+	{	cp->ptr = (void*)SOAP_NEW_ARRAY(struct mons__ExeDcpHashCheck, n);
+		if (size)
+			*size = n * sizeof(struct mons__ExeDcpHashCheck);
+	}
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Instantiated location=%p\n", cp->ptr));
+	if (!cp->ptr)
+		soap->error = SOAP_EOM;
+	return (struct mons__ExeDcpHashCheck*)cp->ptr;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeDcpHashCheck(struct soap *soap, int st, int tt, void *p, size_t len, const void *q, size_t n)
+{
+	(void)soap; (void)tt; (void)st; (void)len; (void)n; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Copying struct mons__ExeDcpHashCheck %p -> %p\n", q, p));
+	*(struct mons__ExeDcpHashCheck*)p = *(struct mons__ExeDcpHashCheck*)q;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeDcpHashCheckResponse(struct soap *soap, struct mons__ExeDcpHashCheckResponse *a)
+{
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_default_std__string(soap, &a->errorInfo);
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_serialize_mons__ExeDcpHashCheckResponse(struct soap *soap, const struct mons__ExeDcpHashCheckResponse *a)
+{
+#ifndef WITH_NOIDREF
+	(void)soap; (void)a; /* appease -Wall -Werror */
+	soap_serialize_std__string(soap, &a->errorInfo);
+#endif
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_out_mons__ExeDcpHashCheckResponse(struct soap *soap, const char *tag, int id, const struct mons__ExeDcpHashCheckResponse *a, const char *type)
+{
+	(void)soap; (void)tag; (void)id; (void)type;
+	if (soap_element_begin_out(soap, tag, soap_embedded_id(soap, id, a, SOAP_TYPE_mons__ExeDcpHashCheckResponse), type))
+		return soap->error;
+	if (soap_out_std__string(soap, "errorInfo", -1, &a->errorInfo, ""))
+		return soap->error;
+	return soap_element_end_out(soap, tag);
+}
+
+SOAP_FMAC3 struct mons__ExeDcpHashCheckResponse * SOAP_FMAC4 soap_in_mons__ExeDcpHashCheckResponse(struct soap *soap, const char *tag, struct mons__ExeDcpHashCheckResponse *a, const char *type)
+{
+	size_t soap_flag_errorInfo = 1;
+	if (soap_element_begin_in(soap, tag, 0, type))
+		return NULL;
+	a = (struct mons__ExeDcpHashCheckResponse *)soap_class_id_enter(soap, soap->id, a, SOAP_TYPE_mons__ExeDcpHashCheckResponse, sizeof(struct mons__ExeDcpHashCheckResponse), soap->type, soap->arrayType);
+	if (!a)
+		return NULL;
+	soap_default_mons__ExeDcpHashCheckResponse(soap, a);
+	if (soap->body && !*soap->href)
+	{
+		for (;;)
+		{	soap->error = SOAP_TAG_MISMATCH;
+			if (soap_flag_errorInfo && (soap->error == SOAP_TAG_MISMATCH || soap->error == SOAP_NO_TAG))
+				if (soap_in_std__string(soap, "errorInfo", &a->errorInfo, "xsd:string"))
+				{	soap_flag_errorInfo--;
+					continue;
+				}
+			if (soap->error == SOAP_TAG_MISMATCH)
+				soap->error = soap_ignore_element(soap);
+			if (soap->error == SOAP_NO_TAG)
+				break;
+			if (soap->error)
+				return NULL;
+		}
+		if (soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	else
+	{	a = (struct mons__ExeDcpHashCheckResponse *)soap_id_forward(soap, soap->href, (void*)a, 0, SOAP_TYPE_mons__ExeDcpHashCheckResponse, 0, sizeof(struct mons__ExeDcpHashCheckResponse), 0, soap_copy_mons__ExeDcpHashCheckResponse);
+		if (soap->body && soap_element_end_in(soap, tag))
+			return NULL;
+	}
+	if ((soap->mode & SOAP_XML_STRICT) && (soap_flag_errorInfo > 0))
+	{	soap->error = SOAP_OCCURS;
+		return NULL;
+	}
+	return a;
+}
+
+SOAP_FMAC3 int SOAP_FMAC4 soap_put_mons__ExeDcpHashCheckResponse(struct soap *soap, const struct mons__ExeDcpHashCheckResponse *a, const char *tag, const char *type)
+{
+	register int id = soap_embed(soap, (void*)a, NULL, 0, tag, SOAP_TYPE_mons__ExeDcpHashCheckResponse);
+	if (soap_out_mons__ExeDcpHashCheckResponse(soap, tag?tag:"mons:ExeDcpHashCheckResponse", id, a, type))
+		return soap->error;
+	return soap_putindependent(soap);
+}
+
+SOAP_FMAC3 struct mons__ExeDcpHashCheckResponse * SOAP_FMAC4 soap_get_mons__ExeDcpHashCheckResponse(struct soap *soap, struct mons__ExeDcpHashCheckResponse *p, const char *tag, const char *type)
+{
+	if ((p = soap_in_mons__ExeDcpHashCheckResponse(soap, tag, p, type)))
+		if (soap_getindependent(soap))
+			return NULL;
+	return p;
+}
+
+SOAP_FMAC1 struct mons__ExeDcpHashCheckResponse * SOAP_FMAC2 soap_instantiate_mons__ExeDcpHashCheckResponse(struct soap *soap, int n, const char *type, const char *arrayType, size_t *size)
+{
+	(void)type; (void)arrayType; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "soap_instantiate_mons__ExeDcpHashCheckResponse(%d, %s, %s)\n", n, type?type:"", arrayType?arrayType:""));
+	struct soap_clist *cp = soap_link(soap, NULL, SOAP_TYPE_mons__ExeDcpHashCheckResponse, n, soap_fdelete);
+	if (!cp)
+		return NULL;
+	if (n < 0)
+	{	cp->ptr = (void*)SOAP_NEW(struct mons__ExeDcpHashCheckResponse);
+		if (size)
+			*size = sizeof(struct mons__ExeDcpHashCheckResponse);
+	}
+	else
+	{	cp->ptr = (void*)SOAP_NEW_ARRAY(struct mons__ExeDcpHashCheckResponse, n);
+		if (size)
+			*size = n * sizeof(struct mons__ExeDcpHashCheckResponse);
+	}
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Instantiated location=%p\n", cp->ptr));
+	if (!cp->ptr)
+		soap->error = SOAP_EOM;
+	return (struct mons__ExeDcpHashCheckResponse*)cp->ptr;
+}
+
+SOAP_FMAC3 void SOAP_FMAC4 soap_copy_mons__ExeDcpHashCheckResponse(struct soap *soap, int st, int tt, void *p, size_t len, const void *q, size_t n)
+{
+	(void)soap; (void)tt; (void)st; (void)len; (void)n; /* appease -Wall -Werror */
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Copying struct mons__ExeDcpHashCheckResponse %p -> %p\n", q, p));
+	*(struct mons__ExeDcpHashCheckResponse*)p = *(struct mons__ExeDcpHashCheckResponse*)q;
+}
 
 SOAP_FMAC3 void SOAP_FMAC4 soap_default_mons__ExeStartSMS(struct soap *soap, struct mons__ExeStartSMS *a)
 {

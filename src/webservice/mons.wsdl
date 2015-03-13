@@ -254,6 +254,41 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="ExeDcpHashCheck">
+   <complexType>
+    <sequence>
+     <element name="path" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeDcpHashCheck::path -->
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeDcpHashCheck::PklUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="ExeDcpHashCheckResponse">
+   <complexType>
+    <sequence>
+     <element name="errorInfo" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeDcpHashCheck::errorInfo -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="ExeGetHashCheckPercent">
+   <complexType>
+    <sequence>
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__ExeGetHashCheckPercent::PklUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="HashCheckPercent">
+   <complexType>
+    <sequence>
+     <element name="Result" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__HashCheckPercent::Result -->
+     <element name="nPercent" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__HashCheckPercent::nPercent -->
+     <element name="errorInfo" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__HashCheckPercent::errorInfo -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 
 </types>
@@ -362,6 +397,22 @@
  <part name="Body" element="mons:ExeStartSMSResponse"/>
 </message>
 
+<message name="ExeDcpHashCheckRequest">
+ <part name="Body" element="mons:ExeDcpHashCheck"/><!-- mons__ExeDcpHashCheck::mons__ExeDcpHashCheck -->
+</message>
+
+<message name="ExeDcpHashCheckResponse">
+ <part name="Body" element="mons:ExeDcpHashCheckResponse"/>
+</message>
+
+<message name="ExeGetHashCheckPercent">
+ <part name="Body" element="mons:ExeGetHashCheckPercent"/><!-- mons__ExeGetHashCheckPercent::mons__ExeGetHashCheckPercent -->
+</message>
+
+<message name="HashCheckPercent">
+ <part name="Body" element="mons:HashCheckPercent"/><!-- mons__ExeGetHashCheckPercent::stResult -->
+</message>
+
 <portType name="ServicePortType">
  <operation name="GetMontorState">
   <documentation>Service definition of function mons__GetMontorState</documentation>
@@ -427,6 +478,16 @@
   <documentation>Service definition of function mons__ExeStartSMS</documentation>
   <input message="tns:ExeStartSMSRequest"/>
   <output message="tns:ExeStartSMSResponse"/>
+ </operation>
+ <operation name="ExeDcpHashCheck">
+  <documentation>Service definition of function mons__ExeDcpHashCheck</documentation>
+  <input message="tns:ExeDcpHashCheckRequest"/>
+  <output message="tns:ExeDcpHashCheckResponse"/>
+ </operation>
+ <operation name="ExeGetHashCheckPercent">
+  <documentation>Service definition of function mons__ExeGetHashCheckPercent</documentation>
+  <input message="tns:ExeGetHashCheckPercent"/>
+  <output message="tns:HashCheckPercent"/>
  </operation>
 </portType>
 
@@ -541,6 +602,24 @@
   </output>
  </operation>
  <operation name="ExeStartSMS">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="ExeDcpHashCheck">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="ExeGetHashCheckPercent">
   <SOAP:operation soapAction=""/>
   <input>
      <SOAP:body parts="Body" use="literal"/>

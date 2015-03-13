@@ -150,6 +150,11 @@ int  CInvoke::Init()
 	{
 		m_ptrHash = new CHashCheck;
 	}
+
+	if(m_ptrFO == NULL)
+	{
+		m_ptrFO = new CFileOperator;
+	}
 }
 
 void CInvoke::DeInit()
@@ -161,6 +166,7 @@ void CInvoke::DeInit()
 	SAFE_DELETE(m_ptrTMS);
 	SAFE_DELETE(m_ptrDispatch);
 	SAFE_DELETE(m_ptrHash);
+	SAFE_DELETE(m_ptrFO);
 }
 
 bool CInvoke::AddInitTask()
@@ -254,6 +260,9 @@ bool CInvoke::AddInitTask()
 	// 添加hash校验处理任务
 	ptrTaskList->AddTask(TASK_NUMBER_HASHCHECK_ROUTINE,NULL,-1);
 
+	// 添加hash校验处理任务
+	ptrTaskList->AddTask(TASK_NUMBER_FILEOPERATION_ROUTINE,NULL,-1);
+
 	// 运行在交互模式
 	if(0 == g_nRunType)
 	{
@@ -336,6 +345,9 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 	case TASK_NUMBER_GET_DISK_STATUS:
 		m_ptrDisk->ReadMegaSASInfo();
 		nResult = 0;
+		break;
+	case TASK_NUMBER_FILEOPERATION_ROUTINE:
+		m_ptrFO->ProcessFileOptTask();
 		break;
 	case TASK_NUMBER_GET_NET_STATUS:
 		m_ptrNet->GetAllEthStatus();
@@ -886,26 +898,145 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 	}
 }
 
-void CInvoke::DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo)
+int CInvoke::DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo)
 {
+	struct stat buf;
+	if(stat(strPath.c_str(),&buf)<0)
+	{
+		strErrInfo="path not exsit";
+		return 1;
+	}
+	
+	if(!S_ISDIR(buf.st_mode))
+	{
+		strErrInfo="path not directory";
+		return 1;
+	}
+	
 	if(m_ptrHash != NULL)
 	{
 		stHashTaskInfo st;
 		st.strPath = strPath;
 		st.strUUID = strPklUuid;
 		m_ptrHash->AddHaskTask(st);
+		return 0;
 	}
 }
 
-int CInvoke::GetHashCheckPercent(std::string strPklUuid,int &nResult,std::string &strErrInfo)
+int CInvoke::GetHashCheckPercent(std::string strPklUuid,int &nResult,int &nPercent,std::string &strErrInfo)
 {
 	if(m_ptrHash != NULL)
 	{
-		m_ptrHash->GetDcpHashCheckResult(strPklUuid,nResult,strErrInfo);
+		m_ptrHash->GetDcpHashCheckResult(strPklUuid,nResult,nPercent,strErrInfo);
 		return 0;
 	}
 	else
 	{
 		return 1;
+	}
+}
+
+
+// 拷贝dcp
+int  CInvoke::CopyDcp(std::string PklUuid,std::string srcPath,std::string desPath,int &result ,std::string &errinfo)
+{
+	struct stat buf;
+	if(stat(srcPath.c_str(),&buf)<0)
+	{
+		errinfo="src path not exsit";
+		result = 1;
+		return 1;
+	}
+
+	if(!S_ISDIR(buf.st_mode))
+	{
+		errinfo="src path not directory";
+		result = 1;
+		return 1;
+	}
+
+	if(stat(desPath.c_str(),&buf)<0)
+	{
+		errinfo="des path not exsit";
+		result = 2;
+		return 1;
+	}
+
+	if(!S_ISDIR(buf.st_mode))
+	{
+		errinfo="despath not directory";
+		result = 2;
+		return 1;
+	}
+
+	if(m_ptrFO!=NULL)
+	{
+		stFileOperatorInfo st;
+		st.strSrcPath = srcPath;
+		st.strDesPath = desPath;
+		st.strUUID = PklUuid;
+		st.enOpt = CP;
+		m_ptrFO->AddFileOptTask(st);
+		result = 0;
+		
+	}
+
+}
+
+// 删除dcp
+int  CInvoke::DeleteDcp(std::string PklUuid,std::string Path,int &result ,std::string &errinfo)
+{
+	struct stat buf;
+	if(stat(Path.c_str(),&buf)<0)
+	{
+		errinfo="path not exsit";
+		result = 1;
+		return 1;
+	}
+
+	if(!S_ISDIR(buf.st_mode))
+	{
+		errinfo="path not directory";
+		result = 1;
+		return 1;
+	}
+	if(m_ptrFO!=NULL)
+	{
+		stFileOperatorInfo st;
+		st.strSrcPath = Path;
+		st.strUUID = PklUuid;
+		st.enOpt = RM;
+		m_ptrFO->AddFileOptTask(st);
+		result = 0;
+		return 0;
+	}
+
+}
+
+// 获取拷贝dcp的进度/结果
+bool  CInvoke::GetCopyDcpProgress(std::string &strPKIUUID,int &nResult,std::string &strErrInfo)
+{
+	if(m_ptrFO!=NULL)
+	{
+		m_ptrFO->GetCopyDcpProgress(strPKIUUID,nResult,strErrInfo);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// 获取删除dcp的进度/结果
+bool  CInvoke::GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,std::string &strErrInfo)
+{
+	if(m_ptrFO!=NULL)
+	{
+		m_ptrFO->GetDeleteDcpProgress(strPKIUUID,nResult,strErrInfo);
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }

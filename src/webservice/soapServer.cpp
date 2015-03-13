@@ -14,7 +14,7 @@ compiling, linking, and/or using OpenSSL is allowed.
 #endif
 #include "soapH.h"
 
-SOAP_SOURCE_STAMP("@(#) soapServer.cpp ver 2.8.18 2015-01-12 05:18:07 GMT")
+SOAP_SOURCE_STAMP("@(#) soapServer.cpp ver 2.8.18 2015-03-02 07:44:15 GMT")
 
 
 extern "C" SOAP_FMAC5 int SOAP_FMAC6 soap_serve(struct soap *soap)
@@ -82,6 +82,10 @@ extern "C" SOAP_FMAC5 int SOAP_FMAC6 soap_serve_request(struct soap *soap)
 		return soap_serve_mons__ExeCloseSMS(soap);
 	if (!soap_match_tag(soap, soap->tag, "mons:ExeStartSMS"))
 		return soap_serve_mons__ExeStartSMS(soap);
+	if (!soap_match_tag(soap, soap->tag, "mons:ExeDcpHashCheck"))
+		return soap_serve_mons__ExeDcpHashCheck(soap);
+	if (!soap_match_tag(soap, soap->tag, "mons:ExeGetHashCheckPercent"))
+		return soap_serve_mons__ExeGetHashCheckPercent(soap);
 	return soap->error = SOAP_NO_METHOD;
 }
 #endif
@@ -612,6 +616,88 @@ SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeStartSMS(struct soap *soap)
 	 || soap_putheader(soap)
 	 || soap_body_begin_out(soap)
 	 || soap_put_mons__ExeStartSMSResponse(soap, &soap_tmp_mons__ExeStartSMSResponse, "mons:ExeStartSMSResponse", NULL)
+	 || soap_body_end_out(soap)
+	 || soap_envelope_end_out(soap)
+	 || soap_end_send(soap))
+		return soap->error;
+	return soap_closesock(soap);
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeDcpHashCheck(struct soap *soap)
+{	struct mons__ExeDcpHashCheck soap_tmp_mons__ExeDcpHashCheck;
+	struct mons__ExeDcpHashCheckResponse soap_tmp_mons__ExeDcpHashCheckResponse;
+	soap_default_mons__ExeDcpHashCheckResponse(soap, &soap_tmp_mons__ExeDcpHashCheckResponse);
+	soap_default_mons__ExeDcpHashCheck(soap, &soap_tmp_mons__ExeDcpHashCheck);
+	if (!soap_get_mons__ExeDcpHashCheck(soap, &soap_tmp_mons__ExeDcpHashCheck, "mons:ExeDcpHashCheck", NULL))
+		return soap->error;
+	if (soap_body_end_in(soap)
+	 || soap_envelope_end_in(soap)
+	 || soap_end_recv(soap))
+		return soap->error;
+	soap->error = mons__ExeDcpHashCheck(soap, soap_tmp_mons__ExeDcpHashCheck.path, soap_tmp_mons__ExeDcpHashCheck.PklUuid, soap_tmp_mons__ExeDcpHashCheckResponse.errorInfo);
+	if (soap->error)
+		return soap->error;
+	soap->encodingStyle = NULL;
+	soap_serializeheader(soap);
+	soap_serialize_mons__ExeDcpHashCheckResponse(soap, &soap_tmp_mons__ExeDcpHashCheckResponse);
+	if (soap_begin_count(soap))
+		return soap->error;
+	if (soap->mode & SOAP_IO_LENGTH)
+	{	if (soap_envelope_begin_out(soap)
+		 || soap_putheader(soap)
+		 || soap_body_begin_out(soap)
+		 || soap_put_mons__ExeDcpHashCheckResponse(soap, &soap_tmp_mons__ExeDcpHashCheckResponse, "mons:ExeDcpHashCheckResponse", NULL)
+		 || soap_body_end_out(soap)
+		 || soap_envelope_end_out(soap))
+			 return soap->error;
+	};
+	if (soap_end_count(soap)
+	 || soap_response(soap, SOAP_OK)
+	 || soap_envelope_begin_out(soap)
+	 || soap_putheader(soap)
+	 || soap_body_begin_out(soap)
+	 || soap_put_mons__ExeDcpHashCheckResponse(soap, &soap_tmp_mons__ExeDcpHashCheckResponse, "mons:ExeDcpHashCheckResponse", NULL)
+	 || soap_body_end_out(soap)
+	 || soap_envelope_end_out(soap)
+	 || soap_end_send(soap))
+		return soap->error;
+	return soap_closesock(soap);
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_serve_mons__ExeGetHashCheckPercent(struct soap *soap)
+{	struct mons__ExeGetHashCheckPercent soap_tmp_mons__ExeGetHashCheckPercent;
+	struct mons__HashCheckPercent stResult;
+	soap_default_mons__HashCheckPercent(soap, &stResult);
+	soap_default_mons__ExeGetHashCheckPercent(soap, &soap_tmp_mons__ExeGetHashCheckPercent);
+	if (!soap_get_mons__ExeGetHashCheckPercent(soap, &soap_tmp_mons__ExeGetHashCheckPercent, "mons:ExeGetHashCheckPercent", NULL))
+		return soap->error;
+	if (soap_body_end_in(soap)
+	 || soap_envelope_end_in(soap)
+	 || soap_end_recv(soap))
+		return soap->error;
+	soap->error = mons__ExeGetHashCheckPercent(soap, soap_tmp_mons__ExeGetHashCheckPercent.PklUuid, stResult);
+	if (soap->error)
+		return soap->error;
+	soap->encodingStyle = NULL;
+	soap_serializeheader(soap);
+	soap_serialize_mons__HashCheckPercent(soap, &stResult);
+	if (soap_begin_count(soap))
+		return soap->error;
+	if (soap->mode & SOAP_IO_LENGTH)
+	{	if (soap_envelope_begin_out(soap)
+		 || soap_putheader(soap)
+		 || soap_body_begin_out(soap)
+		 || soap_put_mons__HashCheckPercent(soap, &stResult, "mons:HashCheckPercent", NULL)
+		 || soap_body_end_out(soap)
+		 || soap_envelope_end_out(soap))
+			 return soap->error;
+	};
+	if (soap_end_count(soap)
+	 || soap_response(soap, SOAP_OK)
+	 || soap_envelope_begin_out(soap)
+	 || soap_putheader(soap)
+	 || soap_body_begin_out(soap)
+	 || soap_put_mons__HashCheckPercent(soap, &stResult, "mons:HashCheckPercent", NULL)
 	 || soap_body_end_out(soap)
 	 || soap_envelope_end_out(soap)
 	 || soap_end_send(soap))

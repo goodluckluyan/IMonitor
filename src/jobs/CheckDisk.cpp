@@ -85,29 +85,21 @@ int CheckDisk::ReadMegaSASInfo()
 	
 	//读取信息存入结构体
 	DiskInfo diskinfo_temp;
-	iResult = GetDiskInfo( strInipath.c_str(), diskinfo_temp);
+	iResult = GetDiskInfo( strInipath.c_str());
 	if (iResult != 0)
 	{
 		return iResult;
 	}
-// 	else if(diskinfo_temp.diskDrives.size() != atoi(diskinfo_temp.diskNumOfDrives.c_str()))
-// 	{
-// 		return -1;
-// 	}
 
-	diskInfo = diskinfo_temp;
-	DiskSize = diskinfo_temp.diskSize;
-	DiskState = diskinfo_temp.diskState;
-	DiskNumOfDrives = diskinfo_temp.diskNumOfDrives;
 	
 	if(m_ptrDM != NULL)
 	{	
-		m_ptrDM->UpdateDevStat(diskInfo);
+		m_ptrDM->UpdateDevStat(mapDiskInfo);
 	}
 	return 0;
 }
 
-int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
+int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 {
 	int iResult;
 	string strline;
@@ -129,6 +121,8 @@ int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
 	}
 	
 	DiskDriveInfo disDriveInfo;
+    DiskInfo &diskInfo;
+	int index = -1;
 	while (!ifs.eof())
 	{
 		getline(ifs,strline);
@@ -138,7 +132,14 @@ int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
 		iResult = getkey(strline.c_str(), cfg_key, cfg_value);
 		if (iResult)
 		{
-			if ( !strcmp( cfg_key.c_str(), "Size"))
+			if (!strcmp(cfg_key.c_str(),"Virtual Drive"))
+			{
+				//形如 1 (Target Id: 1);
+				std::string strIndex = cfg_value.substr(0,cfg_value.find('('));
+                index = atoi(strIndex.c_str());
+                diskInfo.diskGroup = cfg_value;
+			}
+			else if ( !strcmp( cfg_key.c_str(), "Size"))
 			{
 				diskInfo.diskSize = cfg_value;
 			}
@@ -149,7 +150,13 @@ int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
 			else if( !strcmp( cfg_key.c_str(), "Number Of Drives"))
 			{
 				diskInfo.diskNumOfDrives = cfg_value;
+				if(index != -1)
+				{
+					mapDiskInfo[index] = diskInfo;
+				}
 			}
+
+			
 			else if( !strcmp( cfg_key.c_str(), "Enclosure Device ID"))
 			{
 				disDriveInfo.driveID = cfg_value;
@@ -157,6 +164,14 @@ int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
 			else if( !strcmp( cfg_key.c_str(), "Slot Number"))
 			{
 				disDriveInfo.driveSlotNum = cfg_value;
+			}
+			else if( !strcmp(cfg_key.c_str(),"Drive's postion"))
+			{
+				// 应该是形如 DiskGroup: 0, Span: 0, Arm: 0
+				int start = cfg_value.find(':');
+				std::string pos = cfg_value.substr(start+1,cfg_value.find(',')-start-1);
+				disDriveInfo.group = atoi(pos.c_str());
+				disDriveInfo.drivePosition = cfg_value;
 			}
 			else if( !strcmp( cfg_key.c_str(), "Media Error Count"))
 			{
@@ -174,17 +189,22 @@ int CheckDisk::GetDiskInfo( const char* ppath, DiskInfo &diskInfo)//MegaSAS.log
 			{
 				disDriveInfo.driveSpeed = cfg_value;
 				bool bFind = false;
-			        int nLen = diskInfo.diskDrives.size();
-				for(int i = 0 ;i < nLen ;i++)
+				if(disDriveInfo.group != -1)
 				{
-				  if(!strcmp(diskInfo.diskDrives[i].driveSlotNum.c_str(),disDriveInfo.driveSlotNum.c_str()) )
-				  {
-				    bFind = true;
-			            break;	
-				   }
+					int nLen = mapDiskInfo[disDriveInfo.group].diskDrives.size();
+					for(int i = 0 ;i < nLen ;i++)
+					{
+						if(!strcmp(mapDiskInfo[disDriveInfo.group].diskDrives[i].driveSlotNum.c_str(),disDriveInfo.driveSlotNum.c_str()) )
+						{
+							 bFind = true;
+							 break;	
+						}
+					}
+					if(!bFind)
+					{
+						mapDiskInfo[disDriveInfo.group].diskDrives.push_back( disDriveInfo);
+					}
 				}
-				if(!bFind)
-				   diskInfo.diskDrives.push_back( disDriveInfo);
 			}
 		}
 	}

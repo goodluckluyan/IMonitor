@@ -411,6 +411,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\jobs\FileOperator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\jobs\FileOperator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\jobs\HashCheck.cpp"
 				>
 			</File>

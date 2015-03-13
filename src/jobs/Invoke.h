@@ -13,7 +13,7 @@
 #include "MonitorSensor.h"
 #include "TMSSensor.h"
 #include "HashCheck.h"
-
+#include "FileOperator.h"
 
 #define SAFE_DELETE(ptr) if(ptr != NULL) {delete ptr ; ptr = NULL;}
 class CInvoke
@@ -27,6 +27,7 @@ public:
 	  ,m_ptrDispatch(NULL)
 	  ,m_ptrTMS(NULL)
 	  ,m_ptrHash(NULL)
+	  ,m_ptrFO(NULL)
 	  {
 	  }
 
@@ -92,9 +93,23 @@ public:
 	// 解决sms运行冲突
 	bool SolveConflict(std::vector<ConflictInfo> &vecCI);
 
-	void DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo);
+	// hash校验
+	int DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo);
 
-	int GetHashCheckPercent(std::string strPklUuid,int &nResult,std::string &strErrInfo);
+	// 获取hash校验的进度
+	int GetHashCheckPercent(std::string strPklUuid,int &nResult,int &nPercent,std::string &strErrInfo);
+
+	// 拷贝dcp
+	int CopyDcp(std::string PklUuid,std::string srcPath,std::string desPath,int &result ,std::string &errinfo);
+
+	// 删除dcp
+	int DeleteDcp(std::string PklUuid,std::string Path,int &result ,std::string &errinfo);
+
+	// 获取拷贝dcp的进度/结果
+	bool GetCopyDcpProgress(std::string &strPKIUUID,int &nResult,std::string &strErrInfo);
+
+	// 获取删除dcp的进度/结果
+	bool GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,std::string &strErrInfo);
 
 private:
 	// 打印帮助信息
@@ -118,6 +133,7 @@ private:
 	CMonitorSensor * m_ptrMonitor;
 	CTMSSensor * m_ptrTMS;
 	CHashCheck * m_ptrHash;
+	CFileOperator * m_ptrFO;
 };
 
 #endif

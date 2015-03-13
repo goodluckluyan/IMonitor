@@ -72,5 +72,24 @@ int mons__ExeCloseSMS(std::string strHallID,int &ret);
 int mons__ExeStartSMS(std::string strHallID,int &ret);
 
 int mons__ExeDcpHashCheck(std::string path,std::string PklUuid,std::string& errorInfo);
-int mons__ExeGetHashCheckPercent(std::string PklUuid,int& Result,std::string& errorInfo);
 
+struct mons__HashCheckPercent
+{
+	int Result;
+	int nPercent;
+	std::string errorInfo;
+};
+int mons__ExeGetHashCheckPercent(std::string PklUuid,struct mons__HashCheckPercent& stResult);
+
+
+struct mons__FileOperationResult
+{
+	int Result;
+	std::string errorInfo;
+};
+
+int mons__CopyDcp(std::string PklUuid,std::string srcPath,std::string desPath,struct mons__FileOperationResult &result);
+int mons__GetCopyDcpProgress(std::string PklUuid,struct mons__FileOperationResult &result);
+
+int mons__DeleteDcp(std::string PklUuid,std::string Path,struct mons__FileOperationResult &result);
+int mons__GetDeleteDcpProgress(std::string PklUuid,struct mons__FileOperationResult &result);

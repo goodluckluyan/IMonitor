@@ -66,8 +66,11 @@ bool CHashCheck::GetDcpHashCheckResult(std::string &strPKIUUID,int &nPercent,int
 // 	pthread_mutex_unlock(m_mutxMap);
 
 	Content::Hashinfo hash;
-	GetHashPercent("", strPKIUUID, hash ,strErrInfo );
+	std::string path;
+	GetHashPercent(path, strPKIUUID, hash ,strErrInfo );
 	nResult = hash.status;
 	nPercent = hash.percent;
 	return bRet;	
 }
+
+

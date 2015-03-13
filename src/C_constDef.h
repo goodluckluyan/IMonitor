@@ -34,6 +34,7 @@ const int TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS = 0x0508;
 const int TASK_NUMBER_PROCESS_USERINPUT = 0x0601;
 const int TASK_NUMBER_CONDSWITCH_ROUTINE = 0x0701;
 const int TASK_NUMBER_HASHCHECK_ROUTINE = 0x0801;
+const int TASK_NUMBER_FILEOPERATION_ROUTINE = 0x0901;
 
 
 // sms ״̬
@@ -135,6 +136,7 @@ enum TASK_STATE
 // RAID״̬
 typedef struct DiskInfo
 {
+	std::string diskGroup;
 	std::string diskSize;
 	std::string diskState;
 	std::string diskNumOfDrives;
@@ -143,12 +145,16 @@ typedef struct DiskInfo
 
 typedef struct DiskDriveInfo
 {
+	int group ;
 	std::string driveID;
+	std::string drivePosition;
 	std::string driveSlotNum;
 	std::string driveErrorCount;
 	std::string driveSize;
 	std::string driveFirmwareState;
 	std::string driveSpeed;
+	DiskDriveInfo():group(-1)
+	{}
 }DiskDriveInfo;
 
 
