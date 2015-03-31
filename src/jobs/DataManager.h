@@ -55,7 +55,7 @@ public:
 
 	// 更新本机的各个监测数据
 	// 更新磁盘陈列的监测数据
-	bool UpdateDevStat(DiskInfo &df);
+	bool UpdateDevStat(std::map<int,DiskInfo> &mapdf);
 
 	// 检测磁盘陈列是否有错误
 	bool CheckRaidError(std::vector<stError> &vecErr);
@@ -74,7 +74,7 @@ public:
 	bool UpdateTMSStat(int state);
 
 	// 读取监测参数
-	bool GetDevStat(DiskInfo &df);
+	bool GetDevStat(std::map<int,DiskInfo> &df);
 	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
 	bool GetSMSStat(std::vector<SMSStatus>& vecSMSState);
 	bool GetSMSStat(std::string strHallID,SMSInfo& smsinfo);
@@ -101,7 +101,7 @@ private:
 	bool CheckConfile(std::vector<ConflictInfo> &vecConflict);
 
 
-	DiskInfo m_df;
+	std::map<int,DiskInfo> m_mapdf;
 
 	std::map<std::string,EthStatus> m_mapEthStatus;
 	std::map<std::string,SMSInfo> m_mapSmsStatus;

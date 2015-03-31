@@ -77,7 +77,7 @@ int C_HallList::Init()
 	int nResult;
 	CppMySQLQuery query = mysql.querySQL("select * from devices where device_type=3 and device_model=\"AQ33CS\"",nResult);
 	int nRows = 0 ;
-	if((nRows = query.numRow()) == 0)
+	if((nRows = query.numRow()) == 0) 
 	{
 		LOGERRFMT(ERROR_READSMSTABLE_NOROW,"C_HallList Initial failed,hallinfo talbe no rows!\n");
 		return false;

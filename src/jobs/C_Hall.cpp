@@ -311,6 +311,11 @@ bool C_Hall::ShutDownSMS()
 
 int C_Hall::ISSMSRun()
 {
+	if(m_pid == 0)
+	{
+		return false;
+	}
+
 	char buf[64]={'\0'};
 	snprintf(buf,sizeof(buf),"ps %d|grep %d|awk '{print $1}'",(int)m_pid,(int)m_pid);
 	

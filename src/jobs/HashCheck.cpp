@@ -1,7 +1,8 @@
 #include "HashCheck.h"
+#include "log/C_LogManage.h"
+#include "C_constDef.h"
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
-
-extern bool g_bQuit;
 CHashCheck::CHashCheck()
 {
 	pthread_mutex_init(&m_mutx,NULL);
@@ -37,9 +38,10 @@ void CHashCheck::ProcessHashTask()
 
 	pthread_mutex_unlock(&m_mutx);
 
-
+	
 	stHashTaskInfo &task = m_lstHaskTask.front();
 	std::string strErr;
+	LOGINFFMT(0,"Start HashDcp(%s)....",task.strUUID.c_str());
 	task.nResult = HashDcp( task.strPath, task.strUUID , task.strErrInfo);
 	m_lstHaskTask.pop_front();
 
@@ -50,7 +52,7 @@ void CHashCheck::ProcessHashTask()
 
 
 // ªÒ»°
-bool CHashCheck::GetDcpHashCheckResult(std::string &strPKIUUID,int &nPercent,int &nResult,std::string &strErrInfo)
+bool CHashCheck::GetDcpHashCheckResult(std::string &strPKIUUID,int &nResult,int &nPercent,std::string &strErrInfo)
 {
 	bool bRet = false;
 // 	pthread_mutex_lock(m_mutxMap);

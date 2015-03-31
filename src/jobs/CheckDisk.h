@@ -58,7 +58,7 @@ public:
 
 private:
 	
-	int GetDiskInfo( const char* ppath, DiskInfo &diskInfo);
+	int GetDiskInfo( const char* ppath);
 
 	//生成包含磁盘信息的MegaSAS.log文件
 	int GetDickInfoLog(std::string ppath);
@@ -76,7 +76,7 @@ private:
 	std::string DiskState;//总磁盘状态
 	std::string DiskNumOfDrives;//总磁盘数量
 
-	DiskInfo diskInfo;//磁盘总信息
+	std::map<int,DiskInfo> mapDiskInfo;//磁盘总信息
 
 	CDataManager * m_ptrDM;
 };

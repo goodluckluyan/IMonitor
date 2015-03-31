@@ -67,32 +67,42 @@ void CDataManager::SetSMSInfo(std::vector<SMSInfo> vecHall)
 }
 
 // 更新各个模块的监测数据
-bool CDataManager::UpdateDevStat(DiskInfo &df)
+bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 {
 	m_csDisk.EnterCS();
-	m_df = df;
-	
-    LOGDEBFMT("*****************Raid State************");
-	LOGDEBFMT("diskSize:%s",df.diskSize.c_str());
-	std::transform(m_df.diskState.begin(),m_df.diskState.end(),m_df.diskState.begin(),::tolower);
-	LOGDEBFMT("diskState:%s",df.diskState.c_str());
-	LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
-	LOGDEBFMT("-------------------Detail--------------");
-	int nLen = df.diskDrives.size();
-	for(int i = 0 ;i < nLen ;i ++)
-	{	
-	    LOGDEBFMT("----------------%d----------------",i);
-	    LOGDEBFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
-	    LOGDEBFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
-	    LOGDEBFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
-	    LOGDEBFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
-		std::transform(df.diskDrives[i].driveFirmwareState.begin(),
-			df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
-	    LOGDEBFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
-	    LOGDEBFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
-	}
-	LOGDEBFMT("---------------------------------------");
+	m_mapdf = mapdf;
 	m_csDisk.LeaveCS();
+	
+	LOGDEBFMT("*****************Raid State************");
+	std::map<int,DiskInfo>::iterator it = mapdf.begin();
+	for(;it != mapdf.end();it++)
+	{
+		DiskInfo &df = it->second;
+		
+		LOGDEBFMT("diskGroup:%d",it->first);
+		LOGDEBFMT("diskSize:%s",df.diskSize.c_str());
+		std::transform(df.diskState.begin(),df.diskState.end(),df.diskState.begin(),::tolower);
+		LOGDEBFMT("diskState:%s",df.diskState.c_str());
+		LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
+		LOGDEBFMT("-------------------Detail--------------");
+		int nLen = df.diskDrives.size();
+		for(int i = 0 ;i < nLen ;i ++)
+		{	
+			LOGDEBFMT("----------------%d----------------",i);
+			LOGDEBFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
+			LOGDEBFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
+			LOGDEBFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
+			LOGDEBFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
+			std::transform(df.diskDrives[i].driveFirmwareState.begin(),
+				df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
+			LOGDEBFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
+			LOGDEBFMT("dirveType:%s",df.diskDrives[i].driveType.c_str());
+			LOGDEBFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
+		}
+		
+	}
+    LOGDEBFMT("---------------------------------------");
+	
 	
 	std::vector<stError> vecRE;
 	if(!CheckRaidError(vecRE))
@@ -110,44 +120,50 @@ bool CDataManager::UpdateDevStat(DiskInfo &df)
 bool CDataManager::CheckRaidError(std::vector<stError> &vecErr)
 {
 	bool bRet = true;
-	DiskInfo df;
+	std::map<int,DiskInfo> mapdf;
 	m_csDisk.EnterCS();
-	df = m_df;
+	mapdf = m_mapdf;
 	m_csDisk.LeaveCS();
 	
-	if(df.diskState == "degraded")
+	std::map<int,DiskInfo>::iterator it = mapdf.begin();
+	for(;it != mapdf.end();it++)
 	{
-		stError re;
-		re.ErrorName = "diskState";
-		re.ErrorVal = "degraded";
-		vecErr.push_back(re);
-		bRet = false;
-	}
-
-	int nLen = df.diskDrives.size();
-	for(int i = 0 ;i < nLen ;i++)
-	{
-		DiskDriveInfo &di = df.diskDrives[i];
-		if(di.driveFirmwareState.find("online") == std::string::npos)
+		DiskInfo &df = it->second;
+		if(df.diskState == "degraded")
 		{
 			stError re;
-			re.ErrorName = "driveFirmwareState";
-			re.ErrorVal = di.driveFirmwareState;
-			re.nOrdinal = atoi(di.driveSlotNum.c_str());
+			re.ErrorName = "diskState";
+			re.ErrorVal = "degraded";
 			vecErr.push_back(re);
 			bRet = false;
 		}
 
-		if(di.driveErrorCount != "0")
+		int nLen = df.diskDrives.size();
+		for(int i = 0 ;i < nLen ;i++)
 		{
-			stError re;
-			re.ErrorName = "driveErrorCount";
-			re.ErrorVal = di.driveErrorCount;
-			re.nOrdinal = atoi(di.driveSlotNum.c_str());
-			vecErr.push_back(re);
-			bRet = false;
+			DiskDriveInfo &di = df.diskDrives[i];
+			if(di.driveFirmwareState.find("online") == std::string::npos)
+			{
+				stError re;
+				re.ErrorName = "driveFirmwareState";
+				re.ErrorVal = di.driveFirmwareState;
+				re.nOrdinal = atoi(di.driveSlotNum.c_str());
+				vecErr.push_back(re);
+				bRet = false;
+			}
+
+			if(di.driveErrorCount != "0")
+			{
+				stError re;
+				re.ErrorName = "driveErrorCount";
+				re.ErrorVal = di.driveErrorCount;
+				re.nOrdinal = atoi(di.driveSlotNum.c_str());
+				vecErr.push_back(re);
+				bRet = false;
+			}
 		}
 	}
+	
 	return bRet;
 }
 
@@ -295,10 +311,10 @@ bool CDataManager::UpdateTMSStat(int state)
 }
 
 // 读取disk监测参数
-bool CDataManager::GetDevStat(DiskInfo &df)
+bool CDataManager::GetDevStat(std::map<int,DiskInfo> &mapdf)
 {
 	m_csDisk.EnterCS();
-	df = m_df; 
+	mapdf = m_mapdf; 
 	m_csDisk.LeaveCS();   
 }
 
@@ -680,9 +696,39 @@ void CDataManager::PrintTMSState()
 //帮助信息打印raid状态
 void CDataManager::PrintDiskState()
 {
-	LOGDEBFMT("Number of RAID Disk :%s",m_df.diskNumOfDrives.c_str());
-	LOGDEBFMT("RAID Disk State :%s",m_df.diskState.c_str());
-	LOGDEBFMT("RAID Disk State: %s",m_df.diskSize.c_str());
+	m_csDisk.EnterCS();
+	std::map<int,DiskInfo> &mapdf = m_mapdf;
+	m_csDisk.LeaveCS();
+
+	LOGDEBFMT("*****************Raid State************");
+	std::map<int,DiskInfo>::iterator it = mapdf.begin();
+	for(;it != mapdf.end();it++)
+	{
+		DiskInfo &df = it->second;
+
+		LOGDEBFMT("diskGroup:%d",it->first);
+		LOGDEBFMT("diskSize:%s",df.diskSize.c_str());
+		std::transform(df.diskState.begin(),df.diskState.end(),df.diskState.begin(),::tolower);
+		LOGDEBFMT("diskState:%s",df.diskState.c_str());
+		LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
+		LOGDEBFMT("-------------------Detail--------------");
+		int nLen = df.diskDrives.size();
+		for(int i = 0 ;i < nLen ;i ++)
+		{	
+			LOGDEBFMT("----------------%d----------------",i);
+			LOGDEBFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
+			LOGDEBFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
+			LOGDEBFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
+			LOGDEBFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
+			std::transform(df.diskDrives[i].driveFirmwareState.begin(),
+				df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
+			LOGDEBFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
+			LOGDEBFMT("dirveType:%s",df.diskDrives[i].driveType.c_str());
+			LOGDEBFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
+		}
+
+	}
+	LOGDEBFMT("---------------------------------------");
 }
 
 //帮助信息打印sms状态

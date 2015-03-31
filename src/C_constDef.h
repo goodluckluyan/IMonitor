@@ -153,6 +153,7 @@ typedef struct DiskDriveInfo
 	std::string driveSize;
 	std::string driveFirmwareState;
 	std::string driveSpeed;
+	std::string driveType;
 	DiskDriveInfo():group(-1)
 	{}
 }DiskDriveInfo;

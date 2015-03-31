@@ -33,15 +33,15 @@ bool CheckDisk::InitAndCheck()
 	{
 		return false;
 	}
-	
-	if(diskInfo.diskState != "Optimal")
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+	return true;
+// 	if(diskInfo.diskState != "Optimal")
+// 	{
+// 		return false;
+// 	}
+// 	else
+// 	{
+// 		return true;
+// 	}
 }
 
 
@@ -84,14 +84,12 @@ int CheckDisk::ReadMegaSASInfo()
 	}
 	
 	//读取信息存入结构体
-	DiskInfo diskinfo_temp;
 	iResult = GetDiskInfo( strInipath.c_str());
 	if (iResult != 0)
 	{
 		return iResult;
 	}
 
-	
 	if(m_ptrDM != NULL)
 	{	
 		m_ptrDM->UpdateDevStat(mapDiskInfo);
@@ -121,7 +119,7 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 	}
 	
 	DiskDriveInfo disDriveInfo;
-    DiskInfo &diskInfo;
+    DiskInfo diskInfo;
 	int index = -1;
 	while (!ifs.eof())
 	{
@@ -134,10 +132,9 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 		{
 			if (!strcmp(cfg_key.c_str(),"Virtual Drive"))
 			{
-				//形如 1 (Target Id: 1);
-				std::string strIndex = cfg_value.substr(0,cfg_value.find('('));
-                index = atoi(strIndex.c_str());
-                diskInfo.diskGroup = cfg_value;
+				//形如 1 ;
+				index = atoi(cfg_value.c_str());
+				diskInfo.diskGroup = cfg_value;
 			}
 			else if ( !strcmp( cfg_key.c_str(), "Size"))
 			{
@@ -167,10 +164,11 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 			}
 			else if( !strcmp(cfg_key.c_str(),"Drive's postion"))
 			{
-				// 应该是形如 DiskGroup: 0, Span: 0, Arm: 0
-				int start = cfg_value.find(':');
-				std::string pos = cfg_value.substr(start+1,cfg_value.find(',')-start-1);
-				disDriveInfo.group = atoi(pos.c_str());
+				// cfg_value = "DiskGroup"
+				int npos = strline.find(cfg_value);
+				int nstart = strline.find(':',npos+1);
+				std::string strGroup = strline.substr(nstart+1,strline.find(',')-nstart-1);
+				disDriveInfo.group = atoi(strGroup.c_str());
 				disDriveInfo.drivePosition = cfg_value;
 			}
 			else if( !strcmp( cfg_key.c_str(), "Media Error Count"))
@@ -184,6 +182,10 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 			else if( !strcmp( cfg_key.c_str(), "Firmware state"))
 			{
 				disDriveInfo.driveFirmwareState = cfg_value;
+			}
+			else if( !strcmp(cfg_key.c_str(),"Media Type"))
+			{
+				disDriveInfo.driveType = cfg_value;
 			}
 			else if ( !strcmp( cfg_key.c_str(), "Port's Linkspeed"))
 			{
@@ -277,6 +279,7 @@ int CheckDisk::getkey( const char *pbuf, string &temp_key, string &temp_value)
 		if( KEYVALUE_FLAG == pbuf[i])
 		{
 			ipos_eq = i;
+			break;
 		}
 	}
 

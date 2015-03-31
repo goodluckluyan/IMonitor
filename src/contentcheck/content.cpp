@@ -10,6 +10,7 @@
 #ifndef __CONTENT_H__
 #include "content.h"
 #endif
+#include "log/C_LogManage.h"
 
 using namespace Content;
 using namespace Content::Dcp;
@@ -29,6 +30,9 @@ HANDLE hMutex = CreateMutex(NULL, FALSE, (LPCWSTR)"DCPContent");
 #include "para/C_RunPara.h"
 #define _READDB_DEST_PATH2
 #define _READDB_KDM_DEST_PATH2
+
+#define  LOGERRFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
+
 
 //定义、声明全局变量，用于支持获取进度。
 std::string g_sCopyDcp_PklUuidName;//拷贝的pklUUID名
@@ -89,7 +93,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 	ret = Sate.Init( Ip.c_str() , usPort );
 	if( ret != 0 )
 	{
-		printf("Error:C_Satellite::Init() , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT("Error:C_Satellite::Init() , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:C_Satellite::Init() , IP = %s !\n" , Ip.c_str() );
@@ -104,7 +108,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 	ret = Sate.CreateCertConnect();
 	if( ret != 0 )
 	{
-		printf( "Error:C_Satellite::CreateCertConnect() , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT( "Error:C_Satellite::CreateCertConnect() , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:C_Satellite::CreateCertConnect() , IP = %s !\n" , Ip.c_str() );
@@ -120,7 +124,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 	ret = Sate.GetDcpList( vSatDcpList );
 	if( ret != 0 )
 	{
-		printf( "Error:C_Satellite::GetDcpList() , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT( "Error:C_Satellite::GetDcpList() , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:C_Satellite::GetDcpList() , IP = %s !\n" , Ip.c_str() );
@@ -134,7 +138,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 	int nDcpListCount =  vSatDcpList.size();
 	if ( nDcpListCount == 0 )
 	{
-		printf("Warning:C_Satellite::GetDcpList(),nDcpListCount = 0 !\n");
+		LOGERRFMT("Warning:C_Satellite::GetDcpList(),nDcpListCount = 0 !\n");
 		return 0;
 	}
 
@@ -151,7 +155,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 		int result = count(vTmp.begin(),vTmp.end(), rPklUuid );
 		if( result != 0 ) 
 		{
-			printf( "Warning Sate:PklUuid Repeat:%s!\n", rPklUuid.c_str() );
+			LOGERRFMT( "Warning Sate:PklUuid Repeat:%s!\n", rPklUuid.c_str() );
 			continue;
 		}
 		else
@@ -162,7 +166,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 		ret = Sate.GetFTPDCPInfoById( rPklUuid , aFTP_DCPInfo );
 		if( ret != 0 )
 		{
-			printf( "Error:C_Satellite::GetFTPDCPInfoById(), Uuid= %s !\n" , rPklUuid.c_str() );
+			LOGERRFMT( "Error:C_Satellite::GetFTPDCPInfoById(), Uuid= %s !\n" , rPklUuid.c_str() );
 
 			char buffer[BUF_SIZE]="";
 			sprintf( buffer , "Error:C_Satellite::GetFTPDCPInfoById() , Uuid= %s !\n" , rPklUuid.c_str() );
@@ -178,11 +182,11 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 	int nFTP_DCPInfoListCount = vtFTP_DCPInfoList.size();
 	if ( ( nFTP_DCPInfoListCount < nDcpListCount ) && ( nFTP_DCPInfoListCount != 0 ) )
 	{
-		printf("Warning Sate:nFTP_DCPInfoListCount < nDcpListCount!\n");
+		LOGERRFMT("Warning Sate:nFTP_DCPInfoListCount < nDcpListCount!\n");
 	}
 	else if( ( nFTP_DCPInfoListCount == 0 ) && ( nDcpListCount != 0 ) )
 	{
-		printf("error:Sate vtFTP_DCPInfoList = 0 , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT("error:Sate vtFTP_DCPInfoList = 0 , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:Sate vtFTP_DCPInfoList = 0 , IP = %s !\n" , Ip.c_str() );
@@ -205,7 +209,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 		int result = count( vTmp.begin(),vTmp.end(), sFTP_URL_PATH );
 		if( result != 0 ) 
 		{
-			printf( "Warning Sate FTP_URL_PATH Repeat:%s!\n", sFTP_URL_PATH.c_str() );
+			LOGERRFMT( "Warning Sate FTP_URL_PATH Repeat:%s!\n", sFTP_URL_PATH.c_str() );
 			continue;
 		}
 		else
@@ -216,7 +220,7 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 		ret = SearchFtpDcpList( sFTP_URL_PATH , dcpList , error );
 		if( ret != 0 )
 		{
-			printf( "Warning Sate:SearchFtpDcpList(),error FTP_URL= %s !\n" , sFTP_URL_PATH.c_str() );
+			LOGERRFMT( "Warning Sate:SearchFtpDcpList(),error FTP_URL= %s !\n" , sFTP_URL_PATH.c_str() );
 
 			char buffer[BUF_SIZE]="";
 			sprintf( buffer,"Warning Sate:error,SearchFtpDcpList(),FTP_URL= %s !\n" , sFTP_URL_PATH.c_str() );
@@ -232,13 +236,13 @@ int SearchSatDcpList( const string &Ip , vector<Content::AssetmapInfo> &dcpList 
 	{
 		if ( nSatDCPListCount < nFTP_DCPInfoListCount )
 		{
-			printf( "Warning Sate:SearchSatDcpList(), IP = %s , nSatDCPListCount < nFTP_DCPInfoListCount !\n" , Ip.c_str() );
+			LOGERRFMT( "Warning Sate:SearchSatDcpList(), IP = %s , nSatDCPListCount < nFTP_DCPInfoListCount !\n" , Ip.c_str() );
 		}
 		ret = 0;
 	}
 	else if ( ( nFTP_DCPInfoListCount != 0 ) && ( nSatDCPListCount == 0 ) )
 	{
-		printf( "Error Sate:SearchSatDcpList() , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT( "Error Sate:SearchSatDcpList() , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"Error Sate:SearchSatDcpList() , IP = %s !\n" , Ip.c_str() );
@@ -262,7 +266,7 @@ int Sate_SetFTPDownLoadFinished( const string& Ip , const string& PklUuid , cons
 	ret = Sate.Init( Ip.c_str() , usPort );
 	if( ret != 0 )
 	{
-		printf("Error:C_Satellite::Init() , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT("Error:C_Satellite::Init() , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:C_Satellite::Init() , IP = %s !\n" , Ip.c_str() );
@@ -277,7 +281,7 @@ int Sate_SetFTPDownLoadFinished( const string& Ip , const string& PklUuid , cons
 	ret = Sate.CreateCertConnect();
 	if( ret != 0 )
 	{
-		printf( "Error:C_Satellite::CreateCertConnect() , IP = %s !\n" , Ip.c_str() );
+		LOGERRFMT( "Error:C_Satellite::CreateCertConnect() , IP = %s !\n" , Ip.c_str() );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:C_Satellite::CreateCertConnect() , IP = %s !\n" , Ip.c_str() );
@@ -292,7 +296,7 @@ int Sate_SetFTPDownLoadFinished( const string& Ip , const string& PklUuid , cons
 	ret = Sate.SetFTPDownLoadFinished( PklUuid , Status );
 	if( ret != 0 )
 	{
-		printf( "Error:C_Satellite::SetFTPDownLoadFinished() , IP = %s , PklUuid = %s , Status = %d !\n" , Ip.c_str() , PklUuid.c_str() , Status );
+		LOGERRFMT( "Error:C_Satellite::SetFTPDownLoadFinished() , IP = %s , PklUuid = %s , Status = %d !\n" , Ip.c_str() , PklUuid.c_str() , Status );
 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer , "Error:C_Satellite::SetFTPDownLoadFinished() , IP = %s , PklUuid = %s , Status = %d !\n" , Ip.c_str() , PklUuid.c_str() , Status );
@@ -359,7 +363,7 @@ int SearchFtpDcpList( const std::string &ftpUrl, std::vector<AssetmapInfo> &dcpL
 			if( nRet != cftp::NOANYERROR )
 			{
 #ifdef _TEST_
-				printf("\nError:FtpClient ReLogIn()!\n" );
+				LOGERRFMT("\nError:FtpClient ReLogIn()!\n" );
 #endif
 				nRet = ftp.LogIn(ftpUrl);
 				continue;
@@ -403,7 +407,7 @@ int SearchFtpDcpList( const std::string &ftpUrl, std::vector<AssetmapInfo> &dcpL
 
 				string sFileUrl = ftpUrl + name;
 #ifdef _TEST_
-				printf("\nFileUrl= %s\n" ,sFileUrl.c_str());
+				LOGERRFMT("\nFileUrl= %s\n" ,sFileUrl.c_str());
 #endif
 				//下载相应的文件到当前目录下
 				result = ftp.TransportFile( dir  , "." , name.substr( name.rfind( '/' )+1) );
@@ -422,8 +426,8 @@ int SearchFtpDcpList( const std::string &ftpUrl, std::vector<AssetmapInfo> &dcpL
 						sprintf( buffer,"parseAssetmap error!:%s\n" , (string(".")+DIR_SEPCHAR+filename).c_str() );
 						error = buffer;
 						
-						printf( "parseAssetmap error!:%s\n" , (string(".")+DIR_SEPCHAR+filename).c_str() );
-						//printf( "parseAssetmap error!\n" );
+						LOGERRFMT( "parseAssetmap error!:%s\n" , (string(".")+DIR_SEPCHAR+filename).c_str() );
+						//LOGERRFMT( "parseAssetmap error!\n" );
 
 						//return -1;
 						WELOG(error)
@@ -443,7 +447,7 @@ int SearchFtpDcpList( const std::string &ftpUrl, std::vector<AssetmapInfo> &dcpL
 				int result = count(vTmp.begin(),vTmp.end(), assetmapUuid );
 				if( result != 0 ) 
 				{
-					printf( "Warning AssetmapUuid Repeat:%s!\n", sFileUrl.c_str() );
+					LOGERRFMT( "Warning AssetmapUuid Repeat:%s!\n", sFileUrl.c_str() );
 					continue;
 				}
 				else
@@ -526,7 +530,7 @@ int SearchFtpDcpList( const std::string &ftpUrl, std::vector<AssetmapInfo> &dcpL
 					char buffer[BUF_SIZE]="";
 					sprintf( buffer,"error:SearchDcpList() = %s!\n",srcPath.c_str() );
 					error = buffer;
-					printf("error:SearchDcpList() = %s!\n",srcPath.c_str());
+					LOGERRFMT("error:SearchDcpList() = %s!\n",srcPath.c_str());
 
 					WELOG(error)
 					ret = CMTT2(ERROR_CONTENT_DCP_SEARCH_DCP_LIST);
@@ -598,13 +602,13 @@ int SearchFtpDcpList( const std::string &ftpUrl, std::vector<AssetmapInfo> &dcpL
 				if( ( ret = access( Dest.c_str() , F_OK ) ) == 0 )     
 				{
 #ifdef _TEST_
-					printf( "File Directory already exists :%s\n", Dest.c_str() );
+					LOGERRFMT( "File Directory already exists :%s\n", Dest.c_str() );
 #endif
 					ret = system( (RMDIR + Dest).c_str() );
 					if( ret == 0 )
 					{
 #ifdef _TEST_
-						printf( "\nDirectory deleted :%s\n", Dest.c_str() );
+						LOGERRFMT( "\nDirectory deleted :%s\n", Dest.c_str() );
 #endif
 						errno = 0;
 					}
@@ -647,7 +651,7 @@ int SearchDcpList( const string &path, vector<AssetmapInfo> &dcpList ,std::strin
 	if( ret!=0 ) 
 	{
 #ifdef _TEST_
-		printf("error:CreateDCPInfo()!\n");
+		LOGERRFMT("error:CreateDCPInfo()!\n");
 #endif
 		//error = "error:CreateDCPInfo()!\n";
 		error = "错误：未找到有效的DCP包！";
@@ -703,7 +707,7 @@ int SearchDcpList( const string &path, vector<AssetmapInfo> &dcpList ,std::strin
 				aAssetMapInfo.assetmapLength = stsrc.st_size;
 			else{
 #ifdef _TEST_
-				printf("lstat %s is err:%s!\n",aAssetMapInfo.assetmapName.c_str(),strerror(errno));
+				LOGERRFMT("lstat %s is err:%s!\n",aAssetMapInfo.assetmapName.c_str(),strerror(errno));
 #endif
 				char buffer[BUF_SIZE]="";
 				sprintf( buffer,"lstat %s is error:%s!\n",aAssetMapInfo.assetmapName.c_str(),strerror(errno) );
@@ -737,7 +741,7 @@ int SearchDcpList( const string &path, vector<AssetmapInfo> &dcpList ,std::strin
 						aPklInfo.pklName =  aAssetVt[k].path;
 						aPklInfo.pklLength = aAssetVt[k].Length;
 #ifdef _TEST_
-						printf( "pklName:%s,pklLength=%llu\n", aPklInfo.pklName.c_str() ,aPklInfo.pklLength );
+						LOGERRFMT( "pklName:%s,pklLength=%llu\n", aPklInfo.pklName.c_str() ,aPklInfo.pklLength );
 #endif
 						break;
 					}
@@ -967,7 +971,7 @@ int SearchDcpList( const string &path, vector<AssetmapInfo> &dcpList ,std::strin
 					}
 				}
 #ifdef _TEST_
-			   printf( "create mxf list Number:%d\n", aPklInfo.mxfList.size() );
+			   LOGERRFMT( "create mxf list Number:%d\n", aPklInfo.mxfList.size() );
 #endif
 
 			   //@author zhangmiao@oristartech.com
@@ -1005,7 +1009,7 @@ int SearchDcpList( const string &path, vector<AssetmapInfo> &dcpList ,std::strin
 				   }
 			   }
 #ifdef _TEST_
-			   printf( "create fileInfo list Number:%d\n", aPklInfo.fileInfoList.size() );
+			   LOGERRFMT( "create fileInfo list Number:%d\n", aPklInfo.fileInfoList.size() );
 #endif
 			   //@modify end;
 			   
@@ -1052,7 +1056,7 @@ int CheckCPLIsValid( const vector< asset_cpl_t >& vAsset_Cpl , const vector< ass
 				else{
 					bIsInvalid = true;
 #ifdef _TEST_
-					printf("lstat %s is error:%s!\n",fileName.c_str(),strerror(errno));
+					LOGERRFMT("lstat %s is error:%s!\n",fileName.c_str(),strerror(errno));
 #endif
 					char buffer[BUF_SIZE]="";
 					sprintf( buffer,"lstat %s is error:%s!\n",fileName.c_str(),strerror(errno) );
@@ -1130,7 +1134,7 @@ int CheckCPLIsValid4Ftp( const string dir , const string assetmapUuid , const cf
 								if( ret  )
 								{
 #ifdef _TEST_
-									printf( "File  exists :%s\n", fileName.c_str() );
+									LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 									long long nFileLength = atoll(fileList[0].size.c_str());
 									if ( nFileLength == aMxfInfo.length )
@@ -1146,7 +1150,7 @@ int CheckCPLIsValid4Ftp( const string dir , const string assetmapUuid , const cf
 								else
 								{
 #ifdef _TEST_
-									printf("%s:%s\n",fileName.c_str(),strerror(errno));
+									LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 									bIsInvalid = true;
 									break;
@@ -1188,7 +1192,7 @@ int GetKdmInfo( const std::string &path, std::vector<KdmInfo> &kdmList, std::str
 		ret = dcp.GetKdmInfo( path , kdmInfo , error );
 		if( ret!=0 )
 		{
-			printf("GetKdmInfo error!\n");
+			LOGERRFMT("GetKdmInfo error!\n");
 #ifdef _TEST_
 			error = "GetKdmInfo error!\n" + error;
 #else
@@ -1213,7 +1217,7 @@ int GetKdmInfo( const std::string &path, std::vector<KdmInfo> &kdmList, std::str
 	ret = dcp.GetKdmInfo( Path ,kdmList , error );
 	if( ret!=0 )
 	{
-		printf("GetKdmInfo error!\n");
+		LOGERRFMT("GetKdmInfo error!\n");
 #ifdef _TEST_
 		error = "GetKdmInfo error!\n" + error;
 #else
@@ -1243,15 +1247,15 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 	if( ( ret = access( path.c_str() , F_OK ) ) == 0 )     //check file exist
 	{
 #ifdef _TEST_
-		printf( "File already exists :%s\n", path.c_str() );
-		printf( "Delete file :%s\n", path.c_str() );
+		LOGERRFMT( "File already exists :%s\n", path.c_str() );
+		LOGERRFMT( "Delete file :%s\n", path.c_str() );
 #endif
 
 		ret = remove( path.c_str() );
 		if( ret == 0 )
 		{
 #ifdef _TEST_
-			printf( "\nDelete Kdm file Ok:%s\n", path.c_str() );
+			LOGERRFMT( "\nDelete Kdm file Ok:%s\n", path.c_str() );
 #endif
 
 			errno = 0;
@@ -1308,7 +1312,7 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 			ret = ftp.LogIn(ftpUrl);
 			if(ret != cftp::NOANYERROR)
 			{
-				printf("\nFTP Url LogIn error:%s\n" , ftpUrl.c_str() );
+				LOGERRFMT("\nFTP Url LogIn error:%s\n" , ftpUrl.c_str() );
 
 				error += "\nFTP Url LogIn error!\n";
 
@@ -1322,7 +1326,7 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 			ret = ftp.ParseUrl( ftpUrl , ip , userName , passwd , port , dir );
 			if(ret != cftp::NOANYERROR)
 			{
-				printf("\nFTP Url ParseUrl error:%s\n" , ftpUrl.c_str() );
+				LOGERRFMT("\nFTP Url ParseUrl error:%s\n" , ftpUrl.c_str() );
 
 				error += "\nFTP Url ParseUrl error!\n";
 
@@ -1341,7 +1345,7 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 			if( ret == cftp::NOANYERROR )
 			{
 #ifdef _TEST_
-				printf( "\nFTP Kdm File deleted :%s\n", (dir + sKdmFileName).c_str() );
+				LOGERRFMT( "\nFTP Kdm File deleted :%s\n", (dir + sKdmFileName).c_str() );
 #endif
 
 				error += "\nFTP Delete KDM File local failed , but SLAVE KDM Dest Path2 OK!\n";
@@ -1355,7 +1359,7 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 			else
 			{
 #ifdef _TEST_
-				printf("\nFTP Unable to delete Kdm File :%s\n" , Dest2.c_str() );
+				LOGERRFMT("\nFTP Unable to delete Kdm File :%s\n" , Dest2.c_str() );
 #endif
 				error += "\nFTP Unable to delete Kdm File!\n";
 
@@ -1400,7 +1404,7 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 		ret = ftp.LogIn(ftpUrl);
 		if(ret != cftp::NOANYERROR)
 		{
-			printf("\nFTP SLAVE Url LogIn error:%s\n" , ftpUrl.c_str() );
+			LOGERRFMT("\nFTP SLAVE Url LogIn error:%s\n" , ftpUrl.c_str() );
 			
 			error += "\nFTP SLAVE Url LogIn error!\n";
 
@@ -1415,7 +1419,7 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 		ret = ftp.ParseUrl( ftpUrl , ip , userName , passwd , port , dir );
 		if(ret != cftp::NOANYERROR)
 		{
-			printf("\nFTP SLAVE Url ParseUrl error:%s\n" , ftpUrl.c_str() );
+			LOGERRFMT("\nFTP SLAVE Url ParseUrl error:%s\n" , ftpUrl.c_str() );
 
 			error += "\nFTP SLAVE Url ParseUrl error!\n";
 
@@ -1435,14 +1439,14 @@ int DeleteKdm( const std::string &path  ,std::string& error )
 		if( ret == cftp::NOANYERROR )
 		{
 #ifdef _TEST_
-			printf( "\nFTP SLAVE Kdm File deleted :%s\n", (dir + sKdmFileName).c_str() );
+			LOGERRFMT( "\nFTP SLAVE Kdm File deleted :%s\n", (dir + sKdmFileName).c_str() );
 #endif
 			
 			errno = 0;
 		}
 		else
 		{
-			printf("\nFTP SLAVE Unable to delete Kdm File :%s\n" , (dir + sKdmFileName).c_str() );
+			LOGERRFMT("\nFTP SLAVE Unable to delete Kdm File :%s\n" , (dir + sKdmFileName).c_str() );
 
 			error += "\nFTP SLAVE Unable to delete Kdm File!\n";
 
@@ -1466,7 +1470,7 @@ int ImportKdm( std::vector<KdmInfo> &kdmList, const std::string &dest ,std::stri
 	if (nKdmInfoCount==0)
 	{
 #ifdef _TEST_
-		printf("error:KdmInfoCount is NULL !\n");
+		LOGERRFMT("error:KdmInfoCount is NULL !\n");
 #endif
 		error = "error:KdmInfoCount is NULL !\n";
 		//return -1;
@@ -1478,7 +1482,7 @@ int ImportKdm( std::vector<KdmInfo> &kdmList, const std::string &dest ,std::stri
 	if( ( ret = access( dest.c_str() , F_OK ) ) == 0 )
 	{
 #ifdef _TEST_
-		printf( "File already exists :%s\n", dest.c_str() );
+		LOGERRFMT( "File already exists :%s\n", dest.c_str() );
 #endif
 	}
 	else
@@ -1576,7 +1580,7 @@ int ImportKdm( std::vector<KdmInfo> &kdmList, const std::string &dest ,std::stri
 				if ( ret == 0 )
 				{
 #ifdef _TEST_
-					printf( "KDM File2 Upload File finished :%s\n", destFileName2.c_str() );
+					LOGERRFMT( "KDM File2 Upload File finished :%s\n", destFileName2.c_str() );
 #endif
 
 					nKdm_Import_Status = 0;
@@ -1587,7 +1591,7 @@ int ImportKdm( std::vector<KdmInfo> &kdmList, const std::string &dest ,std::stri
 					sprintf( buffer,"KDM File2 Upload File Failed :%s\n", destFileName2.c_str() );
 					error += buffer;
 #ifdef _TEST_
-					printf( "KDM File2 Upload File Failed :%s\n", destFileName2.c_str() );
+					LOGERRFMT( "KDM File2 Upload File Failed :%s\n", destFileName2.c_str() );
 #endif
 
 					WELOG(error);
@@ -1617,7 +1621,7 @@ int DownLoadKdm( vector<KdmInfo> &kdmList, const string &dest , string& error )
 	if (nKdmInfoCount==0)
 	{
 #ifdef _TEST_
-		printf("error:KdmInfoCount is NULL !\n");
+		LOGERRFMT("error:KdmInfoCount is NULL !\n");
 #endif
 		error = "error:KdmInfoCount is NULL !\n";
 		//return -1;
@@ -1629,7 +1633,7 @@ int DownLoadKdm( vector<KdmInfo> &kdmList, const string &dest , string& error )
 	if( ( ret = access( dest.c_str() , F_OK ) ) == 0 )
 	{
 #ifdef _TEST_
-		printf( "File already exists :%s\n", dest.c_str() );
+		LOGERRFMT( "File already exists :%s\n", dest.c_str() );
 #endif
 	}
 	else
@@ -1721,14 +1725,14 @@ int DeleteDcp( const std::string &path, const std::string &pklUuid , std::string
 	if( ( ret = access( sFilmFilePath.c_str() , F_OK ) ) == 0 )     //check file exist
 	{
 #ifdef _TEST_
-		printf( "File Directory already exists :%s\n", sFilmFilePath.c_str() );
+		LOGERRFMT( "File Directory already exists :%s\n", sFilmFilePath.c_str() );
 #endif
 
 		ret = system( (RMDIR + sFilmFilePath).c_str() );
 		if( ret == 0 )
 		{
 #ifdef _TEST_
-			printf( "\nDirectory deleted :%s\n", sFilmFilePath.c_str() );
+			LOGERRFMT( "\nDirectory deleted :%s\n", sFilmFilePath.c_str() );
 #endif
 			errno = 0;
 			//return 0;
@@ -1815,7 +1819,7 @@ int DeleteDcp( const std::string &path, const std::string &pklUuid , std::string
 			if( ret == 0 )
 			{
 #ifdef _TEST_
-				printf( "\nFTP Directory deleted :%s\n", Dest2.c_str() );
+				LOGERRFMT( "\nFTP Directory deleted :%s\n", Dest2.c_str() );
 #endif
 
 				//Delete DCP local failed , but SLAVE Dest Path2 OK!
@@ -1825,7 +1829,7 @@ int DeleteDcp( const std::string &path, const std::string &pklUuid , std::string
 			else
 			{
 #ifdef _TEST_
-				printf("\nFTP Unable to delete directory:%s\n" , Dest2.c_str() );
+				LOGERRFMT("\nFTP Unable to delete directory:%s\n" , Dest2.c_str() );
 #endif
 				error = "\nFTP Unable to delete directory\n";
 
@@ -1897,14 +1901,14 @@ int DeleteDcp( const std::string &path, const std::string &pklUuid , std::string
 		if( ret == 0 )
 		{
 #ifdef _TEST_
-			printf( "\nFTP Directory deleted :%s\n", Dest2.c_str() );
+			LOGERRFMT( "\nFTP Directory deleted :%s\n", Dest2.c_str() );
 #endif
 			errno = 0;
 		}
 		else
 		{
 #ifdef _TEST_
-			printf("\nFTP Unable to delete directory:%s\n" , Dest2.c_str() );
+			LOGERRFMT("\nFTP Unable to delete directory:%s\n" , Dest2.c_str() );
 #endif
 			error = "\nFTP Unable to delete directory\n";
 
@@ -1929,7 +1933,7 @@ int HashDcp( const std::string &path, const std::string &pklUuid ,std::string& e
 	if( ret!=0 )
 	{
 		error = "error:CreateDCPInfo()!\n" + error;
-		printf("error:CreateDCPInfo()!\n");
+		LOGERRFMT("error:CreateDCPInfo()!\n");
 		WELOG(error)
 		ret = CMTT(ERROR_CONTENT_DCP_CREATE_DCPINFO_ERROR);
 	}
@@ -1982,7 +1986,7 @@ int HashDcp( const std::string &path, const std::string &pklUuid ,std::string& e
 						if( ( ret = access( fileName.c_str() , F_OK ) ) == 0 )
 						{
 #ifdef _TEST_
-							printf( "File  exists :%s\n", fileName.c_str() );
+							LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 						}
 						else  //file NOT exist
@@ -1991,9 +1995,9 @@ int HashDcp( const std::string &path, const std::string &pklUuid ,std::string& e
 							sprintf( buffer,"%s:%s\n", fileName.c_str(), strerror(errno) );
 							error = buffer;
 #ifdef _TEST_
-							printf( "File NOT exists :%s\n", fileName.c_str() );
+							LOGERRFMT( "File NOT exists :%s\n", fileName.c_str() );
 
-							printf( "%s:%s\n", fileName.c_str(),strerror(errno) );
+							LOGERRFMT( "%s:%s\n", fileName.c_str(),strerror(errno) );
 #endif
 							errno = ERROR_CONTENT_DCP_FILE_NOT_EXIST;
 							WELOG(error)
@@ -2051,7 +2055,7 @@ int HashDcp( const std::string &path, const std::string &pklUuid ,std::string& e
 							sprintf( buffer,"hash check is failed! value:%s %s\n",hashValue.c_str(),b64Str.c_str() );
 							error = buffer;
 
-							printf("hash check is failed! value:%s %s\n",hashValue.c_str(),b64Str.c_str());
+							LOGERRFMT("hash check is failed! value:%s %s\n",hashValue.c_str(),b64Str.c_str());
 							errorOccurred = true;
 							break;
 						}
@@ -2270,13 +2274,13 @@ int GetCurrentLimitedSpeed( int& nLimitedSpeed )
 	if( iResult != 0 )
 	{
 		string error = "Error:GetAllPlayingDevice()!\n";
-		printf( "%s\n" , error.c_str() );
+		LOGERRFMT( "%s\n" , error.c_str() );
 		WELOG(error);
 		return iResult;
 	}
 
 #ifdef _TEST_
-	//printf( "AllPlayingDevice=%d\n" , iNum );
+	//LOGERRFMT( "AllPlayingDevice=%d\n" , iNum );
 #endif
 
 	//本机sms播放的个数与导入速度对应关系
@@ -2322,20 +2326,20 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 
 	if( src == NULL || des == NULL ) 
 	{
-		printf("cp_file_BP:para is NULL!\n");
+		LOGERRFMT("cp_file_BP:para is NULL!\n");
 		return -1;
 	}
 
 	if( strcmp(src,des) == 0 )
 	{
-		printf("src is the same as des!\n");
+		LOGERRFMT("src is the same as des!\n");
 		return -1;
 	}
 	
 	if( dest2 != NULL && strlen( dest2 ) == 0 )
 	{
 #ifdef _TEST_
-		printf("dest2 Name is null string!\n");
+		LOGERRFMT("dest2 Name is null string!\n");
 #endif
 		return -1;
 	}
@@ -2343,7 +2347,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 	if( dest2 != NULL && strcmp( src , dest2 ) ==0 )
 	{
 #ifdef _TEST_
-		printf("src is the same as dest2!\n");
+		LOGERRFMT("src is the same as dest2!\n");
 #endif
 		return -1;
 	}
@@ -2351,7 +2355,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 	if (from<0)
 	{
 #ifdef _TEST_
-		printf( "Error:File start position is %llu\n",from );
+		LOGERRFMT( "Error:File start position is %llu\n",from );
 #endif
 		return -1;
 	}
@@ -2359,7 +2363,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 	if((in=open(src,O_RDONLY|O_BINARY))==-1)
 	{
 #ifdef _TEST_
-		printf("cp_f:fail to open %s:%s\n",src,strerror(errno));
+		LOGERRFMT("cp_f:fail to open %s:%s\n",src,strerror(errno));
 #endif
 		return -1;
 	}
@@ -2367,14 +2371,14 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 	if( ( out = open( des , O_WRONLY|O_CREAT|O_BINARY,0644 ) ) == -1 )
 	{
 #ifdef _TEST_
-		printf("cp_f:fail to open %s:%s\n",des,strerror(errno));
+		LOGERRFMT("cp_f:fail to open %s:%s\n",des,strerror(errno));
 #endif
 		close(in);
 		return -1;
 	}
 
 #ifdef _TEST_
-	printf("in=%d out=%d\n",in,out);
+	LOGERRFMT("in=%d out=%d\n",in,out);
 #endif
 
 	
@@ -2384,7 +2388,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 		{
 
 #ifdef _TEST_
-			printf("cp_f:fail to open %s:%s\n",dest2,strerror(errno));
+			LOGERRFMT("cp_f:fail to open %s:%s\n",dest2,strerror(errno));
 #endif
 			close(in);
 			close(out);
@@ -2392,7 +2396,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 		}
 
 #ifdef _TEST_
-		printf( "in=%d out2=%d\n" , in , out2 );
+		LOGERRFMT( "in=%d out2=%d\n" , in , out2 );
 #endif
 	}
 
@@ -2408,7 +2412,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 			close(out2);
 
 #ifdef _TEST_
-		printf( "Error:File start position is %llu\n",nlPos );
+		LOGERRFMT( "Error:File start position is %llu\n",nlPos );
 #endif
 		return -1;
 	}
@@ -2422,7 +2426,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 			close(out2);
 
 #ifdef _TEST_
-		printf( "Error:File start position is %llu\n",nlPos );
+		LOGERRFMT( "Error:File start position is %llu\n",nlPos );
 #endif
 		return -1;
 	}
@@ -2436,7 +2440,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 			close(out2);
 			close(in);
 #ifdef _TEST_
-			printf( "Error:Output File2 start position is %llu\n",nlPos );
+			LOGERRFMT( "Error:Output File2 start position is %llu\n",nlPos );
 #endif
 			return -1;
 		}
@@ -2489,8 +2493,8 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 				close(out2);
 
 #ifdef _TEST_
-			printf( "file handle %d and %d is closed\n",in,out );
-			printf( "file handle out2 %d is closed\n" , out2 );
+			LOGERRFMT( "file handle %d and %d is closed\n",in,out );
+			LOGERRFMT( "file handle out2 %d is closed\n" , out2 );
 #endif
 			return -1;
 		}
@@ -2509,8 +2513,8 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 				close(out2);
 				close(in);
 #ifdef _TEST_
-				printf( "file in handle %d and out1:%d is closed\n" , in , out );
-				printf( "file handle out2 %d is closed\n" , out2 );
+				LOGERRFMT( "file in handle %d and out1:%d is closed\n" , in , out );
+				LOGERRFMT( "file handle out2 %d is closed\n" , out2 );
 #endif
 				return -1;
 			}
@@ -2521,7 +2525,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 				close(out2);
 				close(in);
 #ifdef _TEST_
-				printf("Output file out1 and out2:not sync!\n"  );
+				LOGERRFMT("Output file out1 and out2:not sync!\n"  );
 #endif
 				return -1;
 			}
@@ -2558,7 +2562,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 			rlTransferredSize = nTransferredSize;
 
 #ifdef _TEST_
-			printf("copy DCP received the stop signal! Code is %d\n",CODE_DCPCOPYCANCEL);
+			LOGERRFMT("copy DCP received the stop signal! Code is %d\n",CODE_DCPCOPYCANCEL);
 #endif
 #ifdef WIN32
 			ReleaseMutex(hMutex);
@@ -2600,7 +2604,7 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 						fSpeed = ((iWriteCount)*1000.0)/tUse;
 						fSpeed = fSpeed /ONEMB;
 #ifdef _TEST_
-						printf("Limited WriteSpeed:%dMB,UseTime %d millisecond,Speed:%.3lf MB/S\n" , nLimitedSpeed , tUse, fSpeed );
+						LOGERRFMT("Limited WriteSpeed:%dMB,UseTime %d millisecond,Speed:%.3lf MB/S\n" , nLimitedSpeed , tUse, fSpeed );
 #endif
 					}
 
@@ -2671,8 +2675,8 @@ int cp_file_BP( const char *src, const char *des , unsigned long long& rlTransfe
 		close(out2);
 
 #ifdef _TEST_
-	printf( "file handle %d and %d is closed\n" , in , out );
-	printf( "file handle out2 %d is closed\n" , out2 );
+	LOGERRFMT( "file handle %d and %d is closed\n" , in , out );
+	LOGERRFMT( "file handle out2 %d is closed\n" , out2 );
 #endif
 	
 	if(n<0) 
@@ -2697,20 +2701,20 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 
 	if( src == NULL || des == NULL ) 
 	{
-		printf("cp_file_Mode2:para is NULL!\n");
+		LOGERRFMT("cp_file_Mode2:para is NULL!\n");
 		return -1;
 	}
 
 	if( strcmp(src,des) == 0 )
 	{
-		printf("src is the same as des!\n");
+		LOGERRFMT("src is the same as des!\n");
 		return -1;
 	}
 
 	if( dest2 != NULL && strlen( dest2 ) == 0 )
 	{
 #ifdef _TEST_
-		printf("dest2 Name is null string!\n");
+		LOGERRFMT("dest2 Name is null string!\n");
 #endif
 		return -1;
 	}
@@ -2718,7 +2722,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 	if( dest2 != NULL && strcmp( src , dest2 ) ==0 )
 	{
 #ifdef _TEST_
-		printf("src is the same as dest2!\n");
+		LOGERRFMT("src is the same as dest2!\n");
 #endif
 		return -1;
 	}
@@ -2726,7 +2730,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 	if((in=open(src,O_RDONLY|O_BINARY))==-1)
 	{
 #ifdef _TEST_
-		printf("cp_f:fail to open %s:%s\n",src,strerror(errno));
+		LOGERRFMT("cp_f:fail to open %s:%s\n",src,strerror(errno));
 #endif
 		return -1;
 	}
@@ -2734,14 +2738,14 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 	if( (out=open(des,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0644))==-1 )
 	{
 #ifdef _TEST_
-		printf("cp_f:fail to open %s:%s\n",des,strerror(errno));
+		LOGERRFMT("cp_f:fail to open %s:%s\n",des,strerror(errno));
 #endif
 		close(in);
 		return -1;
 	}
 
 #ifdef _TEST_
-	printf( "in=%d out=%d\n" , in , out );
+	LOGERRFMT( "in=%d out=%d\n" , in , out );
 #endif
 
 	//if( dest2 != NULL )
@@ -2763,7 +2767,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 			if( ret == cftp::NOANYERROR )
 			{
 #ifdef _TEST_
-				printf( "cp_file_Mode2:LogIn()-OK-%s!\n" , dest2 );
+				LOGERRFMT( "cp_file_Mode2:LogIn()-OK-%s!\n" , dest2 );
 #endif
 
 				string ftp_fileName = dir.substr( dir.rfind( '/' )+1);
@@ -2788,7 +2792,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 			{
 
 #ifdef _TEST_
-				printf("cp_file_Mode2:fail to LogIn %s:%d\n" , dest2 , errno );
+				LOGERRFMT("cp_file_Mode2:fail to LogIn %s:%d\n" , dest2 , errno );
 #endif
 
 				/*close(in);
@@ -2846,7 +2850,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 			close(in);
 
 #ifdef _TEST_
-			printf("file handle %d and %d is closed\n",in,out);
+			LOGERRFMT("file handle %d and %d is closed\n",in,out);
 #endif
 
 			if( dest2 != NULL )
@@ -2882,7 +2886,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 				//如果ftp上传失败，目前继续本地拷贝，不再ftp上传 end
 
 #ifdef _TEST_
-				printf( "file in handle %d and out1:%d is closed\n" , in , out );
+				LOGERRFMT( "file in handle %d and out1:%d is closed\n" , in , out );
 #endif
 
 				ret = Ftp.UploadFile_Part_End();
@@ -2908,7 +2912,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 				ret = Ftp.UploadFile_Part_End();
 
 #ifdef _TEST_
-				printf("Output file out1 and out2:not sync!\n"  );
+				LOGERRFMT("Output file out1 and out2:not sync!\n"  );
 #endif
 
 				//如果ftp上传失败，目前继续本地拷贝，不再ftp上传 begin
@@ -2956,7 +2960,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 			}
 
 #ifdef _TEST_
-			printf("copy DCP received the stop signal! Code is %d\n",CODE_DCPCOPYCANCEL);
+			LOGERRFMT("copy DCP received the stop signal! Code is %d\n",CODE_DCPCOPYCANCEL);
 #endif
 
 #ifdef WIN32
@@ -2999,7 +3003,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 						fSpeed = ((iWriteCount)*1000.0)/tUse;
 						fSpeed = fSpeed /ONEMB;
 #ifdef _TEST_
-						printf("Limited WriteSpeed:%dMB,UseTime %d millisecond,Speed:%.3lf MB/S\n" , nLimitedSpeed , tUse, fSpeed );
+						LOGERRFMT("Limited WriteSpeed:%dMB,UseTime %d millisecond,Speed:%.3lf MB/S\n" , nLimitedSpeed , tUse, fSpeed );
 #endif
 					}
 
@@ -3043,7 +3047,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 							}
 
 #ifdef _TEST_
-							printf("copy DCP received the stop signal! Code is %d\n",CODE_DCPCOPYCANCEL);
+							LOGERRFMT("copy DCP received the stop signal! Code is %d\n",CODE_DCPCOPYCANCEL);
 #endif
 
 #ifdef WIN32
@@ -3075,7 +3079,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 						if( nNew_LimitedSpeed != nLimitedSpeed )
 						{
 							nLimitedSpeed = nNew_LimitedSpeed;
-							printf( "Old nLimitedSpeed=0 ,New Limited WriteSpeed = %dMB/S\n" , nLimitedSpeed );
+							LOGERRFMT( "Old nLimitedSpeed=0 ,New Limited WriteSpeed = %dMB/S\n" , nLimitedSpeed );
 						}
 					}
 				}
@@ -3102,7 +3106,7 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 				if( nNew_LimitedSpeed != nLimitedSpeed )
 				{
 					nLimitedSpeed = nNew_LimitedSpeed;
-					printf( "New Limited WriteSpeed = %dMB/S\n" , nLimitedSpeed );
+					LOGERRFMT( "New Limited WriteSpeed = %dMB/S\n" , nLimitedSpeed );
 				}
 			}
 		}
@@ -3148,11 +3152,11 @@ int cp_file_Mode2( const char *src, const char *des , const char *dest2 , int nL
 	}
 
 #ifdef _TEST_
-	printf( "file handle %d and %d is closed\n" , in , out );
+	LOGERRFMT( "file handle %d and %d is closed\n" , in , out );
 	
 	if ( dest2 != NULL )
 	{
-		printf( "file Upload out2 %s is closed\n" , dest2 );
+		LOGERRFMT( "file Upload out2 %s is closed\n" , dest2 );
 	}
 #endif
 
@@ -3178,28 +3182,28 @@ int cp_file(const char *src, const char *des)
 	int in,out,n;
 	char buf[BSIZE];
 
-	if(src==NULL || des==NULL) {printf("para is NULL!\n");return -1;}
-	if(strcmp(src,des)==0){printf("src is the same as des!\n");return -1;}
+	if(src==NULL || des==NULL) {LOGERRFMT("para is NULL!\n");return -1;}
+	if(strcmp(src,des)==0){LOGERRFMT("src is the same as des!\n");return -1;}
 	if((in=open(src,O_RDONLY|O_BINARY))==-1){
-		printf("cp_f:fail to open %s:%s\n",src,strerror(errno));
+		LOGERRFMT("cp_f:fail to open %s:%s\n",src,strerror(errno));
 		return -1;
 	}
 	if((out=open(des,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0644))==-1){
-		printf("cp_f:fail to open %s:%s\n",des,strerror(errno));
+		LOGERRFMT("cp_f:fail to open %s:%s\n",des,strerror(errno));
 		close(in);
 		return -1;
 	}
-	//printf("in=%d out=%d\n",in,out);
+	//LOGERRFMT("in=%d out=%d\n",in,out);
 	while(0<(n=read(in,buf,BSIZE))){
 		if(n!=write(out,buf,n))
 		{
-			close(out);close(in);//printf("%d and %d is closed\n",in,out);
+			close(out);close(in);//LOGERRFMT("%d and %d is closed\n",in,out);
 			return -1;
 		}
 		/*if (eof (in))
 			break;*/
 	}
-	close(out);close(in);//printf("%d and %d is closed\n",in,out);
+	close(out);close(in);//LOGERRFMT("%d and %d is closed\n",in,out);
 	if(n<0) return -1;
 	return 0;
 }
@@ -3449,9 +3453,9 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 					if( ( ret = access( fileName.c_str() , F_OK ) ) == 0 )     //check file exist
 					{
 #ifdef _TEST_
-						printf( "File  exists :%s\n", fileName.c_str() );
+						LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
-						//printf( "Delete file :%s\n", fileName.c_str() );
+						//LOGERRFMT( "Delete file :%s\n", fileName.c_str() );
 						//ret = remove( fileName.c_str() );
 
 						//@author zhangmiao@oristartech.com
@@ -3532,7 +3536,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 
 							rFileCopyInfo.bIsFinished = 1;
 #ifdef _TEST_
-							printf( "File copy finished :%s\n", destFileName.c_str() );
+							LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 						}
 						else
@@ -3554,7 +3558,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 								sprintf( buffer,"%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!" );
 								error = buffer;
 #ifdef _TEST_
-								printf("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
+								LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
 #endif
 
 								errno = ERROR_CONTENT_DCP_BP_DCPCOPYCANCEL;
@@ -3562,7 +3566,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 							else
 							{
 #ifdef _TEST_
-								printf("%s:%s\n",fileName.c_str(),strerror(errno));
+								LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 								errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
 							}
@@ -3583,7 +3587,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 						sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 						error = buffer;
 #ifdef _TEST_
-						printf("%s:%s\n",fileName.c_str(),strerror(errno));
+						LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 #ifdef WIN32
 						WaitForSingleObject(hMutex,INFINITE);
@@ -3627,7 +3631,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 					if( ( ret = access( fileName.c_str() , F_OK ) ) == 0 )     //check file exist
 					{
 #ifdef _TEST_
-						printf( "File  exists :%s\n", fileName.c_str() );
+						LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 
 						//如果目标目录包含子目录，则建立相应的子目录。
@@ -3708,7 +3712,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 
 							rFileCopyInfo.bIsFinished = 1;
 #ifdef _TEST_
-							printf( "File copy finished :%s\n", destFileName.c_str() );
+							LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 						}
 						else
@@ -3730,7 +3734,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 								sprintf( buffer,"%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!" );
 								error = buffer;
 #ifdef _TEST_
-								printf("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
+								LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
 #endif
 
 								errno = ERROR_CONTENT_DCP_BP_DCPCOPYCANCEL;
@@ -3738,7 +3742,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 							else
 							{
 #ifdef _TEST_
-								printf("%s:%s\n",fileName.c_str(),strerror(errno));
+								LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 								errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
 							}
@@ -3759,7 +3763,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 						sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 						error = buffer;
 #ifdef _TEST_
-						printf("%s:%s\n",fileName.c_str(),strerror(errno));
+						LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 #ifdef WIN32
 						WaitForSingleObject(hMutex,INFINITE);
@@ -3799,7 +3803,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 					if( ( ret = access( fileName.c_str() , F_OK ) ) == 0 )     //check file exist
 					{
 #ifdef _TEST_
-						printf( "File  exists :%s\n", fileName.c_str() );
+						LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 #ifdef WIN32
 						WaitForSingleObject(hMutex,INFINITE);
@@ -3889,7 +3893,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 
 							rFileCopyInfo.bIsFinished = 1;
 #ifdef _TEST_
-							printf( "File copy finished :%s\n", destFileName.c_str() );
+							LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 						}
 						else 
@@ -3912,7 +3916,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 								error = buffer;
 
 #ifdef _TEST_
-								printf("%s:%s\n",fileName.c_str(),"DCP Copy BPTrans CANCEL!");
+								LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy BPTrans CANCEL!");
 #endif
 
 								errno = ERROR_CONTENT_DCP_BP_DCPCOPYCANCEL;
@@ -3920,7 +3924,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 							else
 							{
 #ifdef _TEST_
-								printf("%s:%s\n",fileName.c_str(),strerror(errno));
+								LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 								errno = ERROR_CONTENT_DCP_MXF_FILE_COPY_IS_UNFINISHED;
 							}
@@ -3942,7 +3946,7 @@ int CopyDcp_BPTransSub1( const std::string &source, const std::string &Dest, pkl
 						sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 						error = buffer;
 #ifdef _TEST_
-						printf("%s:%s\n",fileName.c_str(),strerror(errno));
+						LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 #ifdef WIN32
 						WaitForSingleObject(hMutex,INFINITE);
@@ -3992,7 +3996,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 	if(ret!=0)
 	{
 #ifdef _TEST_
-		printf("error CreateDCPInfo !\n");
+		LOGERRFMT("error CreateDCPInfo !\n");
 #endif
 		error = "error:CreateDCPInfo()!\n" + error;
 
@@ -4109,7 +4113,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 							sprintf( buffer,"pklName %s Error!\n", pklName.c_str() );
 							error = buffer;
 #ifdef _TEST_
-							printf("pklName %s Error!\n", pklName.c_str());
+							LOGERRFMT("pklName %s Error!\n", pklName.c_str());
 #endif
 							
 							//删除垃圾文件夹，Remove DCP Directory
@@ -4118,7 +4122,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 							if( nResult != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 								error += "Warning:Remove DCP Directory fail.\n";
 							}
@@ -4134,7 +4138,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 								if( nResult2 != 0 )
 								{
 #ifdef _TEST_
-									printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+									LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 									error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 								}
@@ -4147,7 +4151,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 						}
 
 #ifdef _TEST_
-						printf( "pklName:%s\n", pklName.c_str() );
+						LOGERRFMT( "pklName:%s\n", pklName.c_str() );
 #endif
 						break;
 					}
@@ -4243,7 +4247,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 							if( nResult != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif //_TEST_
 								error += "Warning:Remove DCP Directory fail.\n";
 							}
@@ -4258,7 +4262,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 								if( nResult2 != 0 )
 								{
 #ifdef _TEST_
-									printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+									LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 									error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 								}
@@ -4282,7 +4286,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -4297,7 +4301,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 							if( nResult2 != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 								error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 							}
@@ -4318,7 +4322,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -4334,7 +4338,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 							if( nResult2 != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 								error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 							}
@@ -4374,7 +4378,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 			if( ret != 0 )
 			{
 #ifdef _TEST_
-				printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+				LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 				error += "Warning:Remove DCP Directory Fail.\n";
 			}
@@ -4391,7 +4395,7 @@ int CopyDcp_BPTrans( const string &source, const string &pklUuid, const string &
 				if( nResult != 0 )
 				{
 #ifdef _TEST_
-					printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+					LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 					error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 				}
@@ -4440,7 +4444,7 @@ int DownLoadDcp_BPTrans( const string &ftpUrl, const string &pklUuid, const stri
 	if(ret!=0)
 	{
 #ifdef _TEST_
-		printf("error SearchFtpDcpList !\n");
+		LOGERRFMT("error SearchFtpDcpList !\n");
 #endif
 		WELOG("error SearchFtpDcpList !\n")
 		return ret;
@@ -4628,7 +4632,7 @@ int DownLoadDcp_BPTrans( const string &ftpUrl, const string &pklUuid, const stri
 							if( nResult != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif //_TEST_
 								error += "Warning:Remove DCP Directory fail.\n";
 							}
@@ -4648,7 +4652,7 @@ int DownLoadDcp_BPTrans( const string &ftpUrl, const string &pklUuid, const stri
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -4666,7 +4670,7 @@ int DownLoadDcp_BPTrans( const string &ftpUrl, const string &pklUuid, const stri
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -4705,7 +4709,7 @@ int DownLoadDcp_BPTrans( const string &ftpUrl, const string &pklUuid, const stri
 			if( ret != 0 )
 			{
 #ifdef _TEST_
-				printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+				LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 				error += "Warning:Remove DCP Directory Fail.\n";
 			}
@@ -4849,7 +4853,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 				if( ret )
 				{
 #ifdef _TEST_
-					printf( "File  exists :%s\n", fileName.c_str() );
+					LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 
 #ifdef WIN32
@@ -4900,7 +4904,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 						g_hasDcpCopied_Size += aAsset_Pkl.cplLength;
 						//----zhangmiao:end----[7/20/2012]----
 #ifdef _TEST_
-						printf( "File copy finished :%s\n", destFileName.c_str() );
+						LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 					}
 					else
@@ -4922,7 +4926,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 							sprintf( buffer,"%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!" );
 							error = buffer;
 #ifdef _TEST_
-							printf("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
+							LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
 #endif
 
 							errno = ERROR_CONTENT_DCP_BP_DCPCOPYCANCEL;
@@ -4930,7 +4934,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 						else
 						{
 #ifdef _TEST_
-							printf("%s:%s\n",fileName.c_str(),strerror(errno));
+							LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 							errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
@@ -4952,7 +4956,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 					sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 					error = buffer;
 #ifdef _TEST_
-					printf("%s:%s\n",fileName.c_str(),strerror(errno));
+					LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 #ifdef WIN32
@@ -5029,7 +5033,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 				if( ret )
 				{
 #ifdef _TEST_
-					printf( "File  exists :%s\n", fileName.c_str() );
+					LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 
 #ifdef WIN32
@@ -5096,7 +5100,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 						g_hasDcpCopied_Size += aAsset_Pkl.fileLength;
 						
 #ifdef _TEST_
-						printf( "File copy finished :%s\n", destFileName.c_str() );
+						LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 					}
 					else
@@ -5118,7 +5122,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 							sprintf( buffer,"%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!" );
 							error = buffer;
 #ifdef _TEST_
-							printf("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
+							LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
 #endif
 
 							errno = ERROR_CONTENT_DCP_BP_DCPCOPYCANCEL;
@@ -5126,7 +5130,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 						else
 						{
 #ifdef _TEST_
-							printf("%s:%s\n",fileName.c_str(),strerror(errno));
+							LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 							errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
@@ -5147,7 +5151,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 					sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 					error = buffer;
 #ifdef _TEST_
-					printf("%s:%s\n",fileName.c_str(),strerror(errno));
+					LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 #ifdef WIN32
@@ -5218,7 +5222,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 				if( ret  )
 				{
 #ifdef _TEST_
-					printf( "File  exists :%s\n", fileName.c_str() );
+					LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
 
 #ifdef WIN32
@@ -5278,7 +5282,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 
 						rFileCopyInfo.bIsFinished = 1;
 #ifdef _TEST_
-						printf( "File copy finished :%s\n", destFileName.c_str() );
+						LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 					}
 					else 
@@ -5301,7 +5305,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 							error = buffer;
 
 #ifdef _TEST_
-							printf("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
+							LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
 #endif
 
 							errno = ERROR_CONTENT_DCP_BP_DCPCOPYCANCEL;
@@ -5309,7 +5313,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 						else
 						{
 #ifdef _TEST_
-							printf("%s:%s\n",fileName.c_str(),strerror(errno));
+							LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 							errno = ERROR_CONTENT_DCP_MXF_FILE_COPY_IS_UNFINISHED;
@@ -5333,7 +5337,7 @@ int DownLoadDcp_BPTransSub1( const std::string &Dest, PklInfo& aPkl, std::vector
 					sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 					error = buffer;
 #ifdef _TEST_
-					printf("%s:%s\n",fileName.c_str(),strerror(errno));
+					LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 #ifdef WIN32
@@ -5390,7 +5394,7 @@ int DownLoadDcp_BPTransSub2( const std::string &pklName, const std::string &Dest
 			if (ret==0)
 			{
 #ifdef _TEST_
-				printf( "PKL File copy finished :%s\n", destFileName.c_str() );
+				LOGERRFMT( "PKL File copy finished :%s\n", destFileName.c_str() );
 #endif
 			}
 			else if( ret )
@@ -5399,7 +5403,7 @@ int DownLoadDcp_BPTransSub2( const std::string &pklName, const std::string &Dest
 				sprintf( buffer,"PKL File copy Failed :%s\n", destFileName.c_str() );
 				error = buffer;
 #ifdef _TEST_
-				printf( "PKL File copy Failed :%s\n", destFileName.c_str() );
+				LOGERRFMT( "PKL File copy Failed :%s\n", destFileName.c_str() );
 #endif
 				//errno = 1;
 				errno = ERROR_CONTENT_DCP_PKL_FILE_COPY_FAILED;
@@ -5413,7 +5417,7 @@ int DownLoadDcp_BPTransSub2( const std::string &pklName, const std::string &Dest
 			sprintf( buffer,"Error:PKL File(%s) no exist!\n", pklName.c_str() );
 			error = buffer;
 #ifdef _TEST_
-			printf( "Error:PKL File(%s) no exist!\n", pklName.c_str() );
+			LOGERRFMT( "Error:PKL File(%s) no exist!\n", pklName.c_str() );
 #endif
 			//errno = 10;
 			errno = ERROR_CONTENT_DCP_PKL_FILE_NO_EXIST;
@@ -5456,7 +5460,7 @@ int DownLoadDcp_BPTransSub3( const std::string &AssetmapName, const std::string 
 			if (ret==0)
 			{
 #ifdef _TEST_
-				printf( "File copy finished :%s\n", destFileName.c_str() );
+				LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 			}
 			else if( ret )
@@ -5465,7 +5469,7 @@ int DownLoadDcp_BPTransSub3( const std::string &AssetmapName, const std::string 
 				sprintf( buffer,"File copy Failed :%s\n", destFileName.c_str() );
 				error = buffer;
 #ifdef _TEST_
-				printf( "File copy Failed :%s\n", destFileName.c_str() );
+				LOGERRFMT( "File copy Failed :%s\n", destFileName.c_str() );
 #endif
 				//errno = 1;
 				errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
@@ -5521,7 +5525,7 @@ int DownLoadDcp_BPTransSub3( const std::string &AssetmapName, const std::string 
 				sprintf( buffer,"Error ReBuild_Assetmap File FAILED:%s\n", destFileName.c_str() );
 				error = buffer;
 #ifdef _TEST_
-				printf( "Error ReBuild_Assetmap File FAILED:%s\n", destFileName.c_str() );
+				LOGERRFMT( "Error ReBuild_Assetmap File FAILED:%s\n", destFileName.c_str() );
 #endif
 				WELOG(error);
 				errno = ERROR_CONTENT_DCP_REBUILD_ASSETMAP_FILE_FAILED;
@@ -5543,7 +5547,7 @@ int DownLoadDcp_BPTransSub3( const std::string &AssetmapName, const std::string 
 				iRet = rename( destFileName.c_str() , newDestFileName.c_str() );
 				if ( iRet == 0 )
 				{
-					printf("rename: %s to %s.\n", destFileName.c_str() , newDestFileName.c_str() );
+					LOGERRFMT("rename: %s to %s.\n", destFileName.c_str() , newDestFileName.c_str() );
 				}
 				else
 				{
@@ -5558,7 +5562,7 @@ int DownLoadDcp_BPTransSub3( const std::string &AssetmapName, const std::string 
 			sprintf( buffer,"Error:Assetmap(%s) is no exist!\n", AssetmapName.c_str() );
 			error = buffer;
 #ifdef _TEST_
-			printf( "Error:Assetmap(%s) is no exist!\n", AssetmapName.c_str() );
+			LOGERRFMT( "Error:Assetmap(%s) is no exist!\n", AssetmapName.c_str() );
 #endif
 			//errno = 3020;
 			errno = ERROR_CONTENT_DCP_ASSETMAP_IS_NO_EXIST;
@@ -5570,7 +5574,7 @@ int DownLoadDcp_BPTransSub3( const std::string &AssetmapName, const std::string 
 	{
 		error = "Error:Param AssetmapName is Null string!\n";
 #ifdef _TEST_
-		printf( "Error:Param AssetmapName is Null string!\n" );
+		LOGERRFMT( "Error:Param AssetmapName is Null string!\n" );
 #endif
 		//errno = 3010;
 		errno = ERROR_CONTENT_DCP_PARAM_ASSETMAPNAME_IS_NULL_STR;
@@ -5688,7 +5692,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 	if(ret!=0)
 	{
 #ifdef _TEST_
-		printf("error CreateDCPInfo !\n");
+		LOGERRFMT("error CreateDCPInfo !\n");
 #endif
 		error = "error:CreateDCPInfo()!\n" + error;
 		WELOG(error)
@@ -5816,7 +5820,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							sprintf( buffer,"pklName %s Error!\n", pklName.c_str() );
 							error = buffer;
 #ifdef _TEST_
-							printf("pklName %s Error!\n", pklName.c_str());
+							LOGERRFMT("pklName %s Error!\n", pklName.c_str());
 #endif
 							
 							//删除垃圾文件夹，Remove DCP Directory
@@ -5825,7 +5829,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							if( nResult != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 								error += "Warning:Remove DCP Directory fail.\n";
 							}
@@ -5841,7 +5845,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 								if( nResult2 != 0 )
 								{
 #ifdef _TEST_
-									printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+									LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 									error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 								}
@@ -5853,7 +5857,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							return CMTT2(errno);
 						}
 #ifdef _TEST_
-						printf( "pklName:%s\n", pklName.c_str() );
+						LOGERRFMT( "pklName:%s\n", pklName.c_str() );
 #endif
 						break;
 					}
@@ -5946,11 +5950,11 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							char buffer[BUF_SIZE]="";
 							sprintf( buffer,"Error:CopyDcpSub1()--File Copy SLAVE Dest Path2 Failed.:%s\n" , Dest2.c_str() );
 							error += buffer;
-							printf( "%s\n"  , buffer );
+							LOGERRFMT( "%s\n"  , buffer );
 						}
 
 						bIsFtp_UploadFile_Failed = 1;
-						printf( "CopyDcpSub1():bIsFtp_UploadFile_Failed = %d\n" , bIsFtp_UploadFile_Failed );
+						LOGERRFMT( "CopyDcpSub1():bIsFtp_UploadFile_Failed = %d\n" , bIsFtp_UploadFile_Failed );
 					}
 					else if ( ret != 0 )
 					//@modify [2015-01-09] end
@@ -5961,7 +5965,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -5977,7 +5981,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							if( nResult2 != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 								error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 							}
@@ -6001,11 +6005,11 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							char buffer[BUF_SIZE]="";
 							sprintf( buffer,"Error:CopyDcpSub2()--PKL File Copy SLAVE Dest Path2 Failed.:%s\n" , pklName.c_str() );
 							error += buffer;
-							printf( "%s\n"  , buffer );
+							LOGERRFMT( "%s\n"  , buffer );
 						}
 
 						bIsFtp_UploadFile_Failed = 1;
-						printf( "CopyDcpSub2():bIsFtp_UploadFile_Failed = %d\n" , bIsFtp_UploadFile_Failed );
+						LOGERRFMT( "CopyDcpSub2():bIsFtp_UploadFile_Failed = %d\n" , bIsFtp_UploadFile_Failed );
 					}
 					else if ( ret != 0 )
                     //@modify [2015-01-09] end
@@ -6016,7 +6020,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -6032,7 +6036,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							if( nResult2 != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 								error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 							}
@@ -6057,11 +6061,11 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							char buffer[BUF_SIZE]="";
 							sprintf( buffer,"Error:CopyDcpSub3()--AssetMap File Copy SLAVE Dest Path2 Failed.:%s\n" , AssetmapName.c_str() );
 							error += buffer;
-							printf( "%s\n"  , buffer );
+							LOGERRFMT( "%s\n"  , buffer );
 						}
 
 						bIsFtp_UploadFile_Failed = 1;
-						printf( "CopyDcpSub3():bIsFtp_UploadFile_Failed = %d\n" , bIsFtp_UploadFile_Failed );
+						LOGERRFMT( "CopyDcpSub3():bIsFtp_UploadFile_Failed = %d\n" , bIsFtp_UploadFile_Failed );
 					}
 					else if ( ret != 0 )
 					//@modify [2015-01-09] end
@@ -6071,7 +6075,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 						if( nResult != 0 )
 						{
 #ifdef _TEST_
-							printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+							LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 							error += "Warning:Remove DCP Directory fail.\n";
 						}
@@ -6087,7 +6091,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 							if( nResult2 != 0 )
 							{
 #ifdef _TEST_
-								printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+								LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 								error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 							}
@@ -6127,7 +6131,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 								char buffer[BUF_SIZE]="";
 								sprintf( buffer,"Error:CopyDcp()---File Copy SLAVE Dest Path2 Failed.:%s\n" , Dest2.c_str() );
 								error += buffer;
-								printf( "%s\n"  , buffer );
+								LOGERRFMT( "%s\n"  , buffer );
 								WELOG(error);
 							}
 
@@ -6150,7 +6154,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 			if( ret != 0 )
 			{
 #ifdef _TEST_
-                printf( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
+                LOGERRFMT( "Warning:Remove DCP Directory Fail.:%s\n", Dest.c_str() );
 #endif
 				error += "Warning:Remove DCP Directory Fail.\n";
 			}
@@ -6167,7 +6171,7 @@ int CopyDcp( const string &source, const string &pklUuid, const string &dest, ve
 				if( nResult != 0 )
 				{
 #ifdef _TEST_
-					printf( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
+					LOGERRFMT( "Warning:Remove DCP Dest2 Directory Fail.:%s\n", Dest2.c_str() );
 #endif
 					error += "Warning:Remove DCP Dest2 Directory Fail.\n";
 				}
@@ -6255,9 +6259,9 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 		if( ( ret = access( fileName.c_str() , F_OK ) ) == 0 )     //check file exist
 		{
 #ifdef _TEST_
-			printf( "File  exists :%s\n", fileName.c_str() );
+			LOGERRFMT( "File  exists :%s\n", fileName.c_str() );
 #endif
-			//printf( "Delete file :%s\n", fileName.c_str() );
+			//LOGERRFMT( "Delete file :%s\n", fileName.c_str() );
 			//ret = remove( fileName.c_str() );
 
 			//@author zhangmiao@oristartech.com
@@ -6384,7 +6388,7 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 				//----zhangmiao:end----20121226----
 
 #ifdef _TEST_
-				printf( "File copy finished :%s\n", destFileName.c_str() );
+				LOGERRFMT( "File copy finished :%s\n", destFileName.c_str() );
 #endif
 			}
 			else 
@@ -6397,7 +6401,7 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 					sprintf( buffer,"%s:%s\n" , fileName.c_str() , "File copy SLAVE Dest Path2 Failed" );
 					error += buffer;
 
-					printf( "%s:%s\n" , fileName.c_str() , "File copy SLAVE Dest Path2 Failed" );
+					LOGERRFMT( "%s:%s\n" , fileName.c_str() , "File copy SLAVE Dest Path2 Failed" );
 
 					//bIsFtp_UploadFile_Failed = 1;
 					g_bIsFtp_UploadFile_Failed = 1;
@@ -6423,7 +6427,7 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 					sprintf( buffer,"%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!" );
 					error = buffer;
 #ifdef _TEST_
-					printf("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
+					LOGERRFMT("%s:%s\n",fileName.c_str(),"DCP Copy CANCEL!");
 #endif
 
 					errno = ERROR_CONTENT_DCP_DCPCOPYCANCEL;
@@ -6431,7 +6435,7 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 				else
 				{
 #ifdef _TEST_
-					printf("%s:%s\n",fileName.c_str(),strerror(errno));
+					LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 					errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
@@ -6454,7 +6458,7 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 			sprintf( buffer,"%s:%s\n",fileName.c_str(),strerror(errno) );
 			error = buffer;
 #ifdef _TEST_
-			printf("%s:%s\n",fileName.c_str(),strerror(errno));
+			LOGERRFMT("%s:%s\n",fileName.c_str(),strerror(errno));
 #endif
 
 #ifdef WIN32
@@ -6481,7 +6485,7 @@ int CopyDcpSub1( const std::string &source, const std::string &Dest, pkl_Info_t&
 	//如果ftp上传失败，目前继续本地拷贝，不再ftp上传 begin
 	if( g_bIsFtp_UploadFile_Failed == 1 )
 	{
-		printf( "CopyDcpSub1():%s\n" , "File copy SLAVE Dest Path2 Failed!" );
+		LOGERRFMT( "CopyDcpSub1():%s\n" , "File copy SLAVE Dest Path2 Failed!" );
 		errno = ERROR_CONTENT_DCP_FILE_COPY_SLAVE_FAILED;
 		return errno;
 	}
@@ -6505,7 +6509,7 @@ int CopyDcpSub2( const std::string &pklName, const std::string &Dest, std::strin
 			if (ret==0)
 			{
 #ifdef _TEST_
-				printf( "PKL File copy finished :%s\n", destFileName.c_str() );
+				LOGERRFMT( "PKL File copy finished :%s\n", destFileName.c_str() );
 #endif
 			}
 			else if( ret )
@@ -6514,7 +6518,7 @@ int CopyDcpSub2( const std::string &pklName, const std::string &Dest, std::strin
 				sprintf( buffer,"PKL File copy Failed :%s\n", destFileName.c_str() );
 				error += buffer;
 #ifdef _TEST_
-				printf( "PKL File copy Failed :%s\n", destFileName.c_str() );
+				LOGERRFMT( "PKL File copy Failed :%s\n", destFileName.c_str() );
 #endif
 				//errno = 1;
 				errno = ERROR_CONTENT_DCP_PKL_FILE_COPY_FAILED;
@@ -6561,7 +6565,7 @@ int CopyDcpSub2( const std::string &pklName, const std::string &Dest, std::strin
 				if ( ret == 0 )
 				{
 	#ifdef _TEST_
-					printf( "PKL File2 Upload File finished :%s\n", destFileName2.c_str() );
+					LOGERRFMT( "PKL File2 Upload File finished :%s\n", destFileName2.c_str() );
 	#endif
 				}
 				else if( ret )
@@ -6570,7 +6574,7 @@ int CopyDcpSub2( const std::string &pklName, const std::string &Dest, std::strin
 					sprintf( buffer,"PKL File2 Upload File Failed :%s\n", destFileName2.c_str() );
 					error += buffer;
 	#ifdef _TEST_
-					printf( "PKL File2 Upload File Failed :%s\n", destFileName2.c_str() );
+					LOGERRFMT( "PKL File2 Upload File Failed :%s\n", destFileName2.c_str() );
 	#endif
 					
 					//如果ftp上传失败，目前继续本地拷贝，不再ftp上传 begin
@@ -6592,7 +6596,7 @@ int CopyDcpSub2( const std::string &pklName, const std::string &Dest, std::strin
 			sprintf( buffer,"Error:PKL File(%s) no exist!\n", pklName.c_str() );
 			error = buffer;
 #ifdef _TEST_
-			printf( "Error:PKL File(%s) no exist!\n", pklName.c_str() );
+			LOGERRFMT( "Error:PKL File(%s) no exist!\n", pklName.c_str() );
 #endif
 			//errno = 10;
 			errno = ERROR_CONTENT_DCP_PKL_FILE_NO_EXIST;
@@ -6604,7 +6608,7 @@ int CopyDcpSub2( const std::string &pklName, const std::string &Dest, std::strin
 	{
 		error = "Error:Param pklName is Null string!\n";
 #ifdef _TEST_
-		printf( "Error:Param pklName is Null string!\n" );
+		LOGERRFMT( "Error:Param pklName is Null string!\n" );
 #endif
 		//errno = -5;
 		errno = ERROR_CONTENT_DCP_PARAM_PKLNAME_IS_NULL_STR;
@@ -6636,7 +6640,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 			if (ret==0)
 			{
 #ifdef _TEST_
-				printf( "Assetmap File1 copy finished :%s\n", destFileName.c_str() );
+				LOGERRFMT( "Assetmap File1 copy finished :%s\n", destFileName.c_str() );
 #endif
 			}
 			else if( ret )
@@ -6645,7 +6649,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 				sprintf( buffer,"Assetmap File1 copy Failed :%s\n", destFileName.c_str() );
 				error += buffer;
 #ifdef _TEST_
-				printf( "Assetmap File1 copy Failed :%s\n", destFileName.c_str() );
+				LOGERRFMT( "Assetmap File1 copy Failed :%s\n", destFileName.c_str() );
 #endif
 				//errno = 1;
 				errno = ERROR_CONTENT_DCP_FILE_COPY_FAILED;
@@ -6660,7 +6664,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 				sprintf( buffer,"Error ReBuild_Assetmap File FAILED:%s\n", destFileName.c_str() );
 				error += buffer;
 #ifdef _TEST_
-				printf( "Error ReBuild_Assetmap File FAILED:%s\n", destFileName.c_str() );
+				LOGERRFMT( "Error ReBuild_Assetmap File FAILED:%s\n", destFileName.c_str() );
 #endif
 				WELOG(error)
 				errno = ERROR_CONTENT_DCP_REBUILD_ASSETMAP_FILE_FAILED;
@@ -6707,7 +6711,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 				if ( ret == 0 )
 				{
 #ifdef _TEST_
-					printf( "Assetmap File2 Upload File finished :%s\n", destFileName2.c_str() );
+					LOGERRFMT( "Assetmap File2 Upload File finished :%s\n", destFileName2.c_str() );
 #endif
 				}
 				else if( ret )
@@ -6716,7 +6720,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 					sprintf( buffer,"Assetmap File2 Upload File Failed :%s\n", destFileName2.c_str() );
 					error += buffer;
 #ifdef _TEST_
-					printf( "Assetmap File2 Upload File Failed :%s\n", destFileName2.c_str() );
+					LOGERRFMT( "Assetmap File2 Upload File Failed :%s\n", destFileName2.c_str() );
 #endif
 					
 					//如果ftp上传失败，目前继续本地拷贝，不再ftp上传 begin
@@ -6738,7 +6742,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 			sprintf( buffer,"Error:Assetmap(%s) is no exist!\n", AssetmapName.c_str() );
 			error = buffer;
 #ifdef _TEST_
-			printf( "Error:Assetmap(%s) is no exist!\n", AssetmapName.c_str() );
+			LOGERRFMT( "Error:Assetmap(%s) is no exist!\n", AssetmapName.c_str() );
 #endif
 			//errno = 2020;
 			errno = ERROR_CONTENT_DCP_ASSETMAP_IS_NO_EXIST;
@@ -6750,7 +6754,7 @@ int CopyDcpSub3( const std::string &AssetmapName, const std::string &pklUuid, co
 	{
 		error = "Error:Param AssetmapName is Null string!\n";
 #ifdef _TEST_
-		printf( "Error:Param AssetmapName is Null string!\n" );
+		LOGERRFMT( "Error:Param AssetmapName is Null string!\n" );
 #endif
 		//errno = 2022;
 		errno = ERROR_CONTENT_DCP_PARAM_ASSETMAPNAME_IS_NULL_STR;
@@ -6785,7 +6789,7 @@ int DownLoadDcp( const string &ftpUrl, const string &pklUuid, const string &dest
 		if(ret!=0)
 		{
 #ifdef _TEST_
-			printf("error SearchFtpDcpList !\n");
+			LOGERRFMT("error SearchFtpDcpList !\n");
 #endif
 			WELOG("error SearchFtpDcpList !\n");
 			return ret;
@@ -6871,7 +6875,7 @@ int DownLoadDcp( const string &ftpUrl, const string &pklUuid, const string &dest
 					if (nSize_Asset_Pkl==0)
 					{
 						error = "Subtitle files list is null!\n";
-						printf( "Warning:%s\n" , error.c_str() );
+						LOGERRFMT( "Warning:%s\n" , error.c_str() );
 					}
 
 					vector<string> vTmp;

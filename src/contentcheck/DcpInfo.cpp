@@ -24,6 +24,9 @@
 #ifndef WIN32
 #include "para/C_RunPara.h"
 #endif
+#include "log/C_LogManage.h"
+
+#define  LOGERRFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
 
 using namespace Content;
 using namespace Content::Dcp;
@@ -99,7 +102,7 @@ int DcpInfo::getAssetmapList( const char *path,char **mapList, int *mapN, int ma
     ret = searchFile(path,"ASSETMAP",mapList,mapN,max);
     if(ret==-2 || ret==0 || ret==ENOENT);
     else {
-        //printf("%s\n",strerror(ret));
+        //LOGERRFMT("%s\n",strerror(ret));
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"%s\n",strerror(ret) );
 		error = buffer;
@@ -110,7 +113,7 @@ int DcpInfo::getAssetmapList( const char *path,char **mapList, int *mapN, int ma
 	ret = searchFile(path,"assetmap",mapList,mapN,max);
 	if(ret==-2 || ret==0 || ret==ENOENT);
 	else {
-		//printf("%s\n",strerror(ret));
+		//LOGERRFMT("%s\n",strerror(ret));
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"%s\n",strerror(ret) );
 		error = buffer;
@@ -120,7 +123,7 @@ int DcpInfo::getAssetmapList( const char *path,char **mapList, int *mapN, int ma
 	ret = searchFile(path,"assetmap.xml",mapList,mapN,max);
 	if(ret==-2 || ret==0 || ret==ENOENT);
 	else {
-		//printf("%s\n",strerror(ret));
+		//LOGERRFMT("%s\n",strerror(ret));
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"%s\n",strerror(ret) );
 		error = buffer;
@@ -130,7 +133,7 @@ int DcpInfo::getAssetmapList( const char *path,char **mapList, int *mapN, int ma
 	ret = searchFile(path,"ASSETMAP.xml",mapList,mapN,max);
 	if(ret==-2 || ret==0 || ret==ENOENT);
 	else {
-		//printf("%s\n",strerror(ret));
+		//LOGERRFMT("%s\n",strerror(ret));
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"%s\n",strerror(ret) );
 		error = buffer;
@@ -140,7 +143,7 @@ int DcpInfo::getAssetmapList( const char *path,char **mapList, int *mapN, int ma
     if(*mapN<=0) 
 	{
 		error = "can not find ASSETMAP!\n";
-		printf("can not find ASSETMAP!\n");
+		LOGERRFMT("can not find ASSETMAP!\n");
 		return -1;
 	}
     return 0;
@@ -152,7 +155,7 @@ int DcpInfo::getKdmList(const char *path,char **kdmList, int *kdmN, int max , st
     ret = searchFile2(path,".xml",kdmList,kdmN,max);
     if(ret==-2 || ret==0 || ret==ENOENT);
 	else {
-		//printf("%s\n",strerror(ret));
+		//LOGERRFMT("%s\n",strerror(ret));
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"%s\n",strerror(ret) );
 		error = buffer;
@@ -161,10 +164,10 @@ int DcpInfo::getKdmList(const char *path,char **kdmList, int *kdmN, int max , st
     if(*kdmN<=0) 
 	{
 		error = "can not find kdm!\n";
-		printf("can not find kdm!\n");
+		LOGERRFMT("can not find kdm!\n");
 		return 1;
 	}
-    //printf("kdmN=%d\n",kdmN);
+    //LOGERRFMT("kdmN=%d\n",kdmN);
     return 0;
 }
 
@@ -175,7 +178,7 @@ DOMNode *DcpInfo::getNodeByXpath(DOMNode *root,std::vector<std::string> path)
     if(root==NULL) return NULL;
     for(size_t i=0;i<path.size();i++)
     {
-        //printf("path:%s\n",(*path)[i].c_str());
+        //LOGERRFMT("path:%s\n",(*path)[i].c_str());
         //XMLString::transcode((*path)[i].c_str(),temp,256);
         DOMNodeList *childList = root->getChildNodes();
         size_t j;
@@ -186,7 +189,7 @@ DOMNode *DcpInfo::getNodeByXpath(DOMNode *root,std::vector<std::string> path)
                && XMLString::compareString(childList->item(j)->getNodeName(),X(path[i].c_str()))==0)
             {
                 root = childList->item(j);
-                //printf("%s\n",StrX(root->getNodeName()).localForm());
+                //LOGERRFMT("%s\n",StrX(root->getNodeName()).localForm());
                 break;
             }
         }
@@ -246,7 +249,7 @@ int DcpInfo::ParseInit(int f_schechk,const std::vector<std::string> &schePath)
 		}
 		catch (...)
 		{
-			printf( "Loading grammar error:Throw Exception!\n" );
+			LOGERRFMT( "Loading grammar error:Throw Exception!\n" );
 
 			//@author zhangmiao@oristartech.com
 			//@date [2014-04-04]
@@ -266,7 +269,7 @@ DOMDocument *DcpInfo::ParseXML(const std::string &xmlFile)
 {
     DOMDocument *pDomRet = NULL;
 
-    if(xmlFile.empty()) {printf("papa is NULL!\n");return NULL;}
+    if(xmlFile.empty()) {LOGERRFMT("papa is NULL!\n");return NULL;}
     
     bool errorOccurred = false;
     try{
@@ -346,7 +349,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 	{
 		error = "DcpInfo::init() fail.\n";
 #ifdef _TEST_
-		printf("fail to init()!\n");
+		LOGERRFMT("fail to init()!\n");
 #endif
 		return -1;
 	}
@@ -369,7 +372,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"ReBuild_Assetmap fail to ParseXML()!\n parse(%s) is error!\n",xmlFile.c_str() );
 		error = buffer;
-		printf("parse(%s) is error!\n",xmlFile.c_str());
+		LOGERRFMT("parse(%s) is error!\n",xmlFile.c_str());
 		return -1;
 	}
 
@@ -385,7 +388,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 	if(tmpN==NULL)
 	{
 		error += "ReBuild_Assetmap(AssetMap Id) is error!\n";
-		printf("ReBuild_Assetmap(AssetMap Id) is error!\n");
+		LOGERRFMT("ReBuild_Assetmap(AssetMap Id) is error!\n");
 		return -1;
 	}
 	string AssetMapUuid = "urn:uuid:";
@@ -417,7 +420,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 	if( tmpN_AnnotationText == NULL )
 	{
 		error += "ReBuild_Assetmap(AssetMap AnnotationText) is Null!\n";
-		printf("ReBuild_Assetmap(AssetMap AnnotationText) is Null!\n");
+		LOGERRFMT("ReBuild_Assetmap(AssetMap AnnotationText) is Null!\n");
 		//return -1;
 	}
 	else
@@ -435,12 +438,12 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 
 	DOMNodeList *nlist = docAsset->getElementsByTagName(X("AssetList"));
 	nodeNum = nlist->getLength(); 
-	//printf("nodeNum=%d\n",nodeNum);
+	//LOGERRFMT("nodeNum=%d\n",nodeNum);
 	if(nodeNum==0)
 	{
 		error = "Parse Assetmap error:not find AssetList!\n";
 #ifdef _TEST_
-		printf("Parse Assetmap error:not find AssetList!\n");
+		LOGERRFMT("Parse Assetmap error:not find AssetList!\n");
 #endif
 		return -1;
 	}
@@ -468,7 +471,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 		if(tmpN==NULL) 
 		{
 			error = "parseAssetmap(pklId) is error!\n";
-			printf("parseAssetmap(pklId) is error!\n");
+			LOGERRFMT("parseAssetmap(pklId) is error!\n");
 			return -1;
 		}
 		std::string pklId = StrX(tmpN->getTextContent()).localForm();
@@ -502,7 +505,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 		if(tmpNode==NULL) 
 		{
 			error = "parse AssetMap(Asset Id) is error!\n";
-			printf("parse AssetMap(Asset Id) is error!\n");
+			LOGERRFMT("parse AssetMap(Asset Id) is error!\n");
 			return -1;
 		}
 
@@ -550,7 +553,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 			if(tmpN==NULL) 
 			{
 				error = "parseAssetmap(pklId) is error!\n";
-				printf("parseAssetmap(pklId) is error!\n");
+				LOGERRFMT("parseAssetmap(pklId) is error!\n");
 				return -1;
 			}
 			std::string Id = StrX(tmpN->getTextContent()).localForm();
@@ -578,7 +581,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 	if ( cloneNode == NULL )
 	{
 		error = "ReBuild_Assetmap error: cloneNode is Null !\n";
-		printf("ReBuild_Assetmap error: cloneNode is Null !\n");
+		LOGERRFMT("ReBuild_Assetmap error: cloneNode is Null !\n");
 		return -1;
 	}
 	else
@@ -587,7 +590,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 		if ( nChildNodesList == NULL )
 		{
 			error = "ReBuild_Assetmap error: ChildNodesList Of cloneNode is Null!\n";
-			printf("ReBuild_Assetmap error: ChildNodesList Of cloneNode is Null!\n");
+			LOGERRFMT("ReBuild_Assetmap error: ChildNodesList Of cloneNode is Null!\n");
 			return -1;
 		}
 	}
@@ -595,7 +598,7 @@ int DcpInfo::ReBuild_Assetmap(  std::string xmlFile, const string &pklUuid, pkl_
 
 	nodeNum = cloneNode->getChildNodes()->getLength();
 #ifdef _TEST_
-	printf("nodeNum=%d\n",nodeNum);
+	LOGERRFMT("nodeNum=%d\n",nodeNum);
 #endif
 	if(nodeNum!=0)
 	{
@@ -619,7 +622,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 	if( 0!= init() )
 	{
 		error += "DcpInfo::init() fail.\n";
-		printf("fail to init()!\n");
+		LOGERRFMT("fail to init()!\n");
 		return -1;
 	}
 
@@ -642,7 +645,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"Parse_Assetmap_New fail to ParseXML()!\n parse(%s) is error!\n",xmlFile.c_str() );
 		error += buffer;
-		printf("parse(%s) is error!\n",xmlFile.c_str());
+		LOGERRFMT("parse(%s) is error!\n",xmlFile.c_str());
 		return -1;
 	}
 
@@ -654,7 +657,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 	if(tmpN==NULL)
 	{
 		error += "parseAssetmap(AssetId) is error!\n";
-		printf("parseAssetmap(AssetId) is error!\n");
+		LOGERRFMT("parseAssetmap(AssetId) is error!\n");
 		return -1;
 	}
 	std::string assetmapId = StrX(tmpN->getTextContent()).localForm();
@@ -669,7 +672,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 			char buffer[BUF_SIZE]="";
 			sprintf( buffer,"Assetmap is repeat!%s\n",xmlFile.c_str() );
 			error += buffer;
-			printf("Assetmap is repeat!%s\n",xmlFile.c_str());
+			LOGERRFMT("Assetmap is repeat!%s\n",xmlFile.c_str());
 			return -1;
 		}
 	}
@@ -681,11 +684,11 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 	//找出所有的<Path>节点，进行解析
 	DOMNodeList *pathList = docAsset->getElementsByTagName(X("Path"));
 	nodeNum = pathList->getLength(); 
-	//printf("nodeNum=%d\n",nodeNum);
+	//LOGERRFMT("nodeNum=%d\n",nodeNum);
 	if(nodeNum==0)
 	{
 		error += "parseAssetmap(path) is error!\n";
-		printf("parseAssetmap(path) is error!\n");
+		LOGERRFMT("parseAssetmap(path) is error!\n");
 		return -1;
 	}
 	for(size_t i=0;i<nodeNum;i++)
@@ -696,7 +699,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(tmpN==NULL)
 		{
 			error += "parseAssetmap(path) is error!\n";
-			printf("parseAssetmap(path) is error!\n");
+			LOGERRFMT("parseAssetmap(path) is error!\n");
 			return -1;
 		}
 		std::string fileName = StrX(tmpN->getTextContent()).localForm();
@@ -727,21 +730,21 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 				if (tmpNODE->getParentNode()->getParentNode() == NULL )
 				{
 					error += "parseAssetmap( path: getParentNode() ) is error!\n";
-					printf("parseAssetmap( path: getParentNode() ) is error!\n");
+					LOGERRFMT("parseAssetmap( path: getParentNode() ) is error!\n");
 					return -1;
 				}
 			}
 			else
 			{
 				error += "parseAssetmap( path: getParentNode() ) is error!\n";
-				printf("parseAssetmap( path: getParentNode() ) is error!\n");
+				LOGERRFMT("parseAssetmap( path: getParentNode() ) is error!\n");
 				return -1;
 			}
 		}
 		else
 		{
 			error += "parseAssetmap( path: getParentNode() ) is error!\n";
-			printf("parseAssetmap( path: getParentNode() ) is error!\n");
+			LOGERRFMT("parseAssetmap( path: getParentNode() ) is error!\n");
 			return -1;
 		}
 		//@modify end;
@@ -752,7 +755,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(tmpN==NULL)
 		{
 			error += "parseAssetmap(fileId) is error!\n";
-			printf("parseAssetmap(fileId) is error!\n");
+			LOGERRFMT("parseAssetmap(fileId) is error!\n");
 			return -1;
 		}
 		std::string fileId = StrX(tmpN->getTextContent()).localForm();
@@ -778,7 +781,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(tmpPath==NULL)
 		{
 			error += "parseAssetmap(path) is error!\n";
-			printf("parseAssetmap(path) is error!\n");
+			LOGERRFMT("parseAssetmap(path) is error!\n");
 			return -1;
 		}
 		//const XMLCh * n=  tmpPath->getParentNode()->getNodeName();
@@ -786,7 +789,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(tmpN==NULL)
 		{
 			error += "parseAssetmap(Length) is error:"+fileName+" not find Length !\n";
-			printf("parseAssetmap(Length) is error:%s not find Length !\n" , fileName.c_str() );
+			LOGERRFMT("parseAssetmap(Length) is error:%s not find Length !\n" , fileName.c_str() );
 			//return -1;
 		}
 		else
@@ -825,7 +828,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 	//对pkl的相关文件信息做解析，用于下一步对pkl文件解析
 	for(int i=0;PKLInfo::num!=0;i++) 
 	{
-		printf("delete pklList[%d]\n",i);
+		LOGERRFMT("delete pklList[%d]\n",i);
 		delete pklList[i];
 		pklList[i] = NULL;
 	}
@@ -833,11 +836,11 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 	pklN = 0;
 	DOMNodeList *nlist = docAsset->getElementsByTagName(X("PackingList"));
 	nodeNum = nlist->getLength(); 
-	//printf("nodeNum=%d\n",nodeNum);
+	//LOGERRFMT("nodeNum=%d\n",nodeNum);
 	if(nodeNum==0)
 	{
 		error += "Parse Assetmap error:not find PackingList!\n";
-		printf("Parse Assetmap error:not find PackingList!\n");
+		LOGERRFMT("Parse Assetmap error:not find PackingList!\n");
 		return -1;
 	}
 	for(size_t i=0;i<nodeNum;i++)
@@ -850,7 +853,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if ( nParent == NULL )
 		{
 			error += "Parse Assetmap error:not find ParentNode Of PackingList!\n";
-			printf("Parse Assetmap error:not find ParentNode Of PackingList!\n");
+			LOGERRFMT("Parse Assetmap error:not find ParentNode Of PackingList!\n");
 			return -1;
 		}
 		//@modify end;
@@ -862,7 +865,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(tmpN==NULL) 
 		{
 			error += "parseAssetmap(chunk,path) is error!\n";
-			printf("parseAssetmap(chunk,path) is error!\n");
+			LOGERRFMT("parseAssetmap(chunk,path) is error!\n");
 			return -1;
 		}
 		std::string pklPath = StrX(tmpN->getTextContent()).localForm();
@@ -874,7 +877,7 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(tmpN==NULL) 
 		{
 			error += "parseAssetmap(pklId) is error!\n";
-			printf("parseAssetmap(pklId) is error!\n");
+			LOGERRFMT("parseAssetmap(pklId) is error!\n");
 			return -1;
 		}
 		std::string pklId = StrX(tmpN->getTextContent()).localForm();
@@ -884,14 +887,14 @@ int DcpInfo::Parse_Assetmap_New( std::string xmlFile ,AMInfo& aAMInfo , string& 
 		if(++pklN>PKL_N_MAX) //目前最多支持64个
 		{
 			error += "pklN>PKL_N_MAX is error!\n";
-			printf("%d\n",pklN);
+			LOGERRFMT("%d\n",pklN);
 			return -1;
 		}
 		PKLInfo *p = new PKLInfo();
 		if(p==NULL) 
 		{
 			error += "new() PKLInfo is failed!\n";
-			printf("new() PKLInfo is failed!\n");
+			LOGERRFMT("new() PKLInfo is failed!\n");
 			return -1;
 		}
 		//将pkl文件的uuid和path记录下来
@@ -909,7 +912,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 	if( 0!= init() )
 	{
 		error = "DcpInfo::init() fail.\n";
-		printf("fail to init()!\n");
+		LOGERRFMT("fail to init()!\n");
 		return -1;
 	}
 
@@ -933,7 +936,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"pkl fail to ParseXML()!\n parse(%s) is error!\n",(pkl->path).c_str() );
 		error = buffer;
-		printf("parse(%s) is error!\n",(pkl->path).c_str());
+		LOGERRFMT("parse(%s) is error!\n",(pkl->path).c_str());
 		return 1;
 	}
 
@@ -961,7 +964,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 		char buffer[BUF_SIZE] = "";
 		sprintf( buffer , "Warning:Parse PKL Element<AnnotationText> NOT exist in <PackingList>(%s)\n" , (pkl->path).c_str() );
 		error += buffer;
-		printf( "%s" , buffer );
+		LOGERRFMT( "%s" , buffer );
 		//@modify end;
 	}
 
@@ -975,7 +978,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 		if(tmpN==NULL)
 		{
 			error = "getNodeByXpath is NULL\n";
-			printf("getNodeByXpath is NULL\n");
+			LOGERRFMT("getNodeByXpath is NULL\n");
 			errorOccurred = true;
 		}
 
@@ -1004,7 +1007,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 	//搜索所有的<Asset>节点
 	DOMNodeList *nList = docPkl->getElementsByTagName(X("Asset"));
 	nodeNum = nList->getLength(); 
-	//printf("Asset num=%d\n",nodeNum);
+	//LOGERRFMT("Asset num=%d\n",nodeNum);
 	if(nodeNum==0)
 	{
 		error = "error:Asset num = 0\n";
@@ -1041,7 +1044,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 			if(tmpN==NULL)
 			{
 				error = "getNodeByXpath(Asset)\n";
-				printf("getNodeByXpath(Asset)\n");
+				LOGERRFMT("getNodeByXpath(Asset)\n");
 				errorOccurred=true;
 				break;
 			}
@@ -1096,7 +1099,7 @@ int DcpInfo::Parse_Pkl_New( PKLInfo *pkl , dcp_Info_t& dcp , string& error )
 			sprintf( buffer,"getNodeByXpath %s is failed!\n",path[0].c_str() );
 			error = buffer;
 
-			printf("getNodeByXpath %s is failed!\n",path[0].c_str());
+			LOGERRFMT("getNodeByXpath %s is failed!\n",path[0].c_str());
 			errorOccurred = true;
 			break;
 		}
@@ -1160,7 +1163,7 @@ int DcpInfo::Parse_Cpl_New( const char *cplPath, cpl_Info_t &cpl , string& error
 	if( ParseInit(1,path) == -1 )
 	{
 		error += "Cpl error:parse init is error!\n";
-		printf("parse init is error!\n");
+		LOGERRFMT("parse init is error!\n");
 		return -1;
 	}
 	string strXml = cplPath;
@@ -1170,7 +1173,7 @@ int DcpInfo::Parse_Cpl_New( const char *cplPath, cpl_Info_t &cpl , string& error
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"parse(%s) is error!\n",cplPath );
 		error += buffer;
-		printf("parse(%s) is error!\n",cplPath);
+		LOGERRFMT("parse(%s) is error!\n",cplPath);
 		return -2;
 	}
 
@@ -1210,7 +1213,7 @@ int DcpInfo::Parse_Cpl_New( const char *cplPath, cpl_Info_t &cpl , string& error
 		//DOMNodeList *lMain = docCpl->getElementsByTagName(X(nodeName[k].c_str()));
 		DOMNodeList *lMain = docCpl->getElementsByTagNameNS( X("*") , X(nodeName[k].c_str()) );
 		int nMain = lMain->getLength();
-		//printf("nMain=%d\n",nMain);
+		//LOGERRFMT("nMain=%d\n",nMain);
 		if(nMain!=0)
 		{
 			//unsigned long long duration = 0lu;
@@ -1261,7 +1264,7 @@ int DcpInfo::GetKdmInfo( const std::string& KdmFileName, KdmInfo& kdmInfo, strin
 	if( 0!= init() )
 	{
 		error = "DcpInfo::init() fail.\n";
-		printf("fail to init()!\n");
+		LOGERRFMT("fail to init()!\n");
 		return -1;
 	}
 
@@ -1303,7 +1306,7 @@ int DcpInfo::GetKdmInfo( const std::string& KdmFileName, KdmInfo& kdmInfo, strin
 		sprintf( buffer,"parserKdm(%s) is failed!\n", sFile.c_str() );
 		error += buffer;
 #ifdef _TEST_
-			printf( "parserKdm(%s) is failed!\n", sFile.c_str() );
+			LOGERRFMT( "parserKdm(%s) is failed!\n", sFile.c_str() );
 #endif
 		return -2;
 	}
@@ -1319,7 +1322,7 @@ int DcpInfo::GetKdmInfo(  std::string &path, std::vector<KdmInfo> &KdmList, stri
 	if(ret!=init()) 
 	{
 		error = "DcpInfo::init() fail.\n";
-		printf("fail to init()!\n");
+		LOGERRFMT("fail to init()!\n");
 		return -1;
 	}
 
@@ -1328,7 +1331,7 @@ int DcpInfo::GetKdmInfo(  std::string &path, std::vector<KdmInfo> &KdmList, stri
 	if(ret!=0)
 	{
 #ifdef _TEST_
-		printf("fail to getKdmList:%s\n",strerror(ret));
+		LOGERRFMT("fail to getKdmList:%s\n",strerror(ret));
 #endif
 		while(--kdmN>=0){if(kdmList[kdmN]!=NULL) free(kdmList[kdmN]);}
 		if(parser!=NULL)parser->release();
@@ -1341,7 +1344,7 @@ int DcpInfo::GetKdmInfo(  std::string &path, std::vector<KdmInfo> &KdmList, stri
 	if(kdmN==0)
 	{
 #ifdef _TEST_
-		printf("there is no kdm file in the USB!\n");
+		LOGERRFMT("there is no kdm file in the USB!\n");
 #endif
 		
 		//while(--kdmN>=0){if(kdmList[kdmN]!=NULL) free(kdmList[kdmN]);}
@@ -1388,7 +1391,7 @@ int DcpInfo::GetKdmInfo(  std::string &path, std::vector<KdmInfo> &KdmList, stri
 		if ( ( ret = ParseKdm_New( sFile , kdmInfo , error ) ) !=0 )
 		{
 #ifdef _TEST_
-			printf( "parserKdm(%s) is failed!\n", sFile.c_str() );
+			LOGERRFMT( "parserKdm(%s) is failed!\n", sFile.c_str() );
 #endif
 			continue;
 			//return 2;
@@ -1454,7 +1457,7 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 	if( nLength == 0 ) 
 	{
 		error = "not find the E of MessageId!\n";
-		printf("not find the E of MessageId!\n");
+		LOGERRFMT("not find the E of MessageId!\n");
 		return 1;
 	}
 	//@modify end;
@@ -1471,7 +1474,7 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 	if(0==nlist->getLength()) 
 	{
 		error = "not find the E of CompositionPlaylistId!\n";
-		printf("not find the E of CompositionPlaylistId!\n");
+		LOGERRFMT("not find the E of CompositionPlaylistId!\n");
 		return 1;
 	}
 	memset(xmlC,0,sizeof(XMLCh)*1024);
@@ -1487,7 +1490,7 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 	if(0==nlist->getLength()) 
 	{
 		error = "not find the E of ContentKeysNotValidBefore!\n";
-		printf("not find the E of ContentKeysNotValidBefore!\n");
+		LOGERRFMT("not find the E of ContentKeysNotValidBefore!\n");
 		return 1;
 	}
 	memset(xmlC,0,sizeof(XMLCh)*1024);
@@ -1526,7 +1529,7 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 	if(0==nlist->getLength()) 
 	{
 		error = "not find the E of ContentKeysNotValidAfter!\n";
-		printf("not find the E of ContentKeysNotValidAfter!\n");
+		LOGERRFMT("not find the E of ContentKeysNotValidAfter!\n");
 		return 1;
 	}
 	memset(xmlC,0,sizeof(XMLCh)*1024);
@@ -1563,7 +1566,7 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 	if(0==nlist->getLength()) 
 	{
 		error = "not find the E of DeviceListIdentifier!\n";
-		printf("not find the E of DeviceListIdentifier!\n");
+		LOGERRFMT("not find the E of DeviceListIdentifier!\n");
 		//@author zhangmiao@oristartech.com
 		//@date 2013-04-02
 		//@brief 如果该标记<DeviceListIdentifier>没有找到，可以忽略。
@@ -1592,7 +1595,7 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 	if(0==nlist->getLength()) 
 	{
 		error = "not find the E of X509SubjectName!\n";
-		printf("not find the E of X509SubjectName!\n");
+		LOGERRFMT("not find the E of X509SubjectName!\n");
 		return 1;
 	}
 	memset(xmlC,0,sizeof(XMLCh)*1024);
@@ -1627,14 +1630,14 @@ int DcpInfo::ParseKdm_New( string sFile  , KdmInfo& kdmInfo, string& error )
 		else
 		{
 			error = "No 'CN=' the Elem of X509SubjectName!\n";
-			printf("No 'CN=' the Elem of X509SubjectName!\n");
+			LOGERRFMT("No 'CN=' the Elem of X509SubjectName!\n");
 			return 1;
 		}
 	}
 	else
 	{
 		error = "empty the Elem of X509SubjectName!\n";
-		printf("empty the Elem of X509SubjectName!\n");
+		LOGERRFMT("empty the Elem of X509SubjectName!\n");
 		return 1;
 	}
 
@@ -1680,7 +1683,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 		if( assetmapN >= ASSETMAP_N_MAX )
 		{
 #ifdef _TEST_
-			printf( "nfile=%d is bigger than max!\n", assetmapN );
+			LOGERRFMT( "nfile=%d is bigger than max!\n", assetmapN );
 #endif
 			char buffer[BUF_SIZE]="";
 			sprintf( buffer,"nfile=%d is bigger than max!\n", assetmapN );
@@ -1690,7 +1693,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 		}
 		assetmapList[assetmapN] = (char *)malloc(PATH_MAX);
 		sprintf(assetmapList[assetmapN],"%s",srcPath.c_str());
-		//printf("%s,%d\n",filelist[*nfile],*nfile);
+		//LOGERRFMT("%s,%d\n",filelist[*nfile],*nfile);
 		assetmapN++;
 	}
 	else
@@ -1704,7 +1707,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"fail to getAssetmapList:%s\n", strerror(ret) );
 		error = buffer;
-		//printf("fail to getAssetmapList:%s\n",strerror(ret));
+		//LOGERRFMT("fail to getAssetmapList:%s\n",strerror(ret));
 		for(int i=0;i<assetmapN;i++) free(assetmapList[i]);
 		if(parser!=NULL)parser->release();
 		if(docRet!=NULL)docRet->release();
@@ -1716,11 +1719,11 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 #if 0
 	if(assetmapN==0)
 	{
-		printf("did not get the ASSETMAP list!\n");
+		LOGERRFMT("did not get the ASSETMAP list!\n");
 		return -1;
 	}
 #endif
-	//printf("assetmapN=%d\n",assetmapN);
+	//LOGERRFMT("assetmapN=%d\n",assetmapN);
 	assetmapIdVt.clear();
 	for(int i=0;i<assetmapN;i++)
 	{
@@ -1731,8 +1734,8 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 		ret = Parse_Assetmap_New( assetmapList[i], aAMInfo , error );
 		if(ret==-1)
 		{
-			printf("parseAssetmap error!:%s\n",assetmapList[i]);
-			//printf("parseAssetmap error!\n");
+			LOGERRFMT("parseAssetmap error!:%s\n",assetmapList[i]);
+			//LOGERRFMT("parseAssetmap error!\n");
 			continue;
 		}
 		vector<dcp_Info_t> vDcp;
@@ -1746,7 +1749,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 			ret = Parse_Pkl_New( pklList[j], dcp , error );
 			if( ret == -1 )
 			{
-				printf( "parsePkl error!:%s\n" , ( pklList[j]->path ).c_str() );
+				LOGERRFMT( "parsePkl error!:%s\n" , ( pklList[j]->path ).c_str() );
 
 				for(int i=0;PKLInfo::num!=0;i++){delete pklList[i];pklList[i]=NULL;}
 				for(int i=0;i<assetmapN;i++) free(assetmapList[i]);
@@ -1765,7 +1768,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 			}
 			//----zhangmiao:end----2012-12-11----
 
-			//if(r!=0){printf("parsePkl error!:%s\n",pklList[j]);}
+			//if(r!=0){LOGERRFMT("parsePkl error!:%s\n",pklList[j]);}
 
 			//解析cpl文件
 			int pklAssetN = dcp.aPkl.asset.size();
@@ -1797,7 +1800,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 					//continue;
 					if( typeValue == "text/xml" )
 					{
-						printf("This PKL is SMPTE Format file!\n");
+						LOGERRFMT("This PKL is SMPTE Format file!\n");
 
 						int IsCplFile=0;
 						ret = VerifyIsCplFile4Pkl_Asset( asset_pkl_t.originalFileName.c_str() , IsCplFile , error );
@@ -1827,7 +1830,7 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 				string cplPath = asset_pkl_t.originalFileName;
 				if (Parse_Cpl_New( cplPath.c_str() , cpl , error )<0)
 				{
-					printf("parseCpl(%s) is error!\n",cplPath.c_str());
+					LOGERRFMT("parseCpl(%s) is error!\n",cplPath.c_str());
 					continue;
 				}
 
@@ -1861,11 +1864,11 @@ int DcpInfo::CreateDCPInfo(string srcPath ,string& error )
 
 
 				//char uuid[UUID_LEN] = {0};
-				//printf("getPkkuuid:%s\n",cpl.uuid.c_str());
+				//LOGERRFMT("getPkkuuid:%s\n",cpl.uuid.c_str());
 				//if(0!=getPklUuid(cpl.uuid.c_str(),uuid,sfd))        
 				//        getUuid(uuid,UUID_LEN);
 				//	dcp.dcpUuid = uuid;
-				//printf("getPkkuuid over:%s\n",uuid);
+				//LOGERRFMT("getPkkuuid over:%s\n",uuid);
 				//cout << "uuid="<< dcp.dcpUuid << endl;
 				//dcp.dcpPath = "doby" + cpl.annotationText + ".pkl.xml"
 				/*dcp.dcpSource = cpl.path.substr(0,cpl.path.rfind(DIR_SEPCHAR)+1);
@@ -1921,7 +1924,7 @@ int DcpInfo::VerifyIsCplFile4Pkl_Asset( const char* Pkl_AssetPath, int& IsCplFil
 	if( 0!= init() )
 	{
 		error += "DcpInfo::init() fail.\n";
-		printf("fail to init()!\n");
+		LOGERRFMT("fail to init()!\n");
 		return -1;
 	}
 
@@ -1950,7 +1953,7 @@ int DcpInfo::VerifyIsCplFile4Pkl_Asset( const char* Pkl_AssetPath, int& IsCplFil
 	if( ParseInit(0,path) == -1 )
 	{
 		error += "Cpl error:parse init is error!\n";
-		printf("parse init is error!\n");
+		LOGERRFMT("parse init is error!\n");
 		return -1;
 	}
 
@@ -1963,7 +1966,7 @@ int DcpInfo::VerifyIsCplFile4Pkl_Asset( const char* Pkl_AssetPath, int& IsCplFil
 		char buffer[BUF_SIZE]="";
 		sprintf( buffer,"parse(%s) is error!\n",Pkl_AssetPath );
 		error += buffer;
-		printf("parse(%s) is error!\n",Pkl_AssetPath);
+		LOGERRFMT("parse(%s) is error!\n",Pkl_AssetPath);
 
 		return 0;
 	}
@@ -1972,18 +1975,18 @@ int DcpInfo::VerifyIsCplFile4Pkl_Asset( const char* Pkl_AssetPath, int& IsCplFil
 		//IsCplFile = true;
 		DOMNodeList *nlist = doc->getElementsByTagName(X("CompositionPlaylist"));
 		XMLSize_t nodeNum = nlist->getLength(); 
-		printf("<CompositionPlaylist>RootNode Num = %d\n",nodeNum);
+		LOGERRFMT("<CompositionPlaylist>RootNode Num = %d\n",nodeNum);
 		if( nodeNum == 0 )
 		{
 			error += "Parse error:not find CompositionPlaylist!\n";
-			printf("Parse error:not find CompositionPlaylist!\n");
+			LOGERRFMT("Parse error:not find CompositionPlaylist!\n");
 
 			IsCplFile = false;
 
 			char buffer[BUF_SIZE]="";
 			sprintf( buffer,"VerifyIsCplFile(%s) is error!\n",Pkl_AssetPath );
 			error += buffer;
-			printf("VerifyIsCplFile(%s) is error!\n",Pkl_AssetPath);
+			LOGERRFMT("VerifyIsCplFile(%s) is error!\n",Pkl_AssetPath);
 
 			return 0;
 		}

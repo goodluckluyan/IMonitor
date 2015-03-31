@@ -904,12 +904,14 @@ int CInvoke::DcpHashCheck(std::string strPath,std::string strPklUuid,std::string
 	if(stat(strPath.c_str(),&buf)<0)
 	{
 		strErrInfo="path not exsit";
+		LOGINFFMT(0,"DcpHashCheck:%s(%s)",strErrInfo.c_str(),strPath.c_str());
 		return 1;
 	}
 	
 	if(!S_ISDIR(buf.st_mode))
 	{
 		strErrInfo="path not directory";
+		LOGINFFMT(0,"DcpHashCheck:%s(%s)",strErrInfo.c_str(),strPath.c_str());
 		return 1;
 	}
 	

@@ -80,8 +80,8 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
-	DiskInfo df;
-	pDM->GetDevStat(df);
+	std::map<int,DiskInfo> mapdf;
+	pDM->GetDevStat(mapdf);
 	
 	//pDM->GetDevStat(df);
 // 	df.diskState = "1" ;
@@ -101,6 +101,11 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 // 		df.diskDrives.push_back(node);
 // 	}
 
+	if(mapdf.size() == 0)
+	{
+		return 0;
+	}
+	DiskInfo &df = mapdf.begin()->second;
 	int nLen = df.diskDrives.size();
 	int nSpeed = 0;
 	for(int i = 0 ;i < nLen ; i++)

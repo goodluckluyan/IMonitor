@@ -21,8 +21,7 @@ public:
 
 	bool AddHaskTask(stHashTaskInfo task);
 	void ProcessHashTask();
-	bool GetDcpHashCheckResult(std::string &strPKIUUID,int &nPercent,
-		int &nResult,std::string &strErrInfo);
+	bool GetDcpHashCheckResult(std::string &strPKIUUID,int &nResult,int &nPercent,std::string &strErrInfo);
 private:
 	pthread_cond_t m_cond;
 	pthread_mutex_t m_mutx;
