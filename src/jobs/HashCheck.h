@@ -11,6 +11,11 @@ struct stHashTaskInfo
 	std::string strUUID;
 	int nResult ;
 	std::string strErrInfo;
+
+	stHashTaskInfo()
+	{
+		nResult= -1;
+	}
 };
 
 class CHashCheck
@@ -27,6 +32,9 @@ private:
 	pthread_mutex_t m_mutx;
 
 	std::list<stHashTaskInfo> m_lstHaskTask;
+
+	pthread_mutex_t m_mutxDone;
+	std::list<stHashTaskInfo>  m_lstDoneTask;
 
 // 	pthread_mutex_t m_mutxMap;
 // 	std::map<std:string,stHashTaskInfo> m_mapTaskInfo;

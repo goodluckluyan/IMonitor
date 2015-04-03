@@ -49,6 +49,10 @@ void CFileOperator::ProcessFileOptTask()
 
 	pthread_mutex_unlock(&m_mutx);
 
+	if(m_lstFileOptTask.size() == 0)
+	{
+		return;
+	}
 	stFileOperatorInfo &task = m_lstFileOptTask.front();
 	char strCmd[1024]={'\0'};
 
@@ -180,6 +184,7 @@ bool CFileOperator::GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,st
 			if(it->status==DONE)
 			{
 				nResult = 1;
+				bFind = true;
 				m_lstDoneTask.erase(it);
 				break;
 			}
@@ -200,6 +205,7 @@ bool CFileOperator::GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,st
 		{
 			if(it->strUUID == strPKIUUID && it->enOpt == RM)
 			{
+				bFind = true;
 				nResult = 0;
 			}
 		}

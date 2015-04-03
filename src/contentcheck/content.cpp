@@ -2030,12 +2030,12 @@ int HashDcp( const std::string &path, const std::string &pklUuid ,std::string& e
 							{
 								//CODE_SHA1CHECKCANCEL
 								error = "ERROR:getSha1FromFile is Canceled!\n SHA1 Check Is Canceled!\n";
-								cout << "getSha1FromFile is Canceled! SHA1 Check Is Canceled!" << endl;
+								LOGERRFMT("getSha1FromFile is Canceled! SHA1 Check Is Canceled!" );
 							}
 							else
 							{
 								error = "ERROR:getSha1FromFile is failed!";
-								cout << "getSha1FromFile is failed!" << endl;
+								LOGERRFMT("getSha1FromFile is failed!" );
 							}
 							
 							errorOccurred = true;
@@ -2045,7 +2045,7 @@ int HashDcp( const std::string &path, const std::string &pklUuid ,std::string& e
 						if(b64Str.empty())
 						{
 							error = "ERROR:toBase64 is failed!";
-							cout << "toBase64 is failed!" << endl;
+							LOGERRFMT("toBase64 is failed!");
 							errorOccurred = true;
 							break;
 						}

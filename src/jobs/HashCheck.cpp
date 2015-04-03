@@ -6,6 +6,7 @@
 CHashCheck::CHashCheck()
 {
 	pthread_mutex_init(&m_mutx,NULL);
+	pthread_mutex_init(&m_mutxDone,NULL);
 	//pthread_mutex_init(&m_mutxMap,NULL);
 	pthread_cond_init(&m_cond,NULL);
 }
@@ -16,6 +17,7 @@ CHashCheck::~CHashCheck()
 	pthread_mutex_unlock(&m_mutx);
 
 	pthread_mutex_destroy(&m_mutx);
+	pthread_mutex_destroy(&m_mutxDone);
 	pthread_cond_destroy(&m_cond);
 }
 
@@ -38,12 +40,30 @@ void CHashCheck::ProcessHashTask()
 
 	pthread_mutex_unlock(&m_mutx);
 
+	if(m_lstHaskTask.size()!=0)
+	{
+		stHashTaskInfo &task = m_lstHaskTask.front();
+		std::string strErr;
+		LOGINFFMT(0,"Start HashDcp(%s)....",task.strUUID.c_str());
+		task.nResult = 0;
+		int nResult = HashDcp( task.strPath, task.strUUID , task.strErrInfo);
+		if(nResult == 0)
+		{
+			task.nResult = 1;
+		}
+		else
+		{
+			task.nResult = nResult;
+		}
+		pthread_mutex_lock(&m_mutxDone);
+		m_lstDoneTask.push_back(task);
+		pthread_mutex_unlock(&m_mutxDone);
+
+		pthread_mutex_lock(&m_mutx);
+		m_lstHaskTask.pop_front();
+		pthread_mutex_unlock(&m_mutx);
+	}
 	
-	stHashTaskInfo &task = m_lstHaskTask.front();
-	std::string strErr;
-	LOGINFFMT(0,"Start HashDcp(%s)....",task.strUUID.c_str());
-	task.nResult = HashDcp( task.strPath, task.strUUID , task.strErrInfo);
-	m_lstHaskTask.pop_front();
 
 	//pthread_mutex_lock(m_mutxMap);
 	//m_mapTaskInfo[task.strUUID] = task;
@@ -67,11 +87,48 @@ bool CHashCheck::GetDcpHashCheckResult(std::string &strPKIUUID,int &nResult,int 
 // 	
 // 	pthread_mutex_unlock(m_mutxMap);
 
-	Content::Hashinfo hash;
-	std::string path;
-	GetHashPercent(path, strPKIUUID, hash ,strErrInfo );
-	nResult = hash.status;
-	nPercent = hash.percent;
+	bool bFind=false;
+	pthread_mutex_lock(&m_mutxDone);
+	std::list<stHashTaskInfo>::iterator it=m_lstDoneTask.begin();
+	for(;it!=m_lstDoneTask.end();it++)
+	{
+		if(it->strUUID==strPKIUUID)
+		{
+			nResult = it->nResult;
+			if(nResult == 1)
+			{
+				nPercent = 100;
+			}
+			bFind = true;
+			m_lstDoneTask.erase(it);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&m_mutxDone);
+
+	if(!bFind)
+	{
+		pthread_mutex_lock(&m_mutx);
+		std::list<stHashTaskInfo>::iterator it=m_lstHaskTask.begin();
+		for(;it!=m_lstHaskTask.end();it++)
+		{
+			if(it->strUUID==strPKIUUID)
+			{
+				nResult = it->nResult;
+				break;
+			}
+		}
+		pthread_mutex_unlock(&m_mutx);
+	}
+
+// 	if(!bFind)
+// 	{
+// 		Content::Hashinfo hash;
+// 		std::string path;
+// 		GetHashPercent(path, strPKIUUID, hash ,strErrInfo );
+// 		nResult = hash.status;
+// 		nPercent = hash.percent;
+// 	}
 	return bRet;	
 }
 
