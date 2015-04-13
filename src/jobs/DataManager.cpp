@@ -22,6 +22,8 @@ CDataManager::CDataManager()
 
 	time(&m_tmCheckTMSNoRun);
 	m_nCheckTMSNoRun = 0;
+
+	m_nOtherMonitorState = -1;
 }
 CDataManager::~CDataManager()
 {
@@ -388,6 +390,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 	// 对端机正在启动不作处理
 	if(0 == nState)
 	{
+       m_nOtherMonitorState = 0;
 	   return true;
 	}
 
@@ -441,6 +444,8 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 
 		return true;
 	}   
+
+	m_nOtherMonitorState = nState;
 
 	// 启动正常后，nState的状态为对端机所处的角色
 	// 两端都是主

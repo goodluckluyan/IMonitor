@@ -122,6 +122,9 @@ private:
 	time_t m_tmCheckTMSNoRun;
 	int m_nCheckTMSNoRun;
 
+	// 对端主机状态 -1:为未知数，0：为对端正在启动 1：为启动完成
+	int m_nOtherMonitorState;
+
 	std::map<std::string,std::list<ConflictInfo> > m_maplstConfilict;
 
 };

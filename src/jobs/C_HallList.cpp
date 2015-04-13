@@ -93,8 +93,8 @@ int C_HallList::Init()
 		int nPort = atoi(query.getStringField("port"));
 		std::string strIP2 = query.getStringField("ip2");
 		int nPort2 = atoi(query.getStringField("port"));
-		int nDefPos = query.getIntField("default_position");
-		int nCurPos = query.getIntField("cur_position");
+		int nDefPos = query.getIntField("default_position");// 0为主，1为备
+		int nCurPos = query.getIntField("cur_position");//1为主，2为备
 		
 		int nTmp=-1;
 		if(nCurPos<0||nCurPos>2)
@@ -378,7 +378,12 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 			{
 				int nState = -1;
 				std::string strInfo;
+				C_CS * ptrCS = m_mapCS[it->first];
+
+				// 为了防止和正常的获取sms的线程同时获取所以加个互斥
+				ptrCS->EnterCS();
 				int nRet = ptr->GetSMSWorkState(nState,strInfo);
+				ptrCS->LeaveCS();
 				if(nRet >= 0 && nState > 0 && nState != 103 )
 				{
 					break;

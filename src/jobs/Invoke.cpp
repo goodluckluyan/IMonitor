@@ -780,7 +780,7 @@ void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
 // 从（只有主）服务器角色改变成为主角色
 void CInvoke::ChangeToMain()
 {
-	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To MAINHost!****");
+	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find STDBYHost Change To MAINHost!****");
 	C_Para::GetInstance()->SetRoleFlag(MAINROLE);
 	SwtichTakeOverSMS();
 }
