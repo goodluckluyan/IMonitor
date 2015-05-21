@@ -390,7 +390,7 @@ int C_LogManage::ModifyLogStruct(std::string &strPath)
 	for(int i=0; i<vecstr.size(); ++i)
 	{
 
-		(*it)->pLogManage->SetLogPath((vecstr[i]).c_str());
+		(*it)->pLogManage->SetLogPath(strPath.c_str());
 	}	
 	vecstr.clear();
 	return 0;

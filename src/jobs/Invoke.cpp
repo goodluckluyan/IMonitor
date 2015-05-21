@@ -260,7 +260,7 @@ bool CInvoke::AddInitTask()
 	// 添加hash校验处理任务
 	ptrTaskList->AddTask(TASK_NUMBER_HASHCHECK_ROUTINE,NULL,-1);
 
-	// 添加hash校验处理任务
+	// 添加文件任务
 	ptrTaskList->AddTask(TASK_NUMBER_FILEOPERATION_ROUTINE,NULL,-1);
 
 	// 运行在交互模式

@@ -152,13 +152,13 @@ int C_Para::ReadPara()
 	}
 	m_enRole = atoi(a) == 1 ?MAINROLE: STDBYROLE;
 
-	// 	memset(a,0,64);
-	// 	iResult = config.readvalue("PARA","WebServiceIP",a,strInipath.c_str());
-	// 	if(iResult != 0)
-	// 	{
-	// 		return iResult;
-	// 	}
-	// 	m_strWebServiceIP = a ;
+// 	memset(a,0,64);
+// 	iResult = config.readvalue("PARA","WebServiceIP",a,strInipath.c_str());
+// 	if(iResult != 0)
+// 	{
+// 		return iResult;
+// 	}
+// 	m_strWebServiceIP = a ;
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","WebServicePort",a,strInipath.c_str());

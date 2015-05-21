@@ -407,7 +407,7 @@ int C_RunPara::GetCurMillisecond(int &bDateStart)
     gettimeofday(&m_CurTV, NULL);
     if(m_CurTV.tv_sec - m_iZeroTime >= 86400)
     {
-    		m_bSettingTime = 1;
+    	m_bSettingTime = 1;
         m_iZeroTime += 86400;
         C_Time t1;
 				t1.setCurTime();

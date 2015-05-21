@@ -321,5 +321,6 @@ int LogManage::SetLogPath(const char *strLogPath)
 	 CloseLog();
 	 memset(m_logDir, 0, MAX_DIR_LENGTH);
 	 strcpy(m_logDir,strLogPath);
+	 RollLog();
 	 return 0;
 }

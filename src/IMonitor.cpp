@@ -260,7 +260,7 @@ int main(int argc, char** argv)
 		   daemonize("oristar_imonitor");
 		   g_nRunType = 1;
 		
-		   // 注册SIGTERM信号处理程序
+		   // 注册SIGHUP信号处理程序
 		   struct sigaction sa;
 		   sa.sa_handler = sigterm;
 		   sigemptyset(&sa.sa_mask);
