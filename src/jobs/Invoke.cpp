@@ -942,6 +942,11 @@ int CInvoke::GetHashCheckPercent(std::string strPklUuid,int &nResult,int &nPerce
 // ¿½±´dcp
 int  CInvoke::CopyDcp(std::string PklUuid,std::string srcPath,std::string desPath,int &result ,std::string &errinfo)
 {
+	char buff[512];
+	sprintf(buff,"Copy Task :src=%s dest=%s uuid=%s",
+		srcPath.c_str(),desPath.c_str(),PklUuid.c_str());
+	LOGINFFMT(0,"%s",buff);
+
 	struct stat buf;
 	if(stat(srcPath.c_str(),&buf)<0)
 	{
@@ -988,6 +993,10 @@ int  CInvoke::CopyDcp(std::string PklUuid,std::string srcPath,std::string desPat
 // É¾³ýdcp
 int  CInvoke::DeleteDcp(std::string PklUuid,std::string Path,int &result ,std::string &errinfo)
 {
+	char buff[512];
+	sprintf(buff,"DeteteDcp Task :Path=%s uuid=%s",Path.c_str(),PklUuid.c_str());
+	LOGINFFMT(0,"%s",buff);
+
 	struct stat buf;
 	if(stat(Path.c_str(),&buf)<0)
 	{

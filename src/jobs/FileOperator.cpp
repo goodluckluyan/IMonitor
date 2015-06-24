@@ -35,6 +35,8 @@ bool CFileOperator::AddFileOptTask(stFileOperatorInfo task)
 	m_lstFileOptTask.push_back(task);
 	pthread_cond_signal(&m_cond);
 	pthread_mutex_unlock(&m_mutx);
+
+
 }
 
 
@@ -67,9 +69,11 @@ void CFileOperator::ProcessFileOptTask()
 		if(task.strDesPath.find_last_of('/')!=task.strDesPath.size()-1)
 		{
 			task.strDesPath+="/";
-		}
-		sprintf(strCmd,"cp -rf %s%s %s%s",task.strSrcPath.c_str(),task.strUUID.c_str(),
-			task.strDesPath.c_str(),task.strUUID.c_str());
+ 		}
+// 		sprintf(strCmd,"cp -rf %s%s %s%s",task.strSrcPath.c_str(),task.strUUID.c_str(),
+// 			task.strDesPath.c_str(),task.strUUID.c_str());
+		sprintf(strCmd,"cp -rf %s%s %s",task.strSrcPath.c_str(),task.strUUID.c_str(),
+			task.strDesPath.c_str());
 	}
 	else
 	{

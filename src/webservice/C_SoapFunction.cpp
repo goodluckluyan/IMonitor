@@ -105,32 +105,42 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 	{
 		return 0;
 	}
-	DiskInfo &df = mapdf.begin()->second;
-	int nLen = df.diskDrives.size();
+
 	int nSpeed = 0;
-	for(int i = 0 ;i < nLen ; i++)
+	std::map<int,DiskInfo>::iterator it = mapdf.begin();
+	bool bError = false;
+	for(;it != mapdf.end();it++)
 	{
-		// 取最小值.
- 		int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
- 		if(nSpeed == 0 || nSpeed > nDriveSpeed )
- 		{
- 			nSpeed = nDriveSpeed;
- 		}
-		int nPos = df.diskDrives[i].driveFirmwareState.find("Online");
-		if(nPos != std::string::npos)
-		{
-			ret.diskState.push_back(0);
-		}
-		else
-		{
-			ret.diskState.push_back(1);
-		}
+		DiskInfo &df = it->second;
+		int nLen = df.diskDrives.size();
 		
- 	}
+		for(int i = 0 ;i < nLen ; i++)
+		{
+			// 取最小值.
+			int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
+			if(nSpeed == 0 || nSpeed > nDriveSpeed )
+			{
+				nSpeed = nDriveSpeed;
+			}
+			int nPos = df.diskDrives[i].driveFirmwareState.find("Online");
+			if(nPos != std::string::npos)
+			{
+				ret.diskState.push_back(0);
+				bError = false||bError;
+			}
+			else
+			{
+				ret.diskState.push_back(1);
+				bError = true||bError;
+			}
+
+		}
+	}
+	
 
 	ret.ReadSpeed = nSpeed;
 	ret.WriteSpeed = nSpeed;
-	ret.state =atoi( df.diskState.c_str());
+	ret.state = bError ? 1 : 0;
 
 	return 0;
 }
