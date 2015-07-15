@@ -21,7 +21,7 @@ C_HallList* C_HallList::m_pInstance = NULL;
 
 #define MAINDEFRUN 0
 #define STDBYDEFRUN 1
-
+extern int g_RunState;
 
 C_HallList::~C_HallList()
 {
@@ -328,6 +328,7 @@ bool C_HallList::GetSMSWorkState()
 		m_csHallCurState.LeaveCS();
 		ptrCS->LeaveCS();
 	}
+	g_RunState = 1;
 	return true;
 }
 
@@ -358,7 +359,7 @@ void C_HallList::GetTakeOverSMS(std::vector<std::string> &vecHallID)
 
 
 // 启动所有sms
-bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& vecHallid)
+bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& vecHallid,bool bLocalHost/*=false*/)
 {
 	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
 	for( ;it != m_mapHall.end() ;it++)
@@ -403,7 +404,7 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 		
 
 		int nPid = 0;
-		ptr->StartSMS(nPid);
+		ptr->StartSMS(nPid,bLocalHost);
 		LOGINFFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s local run !",ptr->GetHallID().c_str());
 
 		if(nPid == 0)
@@ -504,12 +505,17 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 	// 因为只有主机才能发起切换，所有要判断是否为主
 	if(m_ptrDM != NULL && C_Para::GetInstance()->IsMain())
 	{
-		SMSInfo smsinfo;
-		m_ptrDM->GetSMSStat(strHallID,smsinfo);
+		int status;
+		std::string info;
+		ptr->GetSMSWorkState(status,info);
+// 		SMSInfo smsinfo;
+// 		m_ptrDM->GetSMSStat(strHallID,smsinfo);
 
 		// 正在播放、正在导入、正在验证都禁止切换
-		if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
-			||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
+		//if(smsinfo.stStatus.nStatus == SMS_STATE_PLAYING ||smsinfo.stStatus.nStatus ==SMS_STATE_CPL_RUNNING
+		//	||smsinfo.stStatus.nStatus == SMS_STATE_INGEST_RUNNING)
+		if(status == SMS_STATE_PLAYING ||status ==SMS_STATE_CPL_RUNNING
+				||status == SMS_STATE_INGEST_RUNNING)
 		{
 			LOGERRFMT(ERROR_SMSSWITCH_START,"Sms(%s) is busy cann't switch!",strHallID.c_str());
 			nState = 2;

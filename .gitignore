@@ -28,6 +28,9 @@
 *.ncb
 *.suo
 *.user
+# vc10 solution file
+*.opensdf
+*.xml
 
 #dir
 bin/

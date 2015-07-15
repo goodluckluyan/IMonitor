@@ -49,7 +49,7 @@ public:
 	int  GetSMSWorkState( int &state, std::string &info);
 	
 	// 启动SMS
-	bool StartSMS(int &nPid);
+	bool StartSMS(int &nPid,bool bLocalHost=false);
 
 	// 关闭SMS
 	bool ShutDownSMS();
@@ -89,10 +89,10 @@ private:
 	int ISSMSRun();
 
 	// 在当前终端启动SMS
-	bool StartSMS_CurTerminal(int &nPid);
+	bool StartSMS_CurTerminal(int &nPid,bool bLocalHost=false);
 
 	// 打开新终端启动SMS
-	bool StartSMS_NewTerminal(int &nPid);
+	bool StartSMS_NewTerminal(int &nPid,bool bLocalHost=false);
 
 	// webservice调用函数
 	int UsherHttp(std::string &strURI,std::string& strIP,std::string &xml,std::string action,std::string &strRequest);

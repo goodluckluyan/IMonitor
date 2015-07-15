@@ -420,7 +420,7 @@ int main(int argc, char** argv)
 	char strInfo[1024];
 	while(!g_bQuit)
 	{
-		g_RunState = 1;
+		
 		iMillisecond = pRunPara->GetCurMillisecond(bDateSet);
 		++iCountTime;
 		iCountTime = iCountTime% 3000;

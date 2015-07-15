@@ -716,13 +716,13 @@ void CInvoke::SwtichTakeOverSMS()
 }
 
 // 在本机启动所有sms
-void CInvoke::StartALLSMS(bool bCheckOtherSMSRun)
+void CInvoke::StartALLSMS(bool bCheckOtherSMSRun,bool bLocalHost/*=false*/)
 {
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger StartALLSMS!");
 	if(m_ptrLstHall != NULL)
 	{
 		std::vector<std::string> vecHallID;
-		m_ptrLstHall->StartAllSMS(bCheckOtherSMSRun,vecHallID);
+		m_ptrLstHall->StartAllSMS(bCheckOtherSMSRun,vecHallID, bLocalHost);
 		if(vecHallID.size() == 0)
 		{
 			return;
@@ -759,7 +759,9 @@ void CInvoke::StartALLSMS(bool bCheckOtherSMSRun)
 void CInvoke::TakeOverMain(bool bCheckOtherSMSRun)
 {
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
-	StartALLSMS(bCheckOtherSMSRun);
+
+	//为了防止主数据库恢复时200ip变化时sms状态不正确的问题，在接管主机上的sms时，用localhost数据库ip代替200.
+	StartALLSMS(bCheckOtherSMSRun,true);
 	if(C_Para::GetInstance()->GetRole() != TMPMAINROLE)
 	{
 		C_Para::GetInstance()->SetRoleFlag(TMPMAINROLE);

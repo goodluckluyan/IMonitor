@@ -64,7 +64,7 @@ public:
 	void StartTMS();
 
 	// 启动的所有的sms,就是接管sms
-	void StartALLSMS(bool bCheckOtherSMSRun=true);
+	void StartALLSMS(bool bCheckOtherSMSRun=true,bool bLocalHost=false);
 
 	// 将接管过来的sms复原，就是切回原机
 	void SwtichTakeOverSMS();

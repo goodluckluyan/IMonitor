@@ -93,23 +93,23 @@ void C_Hall::GetRunHost(std::string &strIP,int &nPort)
 }
 
 // 启动SMS
-bool C_Hall::StartSMS(int &nPid)
+bool C_Hall::StartSMS(int &nPid,bool bLocalHost/*=false*/)
 {
 	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
 	if(nStartType == 1 || 1 == g_nRunType)
 	{
-		return StartSMS_CurTerminal(nPid);
+		return StartSMS_CurTerminal(nPid,bLocalHost);
 	}
 	else if(nStartType == 2 && 0 == g_nRunType)
 	{
-		return StartSMS_NewTerminal(nPid);
+		return StartSMS_NewTerminal(nPid,bLocalHost);
 	}
 }
 
 
 
 // 在当前终端启动SMS
-bool C_Hall::StartSMS_CurTerminal(int &nPid)
+bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 {
 	
 	if(m_SMS.strExepath.empty())
@@ -159,6 +159,12 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid)
 		std::string strDir = m_SMS.strExepath.substr(0,nPos);
 		chdir(strDir.c_str());
 		strEXE += "&";
+		if(bLocalHost)
+		{
+			std::string tmp = m_SMS.strConfpath.substr(0,m_SMS.strConfpath.rfind('.'));
+			m_SMS.strConfpath = tmp + "_local.ini";
+		}
+
 		if(!strEXE.empty() && execl(m_SMS.strExepath.c_str(),strEXE.c_str(),
 		m_SMS.strConfpath.c_str(),NULL) < 0)
 		{
@@ -217,7 +223,7 @@ int C_Hall::Getpid(std::string strName,std::vector<int>& vecPID)
 }
 
 // 打开新终端启动SMS
-bool C_Hall::StartSMS_NewTerminal(int &nPid)
+bool C_Hall::StartSMS_NewTerminal(int &nPid,bool bLocalHost/*=false*/)
 {
 
 	if(m_SMS.strExepath.empty())
@@ -235,8 +241,17 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid)
 	}
 	
 	char buf[256]={'\0'};
- 	snprintf(buf,sizeof(buf),"sudo gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
-		,m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());
+	if(!bLocalHost)// 不访问本机数据库而是访问200数据库
+ 	{
+		snprintf(buf,sizeof(buf),"sudo gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s\"",strDir.c_str(),m_SMS.strId.c_str()
+	,m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());
+	}
+	else
+	{
+		std::string confpath=m_SMS.strConfpath.substr(0,m_SMS.strConfpath.rfind('.'));
+		snprintf(buf,sizeof(buf),"sudo gnome-terminal --working-directory=%s --title=\"sms_%s\" -e \"%s %s_local.ini\"",strDir.c_str(),m_SMS.strId.c_str()
+			,m_SMS.strExepath.c_str(),confpath.c_str());
+	}
 //	snprintf(buf,256,"gnome-terminal -e \"%s\"","/usr/bin/top");
 	LOGINFFMT(0,"%s\n",buf);
 	system(buf);

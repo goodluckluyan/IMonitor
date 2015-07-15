@@ -5,9 +5,11 @@
 #include "para/C_Para.h"
 #include "jobs/DataManager.h"
 #include "jobs/Invoke.h"
+#include "log/C_LogManage.h"
 using namespace std;
-
 extern int g_RunState;
+
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 {
 	int nRole = C_Para::GetInstance()->GetRole();
@@ -247,6 +249,7 @@ int mons__ExeSwitchTMSToOther(struct soap* cSoap,int &ret)
 
 int mons__ExeSwitchSMSToOther(struct soap* cSoap,std::string strHallID,int &ret)
 {
+	LOGINFFMT(0,"WS:ExeSwitchSMSToOther(%s)",strHallID.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	int nState;
@@ -263,6 +266,7 @@ int mons__ExeSwitchSMSToOther(struct soap* cSoap,std::string strHallID,int &ret)
 
 int mons__ExeSwitchSMSToOtherDelay(struct soap* cSoap,std::string strHallID,int &ret)
 {
+	LOGINFFMT(0,"WS:ExeSwitchSMSToOtherDelay(%s)",strHallID.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	int nState;
@@ -281,6 +285,7 @@ int mons__ExeSwitchSMSToOtherDelay(struct soap* cSoap,std::string strHallID,int 
 
 int mons__ExeCloseSMS(struct soap* cSoap,std::string strHallID,int &ret)
 {
+	LOGINFFMT(0,"WS:ExeCloseSMS(%s)",strHallID.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	if(ptr->CloseSMS(strHallID))
@@ -296,6 +301,7 @@ int mons__ExeCloseSMS(struct soap* cSoap,std::string strHallID,int &ret)
 
 int mons__ExeStartSMS(struct soap* cSoap,std::string strHallID,int &ret)
 {
+	LOGINFFMT(0,"WS:ExeStartSMS(%s)",strHallID.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	if(ptr->StartSMS(strHallID))
@@ -311,6 +317,7 @@ int mons__ExeStartSMS(struct soap* cSoap,std::string strHallID,int &ret)
 
 int mons__ExeDcpHashCheck(struct soap* cSoap,std::string path,std::string PklUuid,std::string& errorInfo)
 {
+	LOGINFFMT(0,"WS:ExeDcpHashCheck(path:%s,uuid:%s)",path.c_str(),PklUuid.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->DcpHashCheck(path,PklUuid,errorInfo);
@@ -320,6 +327,7 @@ int mons__ExeDcpHashCheck(struct soap* cSoap,std::string path,std::string PklUui
 
 int mons__ExeGetHashCheckPercent(struct soap* cSoap,std::string PklUuid,struct mons__HashCheckPercent& stResult)
 {
+	LOGINFFMT(0,"WS:ExeGetHashCheckPercent(uuid:%s)",PklUuid.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->GetHashCheckPercent(PklUuid,stResult.Result,stResult.nPercent,stResult.errorInfo);
@@ -329,6 +337,7 @@ int mons__ExeGetHashCheckPercent(struct soap* cSoap,std::string PklUuid,struct m
 int mons__CopyDcp(struct soap* cSoap,std::string PklUuid,std::string srcPath,std::string desPath,
 				  struct mons__FileOperationResult &result)
 {
+	LOGINFFMT(0,"WS:CopyDcp(src:%s,dest:%s,uuid:%s)",srcPath.c_str(),desPath.c_str(),PklUuid.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->CopyDcp(PklUuid,srcPath,desPath,result.Result,result.errorInfo);
@@ -337,6 +346,7 @@ int mons__CopyDcp(struct soap* cSoap,std::string PklUuid,std::string srcPath,std
 
 int mons__GetCopyDcpProgress(struct soap* cSoap,std::string PklUuid,struct mons__FileOperationResult &result)
 {
+	LOGINFFMT(0,"WS:GetCopyDcpProgress(uuid:%s)",PklUuid.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->GetCopyDcpProgress(PklUuid,result.Result,result.errorInfo);
@@ -345,6 +355,7 @@ int mons__GetCopyDcpProgress(struct soap* cSoap,std::string PklUuid,struct mons_
 
 int mons__DeleteDcp(struct soap* cSoap,std::string PklUuid,std::string Path,struct mons__FileOperationResult &result)
 {
+	LOGINFFMT(0,"WS:DeleteDcp(path:%s,uuid:%s)",Path.c_str(),PklUuid.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->DeleteDcp(PklUuid,Path,result.Result,result.errorInfo);
@@ -353,6 +364,7 @@ int mons__DeleteDcp(struct soap* cSoap,std::string PklUuid,std::string Path,stru
 
 int mons__GetDeleteDcpProgress(struct soap* cSoap,std::string PklUuid,struct mons__FileOperationResult &result)
 {
+	LOGINFFMT(0,"WS:GetDeleteDcpProgress(uuid:%s)",PklUuid.c_str());
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->GetDeleteDcpProgress(PklUuid,result.Result,result.errorInfo);

@@ -52,7 +52,7 @@ public:
 
 
 	// 在本机启动所有sms
-	bool StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& vecHallid);
+	bool StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& vecHallid,bool bLocalHost=false);
 
 	// 备机调用主机进行切换
 	int SwitchSMSByStdby(bool bDelaySwitch,std::string strHallID);

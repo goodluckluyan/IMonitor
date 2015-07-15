@@ -523,8 +523,8 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	int nLen = vecSMSStatus.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
-		LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d,nPosition:%d,spluuid:%s",vecSMSStatus[i].hallid.c_str(),
-			vecSMSStatus[i].nRun,vecSMSStatus[i].nStatus,vecSMSStatus[i].nPosition,vecSMSStatus[i].strSPLUuid.c_str());
+		LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d",vecSMSStatus[i].hallid.c_str(),
+			vecSMSStatus[i].nRun,vecSMSStatus[i].nStatus);
 		if(vecSMSStatus[i].nRun == 0)
 		{
 			continue;

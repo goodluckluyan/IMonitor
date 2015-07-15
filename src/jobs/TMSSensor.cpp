@@ -773,7 +773,7 @@ int CTMSSensor::SendAndRecvResponse(bool bTMSWS,const std::string &request, std:
 	result = tcp.TcpConnect(strIP.c_str(), m_nTMSWBPort,delayTime);
 	if(result < 0)
 	{	
-		LOGFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nTMSWBPort);
+		LOGFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nTMSWBPort);
 		return  ERROR_SENSOR_TCP_CONNECT;
 	}
 
