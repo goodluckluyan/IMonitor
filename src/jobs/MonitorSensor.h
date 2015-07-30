@@ -93,7 +93,7 @@ private:
 	int InvokerWebServer(std::string &xml,std::string &strResponse);
 
 	// ½âÎöMonitor×´Ì¬
-	bool ParseOtherMonitorState(std::string &retXml,bool &bMain,int &nState );
+	bool ParseOtherMonitorState(std::string &retXml,bool &bMain,int &nState ,long &lSynch);
 
 	// ½âÎöTMS×´Ì¬
 	bool ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,int &nWorkState,int &nState);

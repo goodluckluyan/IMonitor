@@ -387,20 +387,20 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
 	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
 	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
-	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
-	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
-	xml += "<ns1:GetWorkState_CS></ns1:GetWorkState_CS>";
+	xml += "xmlns:sms=\"http://localhost/WebServiceForAQ33/sms.wsdl\" ";
+	xml += "> <SOAP-ENV:Body> ";
+	xml += "<sms:GetWorkState_CS></sms:GetWorkState_CS>";
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 	
 	//refer to wsdl file.
-	std::string strUsherLocation = "/oristar/services/Usher";
+	std::string strUsherLocation = "/";
 	std::string strUsherNs = "http://webservices.oristar.com/XP/Usher/2009-09-29/GetWorkState_CS";
 
 	int iResult;
 	string response_c;
 	string content_c;
 	string http;
-	LOGINFFMT(0,"GetSMSWorkState %s:%s",m_SMS.strId.c_str(),m_SMS.strIp.c_str());
+	LOGINFFMT(0,"GetSMSWorkState %s:%s:%d",m_SMS.strId.c_str(),m_SMS.strIp.c_str(),m_SMS.nPort);
 	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
 	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 5);
 	if (iResult != 0)
@@ -674,7 +674,7 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 		ptrParser->parse(*ptrInputsource);
 		DOMDocument* ptrDoc = ptrParser->getDocument();
 			
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("state"));
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("sms:state"));
 		if ( ptrNodeList == NULL)
 		{
 			return ERROR_PLAYER_AQ_NEEDSOAPELEM;
@@ -692,7 +692,7 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 			XMLString::release( &pstate);
 		}
 
-		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("info"));
+		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("sms:info"));
 		if ( ptrNodeList == NULL)
 		{
 			return ERROR_PLAYER_AQ_NEEDSOAPELEM;

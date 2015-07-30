@@ -111,6 +111,11 @@ public:
 	// 获取删除dcp的进度/结果
 	bool GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,std::string &strErrInfo);
 
+	// 更新数据同步标记，如果另一台主机发现此标志说明数据库同步完成。
+	bool UpdateDBSynch(time_t & tm);
+
+	// 检测数据库是否同步
+	bool CheckDBSynch(long lSynch);
 private:
 	// 打印帮助信息
 	void PrintProductInfo();

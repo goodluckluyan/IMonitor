@@ -366,3 +366,4 @@ bool C_Para::SetRoleFlag(int nRole)
 
 	return bRet;
 }
+

@@ -366,33 +366,11 @@ int C_LogManage::CreateLogStruct(std::string &strPath)
 
 int C_LogManage::ModifyLogStruct(std::string &strPath)
 {
-	vector<string> vecstr;
-	string str;
-
-	str = strPath + "ThreadManage";
-	vecstr.push_back(str);
-
-	str = strPath + "TimeTask";
-	vecstr.push_back(str);
-
-	str = strPath + "DataBase";
-	vecstr.push_back(str);
-
-	str = strPath + "Webservice";	
-	vecstr.push_back(str);
-
-	str = strPath + "Other";	
-	vecstr.push_back(str);
-
-	str = strPath + "Schedule";	
-	vecstr.push_back(str);
 	list<PLOG_STRUCT>::iterator it = m_listLog.begin();				
-	for(int i=0; i<vecstr.size(); ++i)
+	for(; it!=m_listLog.end(); it++)
 	{
-
 		(*it)->pLogManage->SetLogPath(strPath.c_str());
 	}	
-	vecstr.clear();
 	return 0;
 }
 int C_LogManage::ReInitLog()

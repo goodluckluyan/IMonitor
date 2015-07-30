@@ -5,7 +5,7 @@
 #include"para/C_Para.h"
 #include"DataManager.h"
 #include"log/C_LogManage.h"
-
+extern time_t g_tmDBSynch;
 #define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGINF(msg)	  C_LogManage::GetInstance()->WriteLog(ULOG_INFO,LOG_MODEL_JOBS,0,0,msg)
 #define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
@@ -24,6 +24,7 @@ CDataManager::CDataManager()
 	m_nCheckTMSNoRun = 0;
 
 	m_nOtherMonitorState = -1;
+	m_lSynch = 0;
 }
 CDataManager::~CDataManager()
 {
@@ -383,9 +384,14 @@ void * CDataManager::GetInvokerPtr()
 
 
 //更新对端调度软件状态
-bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
+bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 {
-	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d",bMain,nState);
+	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch%lld",bMain,nState,lSynch);
+	if(lSynch!=0 && nState == TMPMAINROLE)
+	{
+		m_lSynch = lSynch;
+		return true;
+	}
 	
 	// 对端机正在启动不作处理
 	if(0 == nState)
@@ -505,6 +511,11 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState)
 		}
 	}
 
+	// 由于一些原因，可能会出现正常启动后，g_tmDBSynch没有恢复0的情况，所以在这判断一下。
+	if(bMain && !C_Para::GetInstance()->IsMain() && g_tmDBSynch != 0)
+	{
+		g_tmDBSynch=0;
+	}
 	return true;
 }
 
@@ -788,7 +799,6 @@ bool  CDataManager::UpdateOtherSMSEWState(int nState,std::string  strInfo,std::s
 	//LOGDEBFMT("Other SMSEW nState:%d,strInfo:%s,strHall:%s",nState,strInfo.c_str(),strHall.c_str());
 	return true;
 }
-
 
 
 

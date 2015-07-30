@@ -30,6 +30,7 @@ extern bool g_bQuit;
 extern int g_nRunType;  // 1为守护进程 0为交互模式
 bool g_bReread = false; // 是否重读配置文件
 int g_RunState = 0;     // 0为正在启动，1 为运行正常
+time_t g_tmDBSynch = 0;
 static void sig_fun(int iSigNum);
 
 

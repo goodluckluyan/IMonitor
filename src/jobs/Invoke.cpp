@@ -4,7 +4,10 @@
 #include "para/C_RunPara.h"
 #include "para/C_Para.h"
 #include "check_netcard.h"
+#include "database/CppMySQL3DB.h"
+#include "database/CppMySQLQuery.h"
 
+extern time_t g_tmDBSynch;
 bool g_bQuit = false;
 int g_LogLevel = 0;
 int g_nRunType = 0; // 1为守护进程 0为交互模式
@@ -41,8 +44,26 @@ int  CInvoke::Init()
 		time(&tm1);
 		while(1)
 		{
-			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS,false))
+			if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS))
 			{
+
+				long lsynch=pDM->GetSynChID();
+				if(lsynch!= 0)
+				{
+					while(1)
+					{
+						if( CheckDBSynch(lsynch))
+						{
+							LOGFAT(0,"Mysql DB Synch  OK!");
+							break;
+						}
+						else 
+						{
+							LOGFAT(0,"Mysql DB Synch  Failed! Try Again Wait 5 Sec.");
+							sleep(5);
+						}
+					}
+				}
 				bRunOther = true;
 				break;
 			}
@@ -794,6 +815,7 @@ void CInvoke::ChangeToStdby()
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
 	SwtichTakeOverSMS();
+	g_tmDBSynch = 0;
 }
 
 // 开始TMS
@@ -1052,4 +1074,81 @@ bool  CInvoke::GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,std::st
 	{
 		return false;
 	}
+}
+
+bool CInvoke::UpdateDBSynch(time_t & tm)
+{
+	// 打开数据库
+	C_Para *ptrPara = C_Para::GetInstance();
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+	{
+		LOGINFFMT(0,"mysql open failed!");
+		return false;
+	}
+
+	char sql[256]={'\0'};
+	snprintf(sql,sizeof(sql),"update system_config  set conf_val=\"%lld\" where conf_item=\"db_synch\"",tm);
+	int i=0;
+	while(i<3)
+	{
+		int nResult = mysql.execSQL(sql);
+		if(nResult != -1)
+		{
+			LOGINFFMT(0,"CInvoke:update system_config:db_synch database OK<%s>",sql);
+			break;
+		}
+		else
+		{
+			LOGINFFMT(0,"CInvoke:update system_config:db_synch database FAILED<%s>",sql);
+		}
+		i++;
+		sleep(1);
+	}
+
+	if(i == 3)
+	{
+		LOGINFFMT(0,"CInvoke Update db_synch failed!<%s>",sql);
+		return false;
+	}
+}
+
+// 检测数据库是否同步
+bool  CInvoke::CheckDBSynch(long lSynch)
+{
+	// 打开数据库
+	C_Para *ptrPara = C_Para::GetInstance();
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+	{
+		LOGINFFMT(0,"mysql open failed!");
+		return false;
+	}
+
+	char sql[256]={'\0'};
+	snprintf(sql,sizeof(sql),"select conf_val from system_config  where conf_item=\"db_synch\"");
+	
+	int nResult;
+	CppMySQLQuery query = mysql.querySQL(sql,nResult);
+	int nRows = 0 ;
+	if((nRows = query.numRow()) == 0) 
+	{
+		LOGINFFMT(0,"C_HallList Initial failed,hallinfo talbe no rows!\n");
+		return false;
+	}
+
+	query.seekRow(0);
+	std::string tmpstr = query.getStringField("conf_val");
+	if(atol(tmpstr.c_str())==lSynch)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+
 }

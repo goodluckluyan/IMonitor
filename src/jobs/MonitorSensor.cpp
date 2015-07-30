@@ -168,7 +168,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 			strStateType.c_str());
 		if(bNoticeDM && nStateType == TASK_NUMBER_GET_OTHERMONITOR_STATUS)
 		{
-			m_ptrDM->UpdateOtherMonitorState(false,-1);
+			m_ptrDM->UpdateOtherMonitorState(false,-1,0);
 		}
 		return false;
 	}
@@ -190,10 +190,11 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 		{
 			bool bMain;
 			int nState;
-			bRet = ParseOtherMonitorState(retXml,bMain,nState);
+			long lSynch;
+			bRet = ParseOtherMonitorState(retXml,bMain,nState,lSynch);
 			if(bNoticeDM && bRet && m_ptrDM != NULL)
 			{
-			   m_ptrDM->UpdateOtherMonitorState(bMain,nState);
+			   m_ptrDM->UpdateOtherMonitorState(bMain,nState,lSynch);
 			}
 		}
 		break;
@@ -288,7 +289,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 
 // 解析Monitor状态
 using namespace xercesc;
-bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int &nState)
+bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int &nState,long &lSynch)
 {
 
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
@@ -340,6 +341,27 @@ bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int 
 			if(!str_state.empty())
 			{
 				nState = atoi(str_state.c_str());
+			}
+			XMLString::release(&pstate);
+		}
+
+		// 读取iState节点
+		DOMNodeList *ptrSynchNodeList = ptrDoc->getElementsByTagName(C2X("lSynch"));
+		if(ptrSynchNodeList == NULL)
+		{
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
+				"ParseOtherMonitorState:没有找到iState节点");
+			return false;
+		}
+		else
+		{
+
+			DOMNode* ptrNode = ptrSynchNodeList->item(0);
+			char *pstate =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_synch =  pstate;
+			if(!str_synch.empty())
+			{
+				lSynch = atoi(str_synch.c_str());
 			}
 			XMLString::release(&pstate);
 		}

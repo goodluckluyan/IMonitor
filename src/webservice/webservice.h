@@ -4,6 +4,7 @@ struct mons__MontorStateRes
 {
 	int bMain;
 	int iState;
+	long lSynch;
 };
 int mons__GetMontorState(struct mons__MontorStateRes &ret);
 

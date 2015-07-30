@@ -8,15 +8,29 @@
 #include "log/C_LogManage.h"
 using namespace std;
 extern int g_RunState;
-
+extern time_t g_tmDBSynch;
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 {
 	int nRole = C_Para::GetInstance()->GetRole();
 	ret.bMain = C_Para::GetInstance()->IsMain();
 
+	if(nRole == 4 && 0 == g_tmDBSynch)// TMPMAINROLE
+	{
+		CDataManager *pDM = CDataManager::GetInstance();
+		time(&g_tmDBSynch);
+		CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+		ptr->UpdateDBSynch(g_tmDBSynch);
+		ret.lSynch=g_tmDBSynch;
+	}
+	else
+	{
+		ret.lSynch = 0;
+	}
+
 	// 如果正在启动时状态为0，启动完成后状态为本机现在的角色
 	ret.iState = 0 == g_RunState ? 0 :nRole;
+	
 	return 0;
 }
 

@@ -42,7 +42,7 @@ public:
 	void SetSMSInfo(std::vector<SMSInfo> vecHall);
 
 	// 更新另一台主机上运行的调度程序各个模块的监测数据
-	bool UpdateOtherMonitorState(bool bMain,int nState);
+	bool UpdateOtherMonitorState(bool bMain,int nState,long lSynch);
 	bool UpdateOtherTMSState(bool bRun,int nWorkState,int nState);
 	bool UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus);
 	bool UpdateOtherRaidState(int nState,int nReadSpeed,int nWriteSpeed,
@@ -95,6 +95,12 @@ public:
 
 	// 获取Invoker指针
 	void *GetInvokerPtr();
+
+	// 获取同步标记
+	long GetSynChID()
+	{
+		return m_lSynch;
+	}
 private:
 	CDataManager();
 
@@ -127,6 +133,7 @@ private:
 
 	std::map<std::string,std::list<ConflictInfo> > m_maplstConfilict;
 
+	long m_lSynch;
 };
 
 #endif
