@@ -15,6 +15,7 @@
 #include "threadManage/C_CS.h"
 #include "C_constDef.h"
 #include "DataManager.h"
+#include "TMSSensor.h"
 #include "C_Hall.h"
 
 
@@ -34,6 +35,7 @@ class C_HallList
 public:
 	C_HallList()
 		:m_ptrDM(NULL)
+		,m_ptrTMS(NULL)
 	{
 		pthread_cond_init(&cond,NULL);
 	};
@@ -42,7 +44,7 @@ public:
     ~C_HallList();
 
    	// 初始化所有影厅。
-    int Init();
+    int Init(CTMSSensor * ptrTMS);
    
 	// 获取SMS工作状态
 	bool GetSMSWorkState();
@@ -59,6 +61,9 @@ public:
 
 	// 获取在本机运行的hallid
 	void GetAllLocalRunHallID(std::vector<std::string>& vecHallID);
+
+	// 获取运行的hallid
+	void GetAllRunHallID(std::vector<std::string> &vecHallID);
 
 	// 获取由本机接管理过来的hallid
 	void GetTakeOverSMS(std::vector<std::string> &vecHallID);
@@ -107,6 +112,7 @@ private:
 	std::string m_WebServiceLocalIP;
 	std::string m_WebServiceOtherIP;
 	CDataManager *m_ptrDM;
+	CTMSSensor * m_ptrTMS;
 
 	std::list<stConditionSwitch>  m_lstCondSwitch;
 	C_CS m_csCondTaskLst;// 保护条件

@@ -238,7 +238,7 @@ int already_running(void)
 			close(fd);
 			return 1;
 		}
-		printf("can't lock %s","/var/run/imonitor.pid");
+		printf("can't lock %s","/var/run/oristar_imonitor.pid");
 		return 1;
 	}
 

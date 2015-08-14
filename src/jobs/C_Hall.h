@@ -69,6 +69,12 @@ public:
 		return m_SMS.stStatus.nRun == 1;
 	}
 
+	// 是否运行
+	bool IsRun()
+	{
+		return m_SMS.stStatus.nRun == 1||m_SMS.stStatus.nRun == 2;
+	}
+
 	// 获取运行角色分为1:为主机运行，2:为备机运行 3:接管运行
 	int GetRunRole()
 	{
@@ -93,6 +99,10 @@ private:
 
 	// 打开新终端启动SMS
 	bool StartSMS_NewTerminal(int &nPid,bool bLocalHost=false);
+
+	// 打开新终端启动SMS,使用execl
+	bool StartSMS_NewTerminalExe(int &nPid,bool bLocalHost=false);
+
 
 	// webservice调用函数
 	int UsherHttp(std::string &strURI,std::string& strIP,std::string &xml,std::string action,std::string &strRequest);

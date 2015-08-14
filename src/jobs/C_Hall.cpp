@@ -102,7 +102,7 @@ bool C_Hall::StartSMS(int &nPid,bool bLocalHost/*=false*/)
 	}
 	else if(nStartType == 2 && 0 == g_nRunType)
 	{
-		return StartSMS_NewTerminal(nPid,bLocalHost);
+		return StartSMS_NewTerminalExe(nPid,bLocalHost);
 	}
 }
 
@@ -220,6 +220,142 @@ int C_Hall::Getpid(std::string strName,std::vector<int>& vecPID)
 
 	pclose(pp);
 	return 0;
+}
+
+// 在新终端启动SMS
+bool C_Hall::StartSMS_NewTerminalExe(int &nPid,bool bLocalHost/*=false*/)
+{
+	
+	if(m_SMS.strExepath.empty())
+	{
+		return false;
+	}
+	int nPos = m_SMS.strExepath.rfind('/');
+	std::string strEXE = m_SMS.strExepath.substr(nPos+1);
+	std::string strDir = m_SMS.strExepath.substr(0,nPos);
+	std::vector<int> vecCurPID;
+	if(Getpid(strEXE,vecCurPID) < 0)
+	{
+		LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
+		return false;
+	}
+
+
+	struct rlimit rl;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+	{
+		return false;
+	}
+
+	pid_t pid ;
+	if((pid = fork()) < 0)
+	{
+		perror("failed to create process/n");
+		return false;
+	}
+	else if(pid == 0)
+	{
+
+		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
+		if(rl.rlim_max == RLIM_INFINITY)
+		{
+			rl.rlim_max = 1024;
+		}
+		for(int i = 3 ;i < rl.rlim_max;i++)
+		{
+			close(i);
+		}
+
+		// 为了防止SMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
+		// 因为SMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
+		struct sigaction sa;
+		sa.sa_handler=SIG_DFL;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		if(sigaction(SIGCHLD,&sa,NULL)<0)
+		{
+			LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
+		}
+
+		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
+// 		int nPos = m_SMS.strExepath.rfind('/');
+// 		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	
+// 		std::string strDir = m_SMS.strExepath.substr(0,nPos);
+//		chdir(strDir.c_str());
+//		strEXE += "&";
+// 		if(bLocalHost)
+// 		{
+// 			std::string tmp = m_SMS.strConfpath.substr(0,m_SMS.strConfpath.rfind('.'));
+// 			m_SMS.strConfpath = tmp + "_local.ini";
+// 		}
+
+		char buf[3][256]={'\0'};
+		snprintf(buf[0],sizeof(buf[0]),"--working-directory=%s",strDir.c_str());
+		snprintf(buf[1],sizeof(buf[1]),"--title=sms_%s",m_SMS.strId.c_str());
+		if(!bLocalHost)// 不访问本机数据库而是访问200数据库
+		{
+			snprintf(buf[2],sizeof(buf[2]),"%s %s",m_SMS.strExepath.c_str(),m_SMS.strConfpath.c_str());	
+		}
+		else
+		{
+			std::string confpath=m_SMS.strConfpath.substr(0,m_SMS.strConfpath.rfind('.'));
+			snprintf(buf[2],sizeof(buf[2]),"%s %s_local.ini",m_SMS.strExepath.c_str(),confpath.c_str());
+		}
+		LOGINFFMT(ULOG_ERROR,"Run execl( %s %s %s %s %s )","/usr/bin/gnome-terminal","gnome-terminal",buf[0],buf[1],buf[2]);
+		if(!strEXE.empty() && execl("/usr/bin/gnome-terminal","gnome-terminal",buf[0],buf[1],"-e",buf[2],NULL) < 0)
+		{
+			perror("execl error");
+			exit(0);
+		}
+	}
+
+	
+	bool bRun = false;
+	int exepid = 0;
+	time_t tm1;
+	time(&tm1);
+	while(!bRun)
+	{
+		sleep(1);
+		std::vector<int> vecNowPID;
+		if(Getpid(strEXE,vecNowPID) < 0)
+		{
+			LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
+			return false;
+		}
+
+		std::vector<int>::iterator fit;
+		for(int i = 0 ;i <vecNowPID.size();i++)
+		{
+			fit = std::find(vecCurPID.begin(),vecCurPID.end(),vecNowPID[i]);
+			if(fit == vecCurPID.end())
+			{
+				exepid = vecNowPID[i];
+				bRun = true;
+				LOGINFFMT(0,"Fork Process(%d) Start SMS_%s ... \n",exepid,m_SMS.strId.c_str());
+				break;
+			}
+		}
+
+		time_t tm2;
+		time(&tm2);
+		if( tm2-tm1 > 5)
+		{
+			LOG(0,"waiting 5 sec ,but SMS not run..\n");
+			break;
+		}
+	}
+
+	if(exepid > 0)
+	{	
+		m_pid = exepid;
+		nPid = exepid;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 // 打开新终端启动SMS

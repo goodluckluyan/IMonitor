@@ -59,9 +59,10 @@ C_HallList::~C_HallList()
 }
 
 // 初始化
-int C_HallList::Init()
+int C_HallList::Init(CTMSSensor * ptrTMS)
 {
 	m_ptrDM = CDataManager::GetInstance();
+	m_ptrTMS = ptrTMS;
 	C_Para *ptrPara = C_Para::GetInstance();
 
 	// 打开数据库
@@ -345,6 +346,20 @@ void C_HallList::GetAllLocalRunHallID(std::vector<std::string> &vecHallID)
 	}
 }
 
+// 获取运行hallid
+void C_HallList::GetAllRunHallID(std::vector<std::string> &vecHallID)
+{
+	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
+	for( ;it != m_mapHall.end() ;it++)
+	{
+		if(it->second->IsRun())
+		{
+			vecHallID.push_back(it->first);			
+		}
+	}
+}
+
+
 void C_HallList::GetTakeOverSMS(std::vector<std::string> &vecHallID)
 {
 	std::map<std::string ,C_Hall *>::iterator it = m_mapHall.begin();
@@ -614,6 +629,15 @@ bool C_HallList::GetSMSRunHost(std::string strHallID,std::string &strIP,int &nPo
 		return false;
 	}
 
+	std::map<std::string,C_CS*>::iterator fcit=m_mapCS.find(strHallID);
+	if(fcit==m_mapCS.end())
+	{
+		return false;
+	}
+
+	C_CS * ptrCS=fcit->second;
+	C_GuardCS guardcs(ptrCS);
+
 	C_Hall * ptr = fit->second;
 	ptr->GetRunHost(strIP,nPort);
 	return true;
@@ -712,8 +736,20 @@ bool C_HallList::ProcessCondSwitchTask()
 		{
 			LOGINFFMT(0,"Condition Switch Task :Condition OK Swtich SMS(%s)",node.strHallID.c_str());
 			int nState;
-			SwitchSMS(false,node.strHallID,nState);
-			m_lstCondSwitch.erase(it++);
+			if(SwitchSMS(false,node.strHallID,nState))
+			{
+				std::string strNewIP;
+				int nNewPort = 0;
+				GetSMSRunHost(node.strHallID,strNewIP,nNewPort);
+				if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+				{
+					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(node.strHallID,strNewIP,nNewPort);
+					LOGINFFMT(0,"ProcessCondSwitchTask:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",node.strHallID.c_str(),
+						strNewIP.c_str(),nNewPort,bRet?1:0);
+				}				
+			}
+			
+			m_lstCondSwitch.erase(it++);			
 		}
 	}
 	

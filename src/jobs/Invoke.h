@@ -116,6 +116,9 @@ public:
 
 	// 检测数据库是否同步
 	bool CheckDBSynch(long lSynch);
+
+	// 通知tms sms位置
+	bool NoticTMSSMSPos();
 private:
 	// 打印帮助信息
 	void PrintProductInfo();

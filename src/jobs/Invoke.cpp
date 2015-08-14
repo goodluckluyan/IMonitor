@@ -93,7 +93,7 @@ int  CInvoke::Init()
 	if(m_ptrLstHall == NULL)
 	{
 		m_ptrLstHall = new C_HallList();
-		if(m_ptrLstHall->Init()!=0)
+		if(m_ptrLstHall->Init(m_ptrTMS)!=0)
 		{
 			return -1;
 		}
@@ -600,6 +600,30 @@ bool CInvoke::SwitchTMS()
 	{
 		return false;
 	}
+}
+
+bool CInvoke::NoticTMSSMSPos()
+{
+	if(NULL != m_ptrLstHall)
+	{
+		std::vector<std::string> vecHallID;
+		m_ptrLstHall->GetAllRunHallID(vecHallID);
+		int nLen = vecHallID.size();
+		for(int i = 0 ;i < nLen ;i++)
+		{
+			std::string strNewIP;
+			int nNewPort = 0;
+			m_ptrLstHall->GetSMSRunHost(vecHallID[i],strNewIP,nNewPort);
+			if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+			{
+				bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
+				LOGINFFMT(0,"NoticTMSSMSPos:< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
+					strNewIP.c_str(),nNewPort,bRet?1:0);
+			}
+		}
+		
+	}
+	
 }
 
 // ÇÐ»»SMS
