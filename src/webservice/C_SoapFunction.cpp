@@ -15,7 +15,7 @@ int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 	int nRole = C_Para::GetInstance()->GetRole();
 	ret.bMain = C_Para::GetInstance()->IsMain();
 
-	if(nRole == 4 && 0 == g_tmDBSynch)// TMPMAINROLE
+	if(nRole == 4 || nRole == 2/*&& 0 == g_tmDBSynch*/)// TMPMAINROLE
 	{
 		CDataManager *pDM = CDataManager::GetInstance();
 		time(&g_tmDBSynch);

@@ -87,7 +87,7 @@ private:
 	int GetHttpContent(const std::string &http, std::string &response);
 
 	// 把调用xml串以http方式发送到服务端并接收返回xml
-	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime=3);
+	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime=1);
 
 	// 调用webservice接口
 	int InvokerWebServer(std::string &xml,std::string &strResponse);

@@ -224,7 +224,7 @@ int already_running(void)
 {
 	int fd;
 	char buf[16];
-	fd = open("/var/run/oristar_imonitor.pid",O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+	fd = open("/var/run/imonitor_cs.pid",O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 
 	struct flock lock;
 	lock.l_type=F_WRLCK;
@@ -238,7 +238,7 @@ int already_running(void)
 			close(fd);
 			return 1;
 		}
-		printf("can't lock %s","/var/run/oristar_imonitor.pid");
+		printf("can't lock %s","/var/run/imonitor_cs.pid");
 		return 1;
 	}
 

@@ -123,6 +123,13 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		return false;
 	}
 
+// 	std::vector<int> vecCurPID;
+// 	if(Getpid(strEXE,vecCurPID) < 0)
+// 	{
+// 		LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
+// 		return false;
+// 	}
+
 	pid_t pid ;
 	if((pid = fork()) < 0)
 	{
@@ -131,7 +138,6 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 	}
 	else if(pid == 0)
 	{
-
 		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
 		if(rl.rlim_max == RLIM_INFINITY)
 		{
@@ -141,6 +147,19 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		{
 			close(i);
 		}
+
+// 		setsid();
+// 
+// 		if ((pid = fork()) < 0)
+// 		{
+// 			printf("%s: can't fork", cmd);
+// 			exit(-1);
+// 		}
+// 		else if (pid != 0) /* parent */
+// 		{
+// 			exit(0);
+// 		}
+// 		
 
 		// 为了防止SMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
 		// 因为SMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
@@ -164,7 +183,11 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 			std::string tmp = m_SMS.strConfpath.substr(0,m_SMS.strConfpath.rfind('.'));
 			m_SMS.strConfpath = tmp + "_local.ini";
 		}
-
+//		m_SMS.strConfpath +=" &";
+		char buf[512]={'\0'};
+		snprintf(buf,sizeof(buf),"execl:%s %s %s",m_SMS.strExepath.c_str(),strEXE.c_str(),
+			m_SMS.strConfpath.c_str());
+		LOGINFFMT(0,"%s",buf);
 		if(!strEXE.empty() && execl(m_SMS.strExepath.c_str(),strEXE.c_str(),
 		m_SMS.strConfpath.c_str(),NULL) < 0)
 		{
@@ -538,7 +561,7 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	string http;
 	LOGINFFMT(0,"GetSMSWorkState %s:%s:%d",m_SMS.strId.c_str(),m_SMS.strIp.c_str(),m_SMS.nPort);
 	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
-	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c, 5);
+	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c,1);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP
