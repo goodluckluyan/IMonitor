@@ -387,7 +387,7 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch%lld",bMain,nState,lSynch);
-	if(lSynch!=0 && nState == TMPMAINROLE)
+	if(lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
 	{
 		m_lSynch = lSynch;
 		return true;
