@@ -133,6 +133,52 @@ int CMonitorSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 	
 }
 
+// 调用对端接口设置数据同步标记
+bool CMonitorSensor::SetOtherDBSynch(std::string dbsynch)
+{
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns2:SetDBSynchSign><dbsynch>"+dbsynch+"</dbsynch></ns2:SetDBSynchSign>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	// 通过http方式调用另一个调度软件的WebService服务
+	std::string strResponse;
+	int nInvokeRes = InvokerWebServer(xml,strResponse);
+	if( nInvokeRes == ERROR_SENSOR_TCP_RECV || nInvokeRes == ERROR_SENSOR_TCP_CONNECT 
+		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
+	{
+		// 写错误日志
+		LOGFATFMT(ERROR_CALLOTHERWS_CONNFAIL,"Call OtherHost Web Service(SetOtherDBSynch) Failed,Due To Connection Fail!");
+		return false;
+	}
+
+	// 提取xml
+	std::string retXml;
+	int result = GetHttpContent(strResponse, retXml);
+	if(retXml.empty())
+	{
+		LOGFATFMT(0,"SetOtherDBSynch:Parse Fail! xml is empty!\n");
+		return false;
+	}
+
+	int nRet ;
+	if(Parser_SetOtherDBSynch(retXml,nRet))
+	{
+		return nRet == 0;
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
+
 // 获取另一台主机的调度程序的状态
 bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 {
@@ -287,8 +333,62 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 }
 
 
-// 解析Monitor状态
 using namespace xercesc;
+
+int CMonitorSensor::Parser_SetOtherDBSynch(std::string &content,int &nRet)
+{
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)content.c_str(), content.size(), "bufId");
+
+	try
+	{
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();	
+
+		// 读取ret
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
+		if(ptrNodeList == NULL)
+		{
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,"Parser_SetOtherDBSynch:没有找到SetDBSynchSign节点");
+			return false;
+		}
+		else
+		{
+
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			char * ret = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  ret;
+			if(!str_state.empty())
+			{
+				nRet = atoi(str_state.c_str());
+			}
+			XMLString::release(&ret);
+		}
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		ptrInputsource = NULL;
+		delete ptrInputsource;
+		ptrParser = NULL;
+	}
+
+
+	delete ptrParser;
+	delete ptrInputsource;
+	ptrInputsource = NULL;
+	ptrParser = NULL;
+	return true;
+}
+
+// 解析Monitor状态
 bool CMonitorSensor::ParseOtherMonitorState(std::string &retXml,bool &bMain,int &nState,long &lSynch)
 {
 

@@ -95,3 +95,4 @@ int mons__GetCopyDcpProgress(std::string PklUuid,struct mons__FileOperationResul
 
 int mons__DeleteDcp(std::string PklUuid,std::string Path,struct mons__FileOperationResult &result);
 int mons__GetDeleteDcpProgress(std::string PklUuid,struct mons__FileOperationResult &result);
+int mons__SetDBSynchSign(std::string dbsynch,int &ret);

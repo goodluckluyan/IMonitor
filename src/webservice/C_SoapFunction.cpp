@@ -15,13 +15,12 @@ int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 	int nRole = C_Para::GetInstance()->GetRole();
 	ret.bMain = C_Para::GetInstance()->IsMain();
 
-	if(nRole == 4 || nRole == 2/*&& 0 == g_tmDBSynch*/)// TMPMAINROLE
+	if((nRole == 4 || nRole == 2) /*&& 0 == g_tmDBSynch*/)// TMPMAINROLE
 	{
 		CDataManager *pDM = CDataManager::GetInstance();
-		time(&g_tmDBSynch);
-		CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
-		ptr->UpdateDBSynch(g_tmDBSynch);
-		ret.lSynch=g_tmDBSynch;
+		time_t tm;
+		time(&tm);
+		ret.lSynch=tm;
 	}
 	else
 	{
@@ -382,5 +381,22 @@ int mons__GetDeleteDcpProgress(struct soap* cSoap,std::string PklUuid,struct mon
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	ptr->GetDeleteDcpProgress(PklUuid,result.Result,result.errorInfo);
+	return 0;
+}
+
+int mons__SetDBSynchSign(struct soap* cSoap,std::string dbsynch,int &ret)
+{
+	LOGINFFMT(0,"WS:SetDBSynchSign(%s)",dbsynch.c_str());
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	if(ptr->UpdateDBSynch(dbsynch))
+	{
+		g_tmDBSynch=atoll(dbsynch.c_str());
+		ret = 0;
+	}
+	else
+	{
+		ret =1;
+	}
 	return 0;
 }

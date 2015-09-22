@@ -31,7 +31,7 @@
 # vc10 solution file
 *.opensdf
 *.xml
-
+*.sdf
 #dir
 bin/
 

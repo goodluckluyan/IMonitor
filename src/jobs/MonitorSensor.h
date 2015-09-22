@@ -81,13 +81,19 @@ public:
 	// 获取另一台主机的调度程序的状态
 	bool GetOtherMonitorState(int nStateType,bool bNoticeDM = true);
 
+	// 调用另一端接口设置数据同步标记
+	bool SetOtherDBSynch(std::string dbsynch);
+
+	// 解析调用SetOtherDBSynch返回
+	int Parser_SetOtherDBSynch(std::string &content,int &nRet);
+
 private:
 
 	// 获取http中的xml 
 	int GetHttpContent(const std::string &http, std::string &response);
 
 	// 把调用xml串以http方式发送到服务端并接收返回xml
-	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime=1);
+	int SendAndRecvResponse(const std::string &request, std::string &response, int delayTime=2);
 
 	// 调用webservice接口
 	int InvokerWebServer(std::string &xml,std::string &strResponse);

@@ -50,6 +50,13 @@ int  CInvoke::Init()
 				long lsynch=pDM->GetSynChID();
 				if(lsynch!= 0)
 				{
+					char buf[64]={'\0'};
+					snprintf(buf,64,"%lld",lsynch);
+					if(!m_ptrMonitor->SetOtherDBSynch(buf))
+					{
+						continue;
+					}
+
 					while(1)
 					{
 						if( CheckDBSynch(lsynch))
@@ -660,6 +667,15 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 				 bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 				 LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",strHallID.c_str(),
 					 strNewIP.c_str(),nNewPort,bRet?1:0);
+
+				 // 如果没能成功则延时2秒再试一次
+				 if(!bRet)
+				 {
+					 sleep(2);
+					 bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
+					 LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",strHallID.c_str(),
+						 strNewIP.c_str(),nNewPort,bRet?1:0);
+				 }
 			 }
 			 nRet = 0;
 			 return true;
@@ -830,6 +846,7 @@ void CInvoke::ChangeToMain()
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find STDBYHost Change To MAINHost!****");
 	C_Para::GetInstance()->SetRoleFlag(MAINROLE);
 	SwtichTakeOverSMS();
+	g_tmDBSynch = 0;
 }
 
 // 从临时主服务器改变成为备角色
@@ -1100,7 +1117,7 @@ bool  CInvoke::GetDeleteDcpProgress(std::string &strPKIUUID,int &nResult,std::st
 	}
 }
 
-bool CInvoke::UpdateDBSynch(time_t & tm)
+bool CInvoke::UpdateDBSynch(std::string dbsynch)
 {
 	// 打开数据库
 	C_Para *ptrPara = C_Para::GetInstance();
@@ -1113,7 +1130,7 @@ bool CInvoke::UpdateDBSynch(time_t & tm)
 	}
 
 	char sql[256]={'\0'};
-	snprintf(sql,sizeof(sql),"update system_config  set conf_val=\"%lld\" where conf_item=\"db_synch\"",tm);
+	snprintf(sql,sizeof(sql),"update system_config  set conf_val=\"%s\" where conf_item=\"db_synch\"",dbsynch.c_str());
 	int i=0;
 	while(i<3)
 	{
@@ -1136,6 +1153,7 @@ bool CInvoke::UpdateDBSynch(time_t & tm)
 		LOGINFFMT(0,"CInvoke Update db_synch failed!<%s>",sql);
 		return false;
 	}
+	return true;
 }
 
 // 检测数据库是否同步

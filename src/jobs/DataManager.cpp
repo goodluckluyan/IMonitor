@@ -511,11 +511,11 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		}
 	}
 
-	// 由于一些原因，可能会出现正常启动后，g_tmDBSynch没有恢复0的情况，所以在这判断一下。
-	if(bMain && !C_Para::GetInstance()->IsMain() && g_tmDBSynch != 0)
-	{
-		g_tmDBSynch=0;
-	}
+// 	// 由于一些原因，可能会出现正常启动后，g_tmDBSynch没有恢复0的情况，所以在这判断一下。
+// 	if(bMain && !C_Para::GetInstance()->IsMain() && g_tmDBSynch != 0)
+// 	{
+// 		g_tmDBSynch=0;
+// 	}
 	return true;
 }
 

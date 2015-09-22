@@ -419,8 +419,15 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 		
 
 		int nPid = 0;
-		ptr->StartSMS(nPid,bLocalHost);
-		LOGINFFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s local run !",ptr->GetHallID().c_str());
+		if(ptr->StartSMS(nPid,bLocalHost))
+		{
+			LOGINFFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s local run !",ptr->GetHallID().c_str());
+		}
+		else
+		{
+			LOGERRFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s local run failed!",ptr->GetHallID().c_str());
+			continue;
+		}
 
 		if(nPid == 0)
 		{

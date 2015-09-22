@@ -561,7 +561,7 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	string http;
 	LOGINFFMT(0,"GetSMSWorkState %s:%s:%d",m_SMS.strId.c_str(),m_SMS.strIp.c_str(),m_SMS.nPort);
 	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
-	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c,1);
+	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c,2);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP
