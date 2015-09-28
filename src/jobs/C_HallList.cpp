@@ -320,6 +320,31 @@ bool C_HallList::GetSMSWorkState()
 		std::string strInfo;
 
 		ptr->GetSMSWorkState(nState,strInfo);
+
+		// 获取失败时，重复获取3次，如果还是失败则把本地的sms kill后再获取！
+		if(0 == nState && strInfo.empty())
+		{
+			int i = 0;
+			while(i < 2)
+			{
+				ptr->GetSMSWorkState(nState,strInfo);
+				if(0 != nState || !strInfo.empty())
+				{
+					break;
+				}
+				i++;
+			}
+			if(i ==2)
+			{
+				if(ptr->IsLocal())
+				{
+					ptr->ShutDownSMS();
+					
+					// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
+					ptr->GetSMSWorkState(nState,strInfo);
+				}
+			}
+		}
 		if(m_ptrDM != NULL)
 		{
 			m_ptrDM->UpdateSMSStat(ptr->GetHallID(),nState,strInfo);
@@ -439,6 +464,7 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 		C_Para *ptrPara = C_Para::GetInstance();
 		char buf[32]={'\0'};
 		snprintf(buf,sizeof(buf),"/proc/%d",nPid);
+		LOGERRFMT(0,"StartAllSMS:SMS:%s local run OK PID(%d)!",ptr->GetHallID().c_str(),nPid);
 		struct stat dstat;
 		if(stat(buf,&dstat) == 0)
 		{

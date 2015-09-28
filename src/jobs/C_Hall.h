@@ -154,5 +154,6 @@ private:
 	// 初始运行标记 
 	bool m_bInitRun;
 
+	bool m_bUseLocalDB;
 };
 #endif //HALL_DEFINE

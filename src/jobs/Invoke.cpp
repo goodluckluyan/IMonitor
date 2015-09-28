@@ -801,9 +801,20 @@ void CInvoke::StartALLSMS(bool bCheckOtherSMSRun,bool bLocalHost/*=false*/)
 				m_ptrLstHall->GetSMSRunHost(vecHallID[i],strNewIP,nNewPort);
 				if(!strNewIP.empty() && nNewPort > 0)
 				{
-					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
-					LOGINFFMT(0,"StartALLSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
-						strNewIP.c_str(),nNewPort,bRet?1:0);
+					bool bRet = false;
+					int cnt = 0;
+					while(!bRet && cnt <2 )
+					{
+						bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecHallID[i],strNewIP,nNewPort);
+						LOGINFFMT(0,"StartALLSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecHallID[i].c_str(),
+							strNewIP.c_str(),nNewPort,bRet?1:0);
+						cnt++;
+						if(!bRet)
+						{
+							sleep(1);
+						}
+					}
+					
 				}
 				else
 				{
@@ -1191,6 +1202,4 @@ bool  CInvoke::CheckDBSynch(long lSynch)
 	{
 		return false;
 	}
-
-
 }

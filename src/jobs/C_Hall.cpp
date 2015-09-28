@@ -29,6 +29,7 @@ C_Hall::C_Hall(SMSInfo &stSms)
    m_SMS = stSms;
    m_bInitRun = false;
    m_pid = 0;
+   m_bUseLocalDB = false;
 }
 
 C_Hall::~C_Hall()
@@ -96,14 +97,18 @@ void C_Hall::GetRunHost(std::string &strIP,int &nPort)
 bool C_Hall::StartSMS(int &nPid,bool bLocalHost/*=false*/)
 {
 	int nStartType = C_Para::GetInstance()->m_nStartSMSType;
+	LOGINFFMT(0,"StartSMS:%s! (runtype:%d starttype:%d) ",m_SMS.strId.c_str(),g_nRunType,nStartType);
 	if(nStartType == 1 || 1 == g_nRunType)
 	{
+		m_bUseLocalDB=bLocalHost;
 		return StartSMS_CurTerminal(nPid,bLocalHost);
 	}
 	else if(nStartType == 2 && 0 == g_nRunType)
 	{
+		m_bUseLocalDB=bLocalHost;
 		return StartSMS_NewTerminalExe(nPid,bLocalHost);
 	}
+	return false;
 }
 
 
@@ -111,15 +116,17 @@ bool C_Hall::StartSMS(int &nPid,bool bLocalHost/*=false*/)
 // 在当前终端启动SMS
 bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 {
-	
+	LOGINFFMT(0,"StartSMS_CurTerminal!");
 	if(m_SMS.strExepath.empty())
 	{
+		LOGERRFMT(0,"StartSMS_CurTerminal:strExepath is Empty!");
 		return false;
 	}
 
 	struct rlimit rl;
 	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
 	{
+		LOGERRFMT(0,"StartSMS_CurTerminal:getrlimit failed!");
 		return false;
 	}
 
@@ -133,11 +140,13 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 	pid_t pid ;
 	if((pid = fork()) < 0)
 	{
-		perror("failed to create process/n");
+		LOGERRFMT(0,"StartSMS_CurTerminal:failed to create process!");
 		return false;
 	}
 	else if(pid == 0)
 	{
+		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
+
 		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
 		if(rl.rlim_max == RLIM_INFINITY)
 		{
@@ -172,7 +181,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 			LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
 		}
 
-		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
+		
 		int nPos = m_SMS.strExepath.rfind('/');
 		std::string strEXE = m_SMS.strExepath.substr(nPos+1);	
 		std::string strDir = m_SMS.strExepath.substr(0,nPos);
@@ -184,20 +193,17 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 			m_SMS.strConfpath = tmp + "_local.ini";
 		}
 //		m_SMS.strConfpath +=" &";
-		char buf[512]={'\0'};
-		snprintf(buf,sizeof(buf),"execl:%s %s %s",m_SMS.strExepath.c_str(),strEXE.c_str(),
-			m_SMS.strConfpath.c_str());
-		LOGINFFMT(0,"%s",buf);
+		LOGINFFMT(0,"execl:%s %s %s",m_SMS.strExepath.c_str(),strEXE.c_str(),m_SMS.strConfpath.c_str());
 		if(!strEXE.empty() && execl(m_SMS.strExepath.c_str(),strEXE.c_str(),
 		m_SMS.strConfpath.c_str(),NULL) < 0)
 		{
-			perror("execl error");
+			LOGERRFMT(0,"execl error");
 			exit(0);
 		}
 	}
 
-	//等待2秒
-	sleep(2);
+	//等待3秒
+	sleep(3);
 
 	if(pid > 0)
 	{	
@@ -534,7 +540,8 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 			{
 				LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
 				int nPID;
-				StartSMS(nPID);
+				StartSMS(nPID,m_bUseLocalDB);
+				sleep(2);
 			}
 			
 		}
