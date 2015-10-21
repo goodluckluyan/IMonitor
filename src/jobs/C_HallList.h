@@ -119,6 +119,7 @@ private:
 	pthread_cond_t cond; 
 
 	std::map<std::string,C_CS*> m_mapCS;// 串行化切换和获取状态
+	
 
 };
 #endif //HALL_LIST;

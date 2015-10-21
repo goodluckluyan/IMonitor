@@ -154,7 +154,7 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 			}
 
 			
-			else if( !strcmp( cfg_key.c_str(), "Enclosure Device ID"))
+			else if( !strcmp( cfg_key.c_str(), "Device Id"))
 			{
 				disDriveInfo.driveID = cfg_value;
 			}
@@ -193,19 +193,31 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 				bool bFind = false;
 				if(disDriveInfo.group != -1)
 				{
-					int nLen = mapDiskInfo[disDriveInfo.group].diskDrives.size();
-					for(int i = 0 ;i < nLen ;i++)
+					std::map<int,DiskInfo>::iterator it = mapDiskInfo.find(disDriveInfo.group);
+					if(it!=mapDiskInfo.end())
 					{
-						if(!strcmp(mapDiskInfo[disDriveInfo.group].diskDrives[i].driveSlotNum.c_str(),disDriveInfo.driveSlotNum.c_str()) )
+						DiskInfo &di=it->second;
+						std::string strDSN=disDriveInfo.driveSlotNum;
+						if(!strDSN.empty())
 						{
-							 bFind = true;
-							 break;	
+							di.diskDrives[strDSN]=disDriveInfo;
 						}
 					}
-					if(!bFind)
-					{
-						mapDiskInfo[disDriveInfo.group].diskDrives.push_back( disDriveInfo);
-					}
+					
+
+//					int nLen = mapDiskInfo[disDriveInfo.group].diskDrives.size();
+// 					for(int i = 0 ;i < nLen ;i++)
+// 					{
+// 						if(!strcmp(mapDiskInfo[disDriveInfo.group].diskDrives[i].driveSlotNum.c_str(),disDriveInfo.driveSlotNum.c_str()) )
+// 						{
+// 							 bFind = true;
+// 							 break;	
+// 						}
+// 					}
+// 					if(!bFind)
+// 					{
+// 						mapDiskInfo[disDriveInfo.group].diskDrives.push_back( disDriveInfo);
+// 					}
 				}
 			}
 		}

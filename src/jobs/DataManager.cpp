@@ -73,7 +73,54 @@ void CDataManager::SetSMSInfo(std::vector<SMSInfo> vecHall)
 bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 {
 	m_csDisk.EnterCS();
-	m_mapdf = mapdf;
+	if(m_mapdf.size()==0)
+	{
+		m_mapdf = mapdf;
+	}
+	else
+	{
+		std::map<int,DiskInfo>::iterator it = mapdf.begin();
+		for(;it!=mapdf.end();it++)
+		{
+			int index = it->first;
+			std::map<int,DiskInfo>::iterator fmit = m_mapdf.find(index);
+			if(fmit!=m_mapdf.end())
+			{
+				DiskInfo &mdi = fmit->second;
+				DiskInfo &di = it->second;
+
+				mdi.diskGroup=di.diskGroup;
+				mdi.diskNumOfDrives=di.diskNumOfDrives;
+				mdi.diskSize=di.diskSize;
+				mdi.diskState=di.diskState;
+
+				std::map<std::string ,struct DiskDriveInfo>::iterator fddmit = mdi.diskDrives.begin();
+				for(;fddmit!=mdi.diskDrives.end();fddmit++)
+				{
+					std::string strDSN=fddmit->first;
+					DiskDriveInfo &mddi=fddmit->second;
+					if(strDSN.empty())
+					{
+						continue;
+					}
+
+					std::map<std::string ,struct DiskDriveInfo>::iterator fddit = di.diskDrives.find(strDSN);
+					if(fddit!=di.diskDrives.end())
+					{
+						DiskDriveInfo &ddi = fddit->second;
+						mddi=ddi;
+					}
+					else
+					{
+						mddi.driveFirmwareState="offline";
+					}
+
+				}
+
+			}
+		}
+	}
+
 	m_csDisk.LeaveCS();
 	
 	LOGDEBFMT("*****************Raid State************");
@@ -88,19 +135,21 @@ bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 		LOGDEBFMT("diskState:%s",df.diskState.c_str());
 		LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
 		LOGDEBFMT("-------------------Detail--------------");
-		int nLen = df.diskDrives.size();
-		for(int i = 0 ;i < nLen ;i ++)
+		std::map<std::string ,struct DiskDriveInfo>::iterator it = df.diskDrives.begin();
+		int i=0;
+		for( ;it != df.diskDrives.end();it++,i++)
 		{	
+			DiskDriveInfo &ddi=it->second;
 			LOGDEBFMT("----------------%d----------------",i);
-			LOGDEBFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
-			LOGDEBFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
-			LOGDEBFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
-			LOGDEBFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
-			std::transform(df.diskDrives[i].driveFirmwareState.begin(),
-				df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
-			LOGDEBFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
-			LOGDEBFMT("dirveType:%s",df.diskDrives[i].driveType.c_str());
-			LOGDEBFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
+			LOGDEBFMT("dirveID:%s",ddi.driveID.c_str());
+			LOGDEBFMT("dirveSlotNum:%s",ddi.driveSlotNum.c_str());
+			LOGDEBFMT("dirveErrorCount:%s",ddi.driveErrorCount.c_str());
+			LOGDEBFMT("dirveSize:%s",ddi.driveSize.c_str());
+			std::transform(ddi.driveFirmwareState.begin(),
+				ddi.driveFirmwareState.end(),ddi.driveFirmwareState.begin(),::tolower);
+			LOGDEBFMT("dirveFirmwareState:%s",ddi.driveFirmwareState.c_str());
+			LOGDEBFMT("dirveType:%s",ddi.driveType.c_str());
+			LOGDEBFMT("dirveSpeed:%s",ddi.driveSpeed.c_str());
 		}
 		
 	}
@@ -141,15 +190,15 @@ bool CDataManager::CheckRaidError(std::vector<stError> &vecErr)
 			bRet = false;
 		}
 
-		int nLen = df.diskDrives.size();
-		for(int i = 0 ;i < nLen ;i++)
+		std::map<std::string ,struct DiskDriveInfo>::iterator it = df.diskDrives.begin();
+		for( ;it != df.diskDrives.end();it++)
 		{
-			DiskDriveInfo &di = df.diskDrives[i];
-			if(di.driveFirmwareState.find("online") == std::string::npos)
+			DiskDriveInfo &di = it->second;
+			if(di.driveFirmwareState.find("bad") != std::string::npos)
 			{
 				stError re;
 				re.ErrorName = "driveFirmwareState";
-				re.ErrorVal = di.driveFirmwareState;
+				re.ErrorVal = "bad";
 				re.nOrdinal = atoi(di.driveSlotNum.c_str());
 				vecErr.push_back(re);
 				bRet = false;
@@ -728,19 +777,21 @@ void CDataManager::PrintDiskState()
 		LOGDEBFMT("diskState:%s",df.diskState.c_str());
 		LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
 		LOGDEBFMT("-------------------Detail--------------");
-		int nLen = df.diskDrives.size();
-		for(int i = 0 ;i < nLen ;i ++)
+		std::map<std::string ,struct DiskDriveInfo>::iterator it = df.diskDrives.begin();
+		int i=0;
+		for(;it != df.diskDrives.end();it++,i++)
 		{	
+			struct DiskDriveInfo &ddi=it->second;
 			LOGDEBFMT("----------------%d----------------",i);
-			LOGDEBFMT("dirveID:%s",df.diskDrives[i].driveID.c_str());
-			LOGDEBFMT("dirveSlotNum:%s",df.diskDrives[i].driveSlotNum.c_str());
-			LOGDEBFMT("dirveErrorCount:%s",df.diskDrives[i].driveErrorCount.c_str());
-			LOGDEBFMT("dirveSize:%s",df.diskDrives[i].driveSize.c_str());
-			std::transform(df.diskDrives[i].driveFirmwareState.begin(),
-				df.diskDrives[i].driveFirmwareState.end(),df.diskDrives[i].driveFirmwareState.begin(),::tolower);
-			LOGDEBFMT("dirveFirmwareState:%s",df.diskDrives[i].driveFirmwareState.c_str());
-			LOGDEBFMT("dirveType:%s",df.diskDrives[i].driveType.c_str());
-			LOGDEBFMT("dirveSpeed:%s",df.diskDrives[i].driveSpeed.c_str());
+			LOGDEBFMT("dirveID:%s",ddi.driveID.c_str());
+			LOGDEBFMT("dirveSlotNum:%s",ddi.driveSlotNum.c_str());
+			LOGDEBFMT("dirveErrorCount:%s",ddi.driveErrorCount.c_str());
+			LOGDEBFMT("dirveSize:%s",ddi.driveSize.c_str());
+			std::transform(ddi.driveFirmwareState.begin(),
+				ddi.driveFirmwareState.end(),ddi.driveFirmwareState.begin(),::tolower);
+			LOGDEBFMT("dirveFirmwareState:%s",ddi.driveFirmwareState.c_str());
+			LOGDEBFMT("dirveType:%s",ddi.driveType.c_str());
+			LOGDEBFMT("dirveSpeed:%s",ddi.driveSpeed.c_str());
 		}
 
 	}

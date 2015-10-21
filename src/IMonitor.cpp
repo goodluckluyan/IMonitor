@@ -354,7 +354,7 @@ int main(int argc, char** argv)
 	int ws = 0;
 	if(pPara->GetRole()!=MAINROLE)
 	{
-		ws = 6+rand()%5;
+		ws = 10+rand()%5;
 	}
 	else
 	{

@@ -89,6 +89,8 @@ public:
 
 	// 调用从机的closesms接口
 	int  CallStandbyStartOrCloseSMS(bool bSoC,std::string strOtherIP,int nPort,std::string strHallID);
+
+	bool IsRouteReboot();
 private:
 
 	// 检测本进程是否在运行
@@ -155,5 +157,7 @@ private:
 	bool m_bInitRun;
 
 	bool m_bUseLocalDB;
+
+	time_t m_tmReboot;// 用于记录维护性重启的时间
 };
 #endif //HALL_DEFINE

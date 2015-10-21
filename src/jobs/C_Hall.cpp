@@ -30,6 +30,7 @@ C_Hall::C_Hall(SMSInfo &stSms)
    m_bInitRun = false;
    m_pid = 0;
    m_bUseLocalDB = false;
+   m_tmReboot=0;
 }
 
 C_Hall::~C_Hall()
@@ -1106,4 +1107,20 @@ string C_Hall::ExtractXml(const string &response)
 	}
 
 	return xml;
+}
+
+bool C_Hall::IsRouteReboot()
+{
+	time_t tm;
+	time(&tm);
+	if(tm-m_tmReboot>3600)
+	{
+		if(localtime(&tm)->tm_hour==3)
+		{
+			m_tmReboot=tm;
+			return true;
+		}
+	}
+
+	return false;
 }

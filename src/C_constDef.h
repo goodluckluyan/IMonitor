@@ -8,6 +8,7 @@
 #include "threadManage/C_CS.h"
 #include <vector>
 #include <string>
+#include <map>
 
 
 //const define
@@ -140,7 +141,7 @@ typedef struct DiskInfo
 	std::string diskSize;
 	std::string diskState;
 	std::string diskNumOfDrives;
-	std::vector<struct DiskDriveInfo> diskDrives;
+	std::map<std::string ,struct DiskDriveInfo> diskDrives;
 }DiskInfo;
 
 typedef struct DiskDriveInfo
@@ -156,6 +157,36 @@ typedef struct DiskDriveInfo
 	std::string driveType;
 	DiskDriveInfo():group(-1)
 	{}
+
+	DiskDriveInfo(const DiskDriveInfo &obj)
+	{
+		group=obj.group;
+		driveID=obj.driveID;
+		drivePosition=obj.drivePosition;
+		driveSlotNum=obj.driveSlotNum;
+		driveErrorCount=obj.driveErrorCount;
+		driveSize=obj.driveSize;
+		driveFirmwareState=obj.driveFirmwareState;
+		driveSpeed=obj.driveSpeed;
+		driveType=obj.driveType;
+	}
+
+	DiskDriveInfo & operator =(const DiskDriveInfo &obj)
+	{
+		if(this != &obj)
+		{
+			group=obj.group;
+			driveID=obj.driveID;
+			drivePosition=obj.drivePosition;
+			driveSlotNum=obj.driveSlotNum;
+			driveErrorCount=obj.driveErrorCount;
+			driveSize=obj.driveSize;
+			driveFirmwareState=obj.driveFirmwareState;
+			driveSpeed=obj.driveSpeed;
+			driveType=obj.driveType;
+		}
+		return *this;
+	}
 }DiskDriveInfo;
 
 

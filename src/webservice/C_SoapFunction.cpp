@@ -127,17 +127,18 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 	for(;it != mapdf.end();it++)
 	{
 		DiskInfo &df = it->second;
-		int nLen = df.diskDrives.size();
-		
-		for(int i = 0 ;i < nLen ; i++)
+
+		std::map<std::string ,struct DiskDriveInfo>::iterator it= df.diskDrives.begin();
+		for( ;it != df.diskDrives.end(); it++)
 		{
 			// 取最小值.
-			int nDriveSpeed = atoi(df.diskDrives[i].driveSpeed.c_str());
+			struct DiskDriveInfo &ddi = it->second;
+			int nDriveSpeed = atoi(ddi.driveSpeed.c_str());
 			if(nSpeed == 0 || nSpeed > nDriveSpeed )
 			{
 				nSpeed = nDriveSpeed;
 			}
-			int nPos = df.diskDrives[i].driveFirmwareState.find("Online");
+			int nPos = ddi.driveFirmwareState.find("Online");
 			if(nPos != std::string::npos)
 			{
 				ret.diskState.push_back(0);

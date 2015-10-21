@@ -345,6 +345,29 @@ bool C_HallList::GetSMSWorkState()
 				}
 			}
 		}
+		else
+		{
+			if(nState == 101)
+			{
+				time_t tm;
+				time(&tm);
+				int hour=localtime(&tm)->tm_hour;
+				if(hour>=0 && hour <=5)
+				{
+					if(ptr->IsLocal()&&ptr->IsRouteReboot())
+					{
+						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
+						ptr->ShutDownSMS();
+
+						// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
+						ptr->GetSMSWorkState(nState,strInfo);
+					}
+				}
+			}
+		}
+		
+
+
 		if(m_ptrDM != NULL)
 		{
 			m_ptrDM->UpdateSMSStat(ptr->GetHallID(),nState,strInfo);
@@ -354,6 +377,8 @@ bool C_HallList::GetSMSWorkState()
 		m_csHallCurState.LeaveCS();
 		ptrCS->LeaveCS();
 	}
+
+	
 	g_RunState = 1;
 	return true;
 }
