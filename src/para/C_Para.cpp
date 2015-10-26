@@ -27,6 +27,8 @@ C_Para::C_Para()
 	m_nOtherSwitchCheckDelay = 5;
 	m_nOtherSpeedLmtCheckDelay = 5;
 	m_nOtherEWCheckDelay = 5;
+	m_nSSD_Raid_Num = 0;
+	m_nSATA_Raid_Num = 0;
 
 	pthread_rwlock_init(&m_rwlk_main,NULL);
 
@@ -227,12 +229,20 @@ int C_Para::ReadPara()
 	m_nTimeOutWaitOtherIMonitor = atoi(a);
 
 	memset(a,0,64);
-	iResult = config.readvalue("PARA","TOMCATPath",a,strInipath.c_str());
+	iResult = config.readvalue("PARA","SSDRAID",a,strInipath.c_str());
 	if(iResult != 0)
 	{
 		return iResult;
 	}
-	m_strTOMCATPath = a;
+	m_nSSD_Raid_Num=atoi(a);
+
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","SATARAID",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_nSATA_Raid_Num=atoi(a);
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","WriteLogLevel",a,strInipath.c_str());

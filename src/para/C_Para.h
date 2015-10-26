@@ -71,7 +71,7 @@ public:
 	std::string m_strTMSPath;
 
 	//tomcat启动目录
-	std::string m_strTOMCATPath;
+	//std::string m_strTOMCATPath;
 
 	//主目录
 	std::string m_strInipath;
@@ -120,7 +120,12 @@ public:
 
 	// 检测对端异常状态时间间隔
 	int m_nOtherEWCheckDelay;
-	
+
+	// SSD RAID数量
+	int m_nSSD_Raid_Num;
+
+	// Sata RAID数量
+	int m_nSATA_Raid_Num;
 private:
     static C_Para *m_pInstance;
 	pthread_rwlock_t m_rwlk_main;

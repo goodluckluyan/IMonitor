@@ -95,7 +95,7 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 {
 	CDataManager *pDM = CDataManager::GetInstance();
-	std::map<int,DiskInfo> mapdf;
+	std::map<int,DiskDriveInfo> mapdf;
 	pDM->GetDevStat(mapdf);
 	
 	//pDM->GetDevStat(df);
@@ -122,18 +122,16 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 	}
 
 	int nSpeed = 0;
-	std::map<int,DiskInfo>::iterator it = mapdf.begin();
 	bool bError = false;
-	for(;it != mapdf.end();it++)
+	int nSum=mapdf.size();
+	for(int i=0;i<nSum;i++)
 	{
-		DiskInfo &df = it->second;
-
-		std::map<std::string ,struct DiskDriveInfo>::iterator it= df.diskDrives.begin();
-		for( ;it != df.diskDrives.end(); it++)
+		// 取最小值.
+		std::map<int,DiskDriveInfo>::iterator it = mapdf.find(i);
+		if(it!=mapdf.end())
 		{
-			// 取最小值.
 			struct DiskDriveInfo &ddi = it->second;
-			int nDriveSpeed = atoi(ddi.driveSpeed.c_str());
+			int nDriveSpeed = ddi.driveSpeed.empty() ? 0:atoi(ddi.driveSpeed.c_str());
 			if(nSpeed == 0 || nSpeed > nDriveSpeed )
 			{
 				nSpeed = nDriveSpeed;
@@ -149,8 +147,13 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 				ret.diskState.push_back(1);
 				bError = true||bError;
 			}
-
 		}
+		else
+		{
+			ret.diskState.push_back(0);
+			bError = false||bError;
+		}
+		
 	}
 	
 

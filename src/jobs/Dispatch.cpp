@@ -273,7 +273,7 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 				for(int i = 0;i < vecStr.size();i++)
 				{
 					TrimSpace(vecStr[i]);
-					if(vecStr[i] == "SwitchAllSMS" && m_ptrInvoker)	
+					if(vecStr[i] == "SwitchALLSMS" && m_ptrInvoker)	
 					{
 						((CInvoke*)m_ptrInvoker)->SwitchAllSMS();	
 					}

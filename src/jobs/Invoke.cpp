@@ -25,6 +25,7 @@ int  CInvoke::Init()
 	
 
 	// 数据管理模块
+	C_Para * pPara = C_Para::GetInstance();
 	CDataManager *pDM = CDataManager::GetInstance();
 	if(!pDM->Init((void *)this))
 	{
@@ -32,7 +33,6 @@ int  CInvoke::Init()
 	}
 
 	// 监测对端调度软件
-	C_Para * pPara = C_Para::GetInstance();
 	bool bRunOther = false;
 	if(m_ptrMonitor == NULL)
 	{
@@ -637,6 +637,7 @@ bool CInvoke::NoticTMSSMSPos()
 bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 {
 	int nRole=C_Para::GetInstance()->GetRole();
+	
 
 	// 只有一台主机运行时不允许切换
 	if(nRole == TMPMAINROLE || nRole == ONLYMAINROLE)
@@ -654,13 +655,14 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 	if(m_ptrLstHall != NULL)
 	{
 		LOGINFFMT(ERROR_POLICYTRI_SMSSWITCH,"Switch SMS(%s)! ",strHallID.c_str());
-
+		CDataManager::GetInstance()->StartSwitch();
 		int nState;
 		 if(m_ptrLstHall->SwitchSMS(bDelaySwitch,strHallID,nState))
 		 {
 			 std::string strNewIP;
 			 int nNewPort = 0;
 			 m_ptrLstHall->GetSMSRunHost(strHallID,strNewIP,nNewPort);
+
 			 //LOGINFFMT(0,"****SwitchSMS:GetSMSRunHost< %s Switch To %s Host >",strHallID.c_str(),strNewIP.c_str());
 			 if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
 			 {
@@ -678,6 +680,7 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 				 }
 			 }
 			 nRet = 0;
+			 CDataManager::GetInstance()->EndSwitch();
 			 return true;
 		 }
 		 else
@@ -688,11 +691,13 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 			 {
 				 m_ptrLstHall->AddCondSwitchTask(strHallID,"state",101);
 				 nRet = 2;// sms正在延时切换
+				 CDataManager::GetInstance()->EndSwitch();
 				 return false;
 			 }
 			 else if(!bDelaySwitch && nState == 2 && C_Para::GetInstance()->IsMain())
 			 {
 				 nRet = 1;//sms繁忙
+				 CDataManager::GetInstance()->EndSwitch();
 				 return false;
 			 }
 			
@@ -713,6 +718,13 @@ bool CInvoke::SwitchAllSMS()
 		LOGFAT(ERROR_POLICYTRI_ALLSMSSWITCH,"Fault Of Policys Trigger Switch ALLSMS!");	
 		std::vector<std::string> vecHallID;
 		m_ptrLstHall->GetAllLocalRunHallID(vecHallID);
+
+		int nOtherStatus = CDataManager::GetInstance()->GetOtherIMonitor();
+		if(nOtherStatus <= 0)
+		{
+			LOGINFFMT(0,"SwitchAllSMS:Due To Other IMonitor Status -1 ,So SwitchALLSMS Failed!");
+			return false;
+		}
 		for(int i = 0 ;i < vecHallID.size();i++)
 		{
 			if(C_Para::GetInstance()->IsMain() )

@@ -26,7 +26,7 @@ public:
 
 	~CDataManager();
 	
-	bool Init(void *);
+	bool Init(void *,int nSSDNum=0,int nHardNum=0);
 
 	// 包含调度类的指针
 	void SetDispatchPtr(CDispatch *ptr)
@@ -58,7 +58,7 @@ public:
 	bool UpdateDevStat(std::map<int,DiskInfo> &mapdf);
 
 	// 检测磁盘陈列是否有错误
-	bool CheckRaidError(std::vector<stError> &vecErr);
+	bool CheckRaidError(std::vector<stError> &vecErr,std::map<std::string ,struct DiskDriveInfo> &mapdf);
 
 	// 更新网卡监测数据
 	bool UpdateNetStat(std::vector<EthStatus> &vecEthStatus);
@@ -74,11 +74,12 @@ public:
 	bool UpdateTMSStat(int state);
 
 	// 读取监测参数
-	bool GetDevStat(std::map<int,DiskInfo> &df);
+	bool GetDevStat(std::map<int,DiskDriveInfo> &df);
 	bool GetNetStat(std::map<std::string,EthStatus> &mapEthStatus);
 	bool GetSMSStat(std::vector<SMSStatus>& vecSMSState);
 	bool GetSMSStat(std::string strHallID,SMSInfo& smsinfo);
 	int GetTMSStat();
+	int GetOtherIMonitor();
 
 	// 其它方法
 	// 打印tms状态
@@ -100,6 +101,16 @@ public:
 	long GetSynChID()
 	{
 		return m_lSynch;
+	}
+
+	void StartSwitch()
+	{
+		m_bSwitching = true;
+	}
+	
+	void EndSwitch()
+	{
+			m_bSwitching = false;
 	}
 private:
 	CDataManager();
@@ -134,6 +145,14 @@ private:
 	std::map<std::string,std::list<ConflictInfo> > m_maplstConfilict;
 
 	long m_lSynch;
+
+	bool m_bSwitching;
+
+	// ssd 硬盘数量
+	int m_nSSDNum;
+
+	// sata 硬盘数量
+	int m_nSataNum;
 };
 
 #endif

@@ -25,18 +25,27 @@ CDataManager::CDataManager()
 
 	m_nOtherMonitorState = -1;
 	m_lSynch = 0;
+	m_bSwitching=false;
+	m_nSSDNum=0;
+	m_nSataNum=0;
 }
 CDataManager::~CDataManager()
 {
 }
 
 // 初始化
-bool CDataManager::Init(void * vptr)
+bool CDataManager::Init(void * vptr,int nSSDNum,int nSataNum)
 {
 	if(vptr != NULL)
 	{
 		m_ptrInvoker = vptr;
 	}
+
+	// ssd 硬盘数量
+	m_nSSDNum=nSSDNum;
+
+	// sata 硬盘数量
+	m_nSataNum=nSataNum;
 
 	return true;
 }
@@ -120,26 +129,54 @@ bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 			}
 		}
 	}
-
+	std::map<int,DiskInfo> df=m_mapdf;
 	m_csDisk.LeaveCS();
+
+	std::map<std::string ,struct DiskDriveInfo>mapSN;
+	std::map<int,DiskInfo>::iterator it = df.begin();
+	for(;it!=df.end();it++)
+	{
+		DiskInfo &di = it->second;
+		std::map<std::string ,struct DiskDriveInfo>::iterator ddmit = di.diskDrives.begin();
+		for(;ddmit!=di.diskDrives.end();ddmit++)
+		{
+			mapSN[ddmit->first] = ddmit->second;
+		}	
+	}
+	int nSum=m_nSSDNum+m_nSataNum;
+	for(int i=0 ;i < nSum ;i++)
+	{
+		char buf[16]={'\0'};
+		snprintf(buf,16,"%d",i);
+		std::map<std::string ,struct DiskDriveInfo>::iterator fit = mapSN.find(buf);
+		if(fit == mapSN.end())
+		{
+			DiskDriveInfo node;
+			node.driveSlotNum = buf;
+			node.driveFirmwareState="bad";
+			mapSN[buf]=node;
+			LOGDEBFMT("----------------NOT FOUND(SN:%d)----------------",i);
+		
+		}
+	}
 	
 	LOGDEBFMT("*****************Raid State************");
-	std::map<int,DiskInfo>::iterator it = mapdf.begin();
-	for(;it != mapdf.end();it++)
+	std::map<int,DiskInfo>::iterator mit = df.begin();
+	for(;mit != df.end();mit++)
 	{
-		DiskInfo &df = it->second;
+		DiskInfo &di = mit->second;
 		
-		LOGDEBFMT("diskGroup:%d",it->first);
-		LOGDEBFMT("diskSize:%s",df.diskSize.c_str());
-		std::transform(df.diskState.begin(),df.diskState.end(),df.diskState.begin(),::tolower);
-		LOGDEBFMT("diskState:%s",df.diskState.c_str());
-		LOGDEBFMT("diskNumberOfDrives:%s",df.diskNumOfDrives.c_str());
+		LOGDEBFMT("diskGroup:%d",mit->first);
+		LOGDEBFMT("diskSize:%s",di.diskSize.c_str());
+		std::transform(di.diskState.begin(),di.diskState.end(),di.diskState.begin(),::tolower);
+		LOGDEBFMT("diskState:%s",di.diskState.c_str());
+		LOGDEBFMT("diskNumberOfDrives:%s",di.diskNumOfDrives.c_str());
 		LOGDEBFMT("-------------------Detail--------------");
-		std::map<std::string ,struct DiskDriveInfo>::iterator it = df.diskDrives.begin();
+		std::map<std::string ,struct DiskDriveInfo>::iterator diit = di.diskDrives.begin();
 		int i=0;
-		for( ;it != df.diskDrives.end();it++,i++)
+		for( ;diit != di.diskDrives.end();diit++,i++)
 		{	
-			DiskDriveInfo &ddi=it->second;
+			DiskDriveInfo &ddi=diit->second;
 			LOGDEBFMT("----------------%d----------------",i);
 			LOGDEBFMT("dirveID:%s",ddi.driveID.c_str());
 			LOGDEBFMT("dirveSlotNum:%s",ddi.driveSlotNum.c_str());
@@ -157,7 +194,7 @@ bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 	
 	
 	std::vector<stError> vecRE;
-	if(!CheckRaidError(vecRE))
+	if(!CheckRaidError(vecRE,mapSN))
 	{
 		if(m_ptrDispatch)
 		{
@@ -169,50 +206,23 @@ bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 }
 
 // 检测磁盘陈列是否有错误
-bool CDataManager::CheckRaidError(std::vector<stError> &vecErr)
+bool CDataManager::CheckRaidError(std::vector<stError> &vecErr,
+	std::map<std::string ,struct DiskDriveInfo> &mapdf)
 {
 	bool bRet = true;
-	std::map<int,DiskInfo> mapdf;
-	m_csDisk.EnterCS();
-	mapdf = m_mapdf;
-	m_csDisk.LeaveCS();
 	
-	std::map<int,DiskInfo>::iterator it = mapdf.begin();
+	std::map<std::string,DiskDriveInfo>::iterator it = mapdf.begin();
 	for(;it != mapdf.end();it++)
 	{
-		DiskInfo &df = it->second;
-		if(df.diskState == "degraded")
+		DiskDriveInfo &di = it->second;
+		if(di.driveFirmwareState.find("Online") == std::string::npos)
 		{
 			stError re;
-			re.ErrorName = "diskState";
-			re.ErrorVal = "degraded";
+			re.ErrorName = "driveFirmwareState";
+			re.ErrorVal = "bad";
+			re.nOrdinal = atoi(di.driveSlotNum.c_str());
 			vecErr.push_back(re);
 			bRet = false;
-		}
-
-		std::map<std::string ,struct DiskDriveInfo>::iterator it = df.diskDrives.begin();
-		for( ;it != df.diskDrives.end();it++)
-		{
-			DiskDriveInfo &di = it->second;
-			if(di.driveFirmwareState.find("bad") != std::string::npos)
-			{
-				stError re;
-				re.ErrorName = "driveFirmwareState";
-				re.ErrorVal = "bad";
-				re.nOrdinal = atoi(di.driveSlotNum.c_str());
-				vecErr.push_back(re);
-				bRet = false;
-			}
-
-			if(di.driveErrorCount != "0")
-			{
-				stError re;
-				re.ErrorName = "driveErrorCount";
-				re.ErrorVal = di.driveErrorCount;
-				re.nOrdinal = atoi(di.driveSlotNum.c_str());
-				vecErr.push_back(re);
-				bRet = false;
-			}
 		}
 	}
 	
@@ -363,11 +373,37 @@ bool CDataManager::UpdateTMSStat(int state)
 }
 
 // 读取disk监测参数
-bool CDataManager::GetDevStat(std::map<int,DiskInfo> &mapdf)
+bool CDataManager::GetDevStat(std::map<int,DiskDriveInfo> &df)
 {
 	m_csDisk.EnterCS();
-	mapdf = m_mapdf; 
+	std::map<int,DiskInfo> mapdf = m_mapdf; 
 	m_csDisk.LeaveCS();   
+
+	std::map<int,DiskInfo>::iterator it = mapdf.begin();
+	for(;it!=mapdf.end();it++)
+	{
+		DiskInfo &di = it->second;
+		std::map<std::string ,struct DiskDriveInfo>::iterator ddmit = di.diskDrives.begin();
+		for(;ddmit!=di.diskDrives.end();ddmit++)
+		{
+			int index = atoi(ddmit->first.c_str());
+			df[index] = ddmit->second;
+		}	
+	}
+	int nSum=m_nSSDNum+m_nSataNum;
+	for(int i=0 ;i < nSum ;i++)
+	{
+		std::map<int ,struct DiskDriveInfo>::iterator fit = df.find(i);
+		if(fit == df.end())
+		{
+			DiskDriveInfo node;
+			char buf[16]={'\0'};
+			snprintf(buf,16,"%d",i);
+			node.driveSlotNum = buf;
+			node.driveFirmwareState="bad";
+			df[i]=node;
+		}
+	}
 }
 
 // 获取网卡状态
@@ -424,6 +460,13 @@ int CDataManager::GetTMSStat()
 {
 	return m_nTMSState;
 }
+
+// 获取对端调度的状态
+int CDataManager::GetOtherIMonitor()
+{
+	return m_nOtherMonitorState;
+}
+
 
 // 获取Invoker指针
 void * CDataManager::GetInvokerPtr()
@@ -617,47 +660,51 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 
 	int nStdbyRun =0;
 	std::vector<ConflictInfo> vecConflict;
-	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
-	for(;it != m_mapOtherSMSStatus.end();it++)
+	if(!m_bSwitching)//在切换期间不进行冲突判断
 	{
-		SMSInfo &Other = it->second;
-		std::map<std::string,SMSInfo>::iterator fit= maptmp.find(Other.strId);
-		if(fit == maptmp.end())
+		std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
+		for(;it != m_mapOtherSMSStatus.end();it++)
 		{
-			continue;	
-		}
-		
-		if(Other.stStatus.nRun == 1)
-		{
-			nStdbyRun++;
-		}
-	
-		// 都在运行这个sms
-		if(Other.stStatus.nRun == 1 && fit->second.stStatus.nRun == 1)
-		{
-			ConflictInfo ci;
-			ci.nMainState=fit->second.stStatus.nStatus;
-			ci.nStdbyState=Other.stStatus.nStatus;
-			ci.nType = 1;
-			ci.strHallID=Other.strId;
-			time(&ci.tmTime);
-			vecConflict.push_back(ci);
-		}
+			SMSInfo &Other = it->second;
+			std::map<std::string,SMSInfo>::iterator fit= maptmp.find(Other.strId);
+			if(fit == maptmp.end())
+			{
+				continue;	
+			}
 
-		// 都没有运行这个sms, 暂不对两边都不启动进行处理。在切换时会出现这种情况。
-		// 要处理两边都没有启动的情况，要过滤掉切换时出现的情况。比较繁琐，要多次上报才会处理(已做)并且要在切换时通知本函数
-		// 不要进行冲突检测。（未做）
-// 		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
-// 		{
-// 			ConflictInfo ci;
-// 			ci.nMainState=fit->second.stStatus.nStatus;
-// 			ci.nStdbyState=Other.stStatus.nStatus;
-// 			ci.nType = 2;
-// 			ci.strHallID=Other.strId;
-// 			ci.tmTime=time();
-// 			vecConflict.push_back(ci);
-// 		}
+			if(Other.stStatus.nRun == 1)
+			{
+				nStdbyRun++;
+			}
+
+			// 都在运行这个sms
+			if(Other.stStatus.nRun == 1 && fit->second.stStatus.nRun == 1 )
+			{
+				ConflictInfo ci;
+				ci.nMainState=fit->second.stStatus.nStatus;
+				ci.nStdbyState=Other.stStatus.nStatus;
+				ci.nType = 1;
+				ci.strHallID=Other.strId;
+				time(&ci.tmTime);
+				vecConflict.push_back(ci);
+			}
+
+			// 都没有运行这个sms, 暂不对两边都不启动进行处理。在切换时会出现这种情况。
+			// 要处理两边都没有启动的情况，要过滤掉切换时出现的情况。比较繁琐，要多次上报才会处理(已做)并且要在切换时通知本函数
+			// 不要进行冲突检测。（未做）
+			// 		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
+			// 		{
+			// 			ConflictInfo ci;
+			// 			ci.nMainState=fit->second.stStatus.nStatus;
+			// 			ci.nStdbyState=Other.stStatus.nStatus;
+			// 			ci.nType = 2;
+			// 			ci.strHallID=Other.strId;
+			// 			ci.tmTime=time();
+			// 			vecConflict.push_back(ci);
+			// 		}
+		}
 	}
+
 
 	int nMainRun=0;
 	std::map<std::string,SMSInfo>::iterator mit = maptmp.begin();
