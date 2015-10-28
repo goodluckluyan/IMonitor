@@ -28,6 +28,8 @@ CDataManager::CDataManager()
 	m_bSwitching=false;
 	m_nSSDNum=0;
 	m_nSataNum=0;
+
+	m_nOtherRaidStatus = -1;
 }
 CDataManager::~CDataManager()
 {
@@ -467,6 +469,12 @@ int CDataManager::GetOtherIMonitor()
 	return m_nOtherMonitorState;
 }
 
+// 获取对端Raid的状态
+int CDataManager::GetOtherRaidStatus()
+{
+	return m_nOtherRaidStatus;
+}
+
 
 // 获取Invoker指针
 void * CDataManager::GetInvokerPtr()
@@ -775,11 +783,15 @@ bool CDataManager::CheckConfile(std::vector<ConflictInfo> &vecConflict)
 bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 										int nWriteSpeed,std::vector<int> &vecDiskState)
 {
-	LOGDEBFMT("Other Raid State:State:%d,RS:%d,WS:%d",nState,nReadSpeed,nWriteSpeed);
+	std::string raidinfo;
 	for(int i=0;i<vecDiskState.size();i++)
 	{
-		LOGDEBFMT("Raid%d:%d",i,vecDiskState[i]);
+		char buf[32]={'\0'}
+		snprintf(buf,sizeof(buf)," Raid%d:%d",i,vecDiskState[i]);
+		raidinfo+=buf;
 	}
+	LOGDEBFMT("Other Raid:State:%d,RS:%d,WS:%d List[%s]",nState,nReadSpeed,nWriteSpeed,raidinfo.c_str());
+	m_nOtherRaidStatus = nState;
 	return true;
 }
 

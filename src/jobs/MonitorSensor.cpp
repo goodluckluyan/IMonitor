@@ -216,6 +216,12 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 		{
 			m_ptrDM->UpdateOtherMonitorState(false,-1,0);
 		}
+
+		if(bNoticeDM && nStateType == TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS && m_ptrDM != NULL)
+		{
+			std::vector<int> vecDiskState;
+			m_ptrDM->UpdateOtherRaidState(-1,-1,-1,vecDiskState);
+		}
 		return false;
 	}
 
@@ -749,8 +755,9 @@ bool CMonitorSensor::ParseOtherMonitorRaidState(std::string &retXml,int &nState,
 			XMLString::release(&pwspeed);
 		}
 
+
 		// ¶ÁÈ¡diskstate½Úµã
-		DOMNodeList *ptrDiskNodeList = ptrDoc->getElementsByTagName(C2X("diskstate"));
+		DOMNodeList *ptrDiskNodeList = ptrDoc->getElementsByTagName(C2X("diskState"));
 		if(ptrDiskNodeList == NULL)
 		{
 			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,

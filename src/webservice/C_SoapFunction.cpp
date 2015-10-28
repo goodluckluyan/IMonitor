@@ -97,27 +97,12 @@ int mons__GetRaidtate(struct soap* cSoap, struct mons__RaidStateRes &ret)
 	CDataManager *pDM = CDataManager::GetInstance();
 	std::map<int,DiskDriveInfo> mapdf;
 	pDM->GetDevStat(mapdf);
-	
-	//pDM->GetDevStat(df);
-// 	df.diskState = "1" ;
-// 	df.diskSize = "8000000000";
-// 	df.diskNumOfDrives = "8" ;
-// 	for(int i = 0 ;i < 8 ;i++)
-// 	{
-// 		DiskDriveInfo node;
-// 		node.driveErrorCount = "0";
-// 		node.driveFirmwareState = ;
-// 		char buf[16]={'\0'};
-// 		snprintf(buf,16,"%d",i);
-// 		node.driveID = buf;
-// 		node.driveSize = "1000000000";
-// 		node.driveSlotNum = buf;
-// 		node.driveSpeed = "1000000";
-// 		df.diskDrives.push_back(node);
-// 	}
 
 	if(mapdf.size() == 0)
 	{
+		ret.ReadSpeed = 0;
+		ret.WriteSpeed = 0;
+		ret.state = 1;
 		return 0;
 	}
 

@@ -80,6 +80,7 @@ public:
 	bool GetSMSStat(std::string strHallID,SMSInfo& smsinfo);
 	int GetTMSStat();
 	int GetOtherIMonitor();
+	int GetOtherRaidStatus();
 
 	// 其它方法
 	// 打印tms状态
@@ -147,6 +148,9 @@ private:
 	long m_lSynch;
 
 	bool m_bSwitching;
+
+	// 对端Raid状态
+	int m_nOtherRaidStatus;
 
 	// ssd 硬盘数量
 	int m_nSSDNum;

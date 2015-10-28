@@ -460,6 +460,13 @@ int main(int argc, char** argv)
 			g_bReread = false;
 			LOGINFFMT(LOG_ERR,"RereadPara Set Log Level:%d",C_Para::GetInstance()->m_nWirteLogLevel);
 			C_LogManage::GetInstance()->SetLogLevel(C_Para::GetInstance()->m_nWirteLogLevel);
+
+			std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
+			LOGINFFMT(0,"#-----------------------------------------------------------------------------#\n");
+			LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.1>>>>                               #\n");
+			LOGINFFMT(0,"#-----------------------------------------------------------------------------#\n");
+			LOGINFFMT(0,"# %s                                                                      #\n",strMORS.c_str());
+			LOGINFFMT(0,"#-----------------------------------------------------------------------------#\n");
 		}
 	}
 

@@ -719,12 +719,21 @@ bool CInvoke::SwitchAllSMS()
 		std::vector<std::string> vecHallID;
 		m_ptrLstHall->GetAllLocalRunHallID(vecHallID);
 
-		int nOtherStatus = CDataManager::GetInstance()->GetOtherIMonitor();
+		 CDataManager * ptrDM = CDataManager::GetInstance();
+		int nOtherStatus =ptrDM->GetOtherIMonitor();
 		if(nOtherStatus <= 0)
 		{
-			LOGINFFMT(0,"SwitchAllSMS:Due To Other IMonitor Status -1 ,So SwitchALLSMS Failed!");
+			LOGINFFMT(0,"SwitchAllSMS:Due To Other IMonitor Status %d ,So SwitchALLSMS Failed!",nOtherStatus);
 			return false;
 		}
+
+		int nOtherRaidStatus =ptrDM->GetOtherRaidStatus();
+		if(0 != nOtherRaidStatus )
+		{
+			LOGINFFMT(0,"SwitchAllSMS:Due To Other Raid Status %d ,So SwitchALLSMS Failed!",nOtherRaidStatus);
+			return false;
+		}
+
 		for(int i = 0 ;i < vecHallID.size();i++)
 		{
 			if(C_Para::GetInstance()->IsMain() )
