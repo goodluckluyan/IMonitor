@@ -1,16 +1,19 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include "CheckDisk.h"
-
+#include "log/C_LogManage.h"
 using namespace std;
+
+#define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 const int CHECKDISK_ERROR_NO_INFOLOG = -1;
 const int CHECKDISK_ERROR_RM_INFOLOG = -2;
 const std::string INFOLOG = "MegaSAS.log";
 const std::string DIR = "rm -rf ";
-const int MAX_BUFF_LEN = 128;
+const int MAX_BUFF_LEN = 256;
 
 
 
@@ -49,42 +52,43 @@ bool CheckDisk::InitAndCheck()
 //读取MegaSAS.log 文件信息
 int CheckDisk::ReadMegaSASInfo()
 {
-	int iResult = 0;
-	char a[64];
-	memset(a, 0, 64);
-	
-	char tmp[256];
-	char buf[256];
-	memset(tmp, 0, 256);
-	memset(buf, 0, 256);
-	
-	sprintf(tmp, "/proc/%d/exe", getpid());
-	readlink(tmp,buf,256);
-	string str = buf;
-	size_t iPos = -1;
-	if ((iPos = str.rfind('/')) == string::npos)
-	{
-		return CHECKDISK_ERROR_NO_INFOLOG;//-1
-	}
-	string strInipath = str.substr(0, iPos);
-	strInipath += "/MegaSAS.log";
+// 	char a[64];
+// 	memset(a, 0, 64);
+// 	
+// 	char tmp[256];
+// 	char buf[256];
+// 	memset(tmp, 0, 256);
+// 	memset(buf, 0, 256);
+// 	
+// 	sprintf(tmp, "/proc/%d/exe", getpid());
+// 	readlink(tmp,buf,256);
+// 	string str = buf;
+// 	size_t iPos = -1;
+// 	if ((iPos = str.rfind('/')) == string::npos)
+// 	{
+// 		return CHECKDISK_ERROR_NO_INFOLOG;//-1
+// 	}
+// 	string strInipath = str.substr(0, iPos);
+// 	strInipath += "/MegaSAS.log";
 
 	//删除之前的MegaSAS.log日志
-	iResult = RemoveDir( strInipath);
+//	iResult = RemoveDir( strInipath);
 //	if (iResult != 0)
 //	{
 //		return -1;
 //	}
 
+	int iResult = 0;
+
 	//获取新的MegaSAS.log信息
-	iResult = GetDickInfoLog(strInipath);
+	iResult = GetRaidInfoFromPip();
 	if (iResult != 0)
 	{
 		return -1;
 	}
 	
 	//读取信息存入结构体
-	iResult = GetDiskInfo( strInipath.c_str());
+	iResult = GetDiskInfo();
 	if (iResult != 0)
 	{
 		return iResult;
@@ -97,33 +101,37 @@ int CheckDisk::ReadMegaSASInfo()
 	return 0;
 }
 
-int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
+int CheckDisk::GetDiskInfo( )
 {
+	
+//	ifstream ifs;
+//	char cbuf[MAX_BUFF_LEN];
+	
+// 	if (NULL == ppath)
+// 	{
+// 		perror("path is NULL\n");
+// 		return -1;
+// 	}
+// 	
+// 	ifs.open( ppath, ios::in);
+// 	
+// 	if (NULL == ifs)
+// 	{
+// 		perror("file is not exist\n");
+// 		return -1;
+// 	}
+	
 	int iResult;
 	string strline;
-	ifstream ifs;
-	char cbuf[MAX_BUFF_LEN];
-	
-	if (NULL == ppath)
-	{
-		perror("path is NULL\n");
-		return -1;
-	}
-	
-	ifs.open( ppath, ios::in);
-	
-	if (NULL == ifs)
-	{
-		perror("file is not exist\n");
-		return -1;
-	}
-	
+
 	DiskDriveInfo disDriveInfo;
     DiskInfo diskInfo;
 	int index = -1;
-	while (!ifs.eof())
+	stringstream ss(m_buf);
+	while(getline(ss,strline))
 	{
-		getline(ifs,strline);
+		
+//		LOGINFFMT(0,"%s",strline.c_str());
 		
 		string cfg_key;
 		string cfg_value;
@@ -203,30 +211,14 @@ int CheckDisk::GetDiskInfo( const char* ppath)//MegaSAS.log
 							di.diskDrives[strDSN]=disDriveInfo;
 						}
 					}
-					
-
-//					int nLen = mapDiskInfo[disDriveInfo.group].diskDrives.size();
-// 					for(int i = 0 ;i < nLen ;i++)
-// 					{
-// 						if(!strcmp(mapDiskInfo[disDriveInfo.group].diskDrives[i].driveSlotNum.c_str(),disDriveInfo.driveSlotNum.c_str()) )
-// 						{
-// 							 bFind = true;
-// 							 break;	
-// 						}
-// 					}
-// 					if(!bFind)
-// 					{
-// 						mapDiskInfo[disDriveInfo.group].diskDrives.push_back( disDriveInfo);
-// 					}
 				}
 			}
 		}
 	}
 
-	ifs.close();
+//	ifs.close();
 	return 0;   
 }
-
 
 int CheckDisk::GetDickInfoLog(std::string ppath)
 {
@@ -235,18 +227,59 @@ int CheckDisk::GetDickInfoLog(std::string ppath)
 	snprintf(cmd,sizeof(cmd),"/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -LDInfo -LALL -aAll > %s",ppath.c_str());
 	iResult = system( cmd);
 	sleep(3);
-//	if (iResult != 0)
-//	{
-//		return CHECKDISK_ERROR_NO_INFOLOG;
-//	}
+// 	if (iResult != 0)
+// 	{
+// 		return CHECKDISK_ERROR_NO_INFOLOG;
+// 	}
 
 	snprintf(cmd,sizeof(cmd), "/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -PDList -aAll >> %s",ppath.c_str());
 	iResult = system(cmd);
-//	if (iResult != 0)
-//	{
-//		return CHECKDISK_ERROR_NO_INFOLOG;
-//	}
+// 	if (iResult != 0)
+// 	{
+// 		return CHECKDISK_ERROR_NO_INFOLOG;
+// 	}
 
+	return 0;
+}
+
+int CheckDisk::GetRaidInfoFromPip()
+{
+	int pos=0;
+	memset(m_buf,0,sizeof(m_buf));
+	FILE *pf=popen("/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -LDInfo -LALL -aAll","r");
+	if(pf!=NULL)
+	{
+		char linebuf[256]={'\0'};
+		while(fgets(linebuf,sizeof(linebuf),pf)!=NULL)
+		{
+			int len=strlen(linebuf);
+			memcpy(m_buf+pos,linebuf,len);
+			pos+=len;
+		}
+		fclose(pf);
+	}
+	else
+	{
+		return -1;
+	}
+
+	FILE *pfd=popen("/usr/local/MegaRAID\\ Storage\\ Manager/StorCLI/storcli64 -PDList -aAll","r");
+	if(pfd!=NULL)
+	{
+		char linebuf[256]={'\0'};
+		while(fgets(linebuf,sizeof(linebuf),pfd)!=NULL)
+		{
+			int len=strlen(linebuf);
+			memcpy(m_buf+pos,linebuf,len);
+			pos+=len;
+		}
+		fclose(pfd);
+	}
+	else
+	{
+		return -1;
+	}
+	
 	return 0;
 }
 

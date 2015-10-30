@@ -58,10 +58,12 @@ public:
 
 private:
 	
-	int GetDiskInfo( const char* ppath);
+	int GetDiskInfo();
 
 	//生成包含磁盘信息的MegaSAS.log文件
 	int GetDickInfoLog(std::string ppath);
+
+	int GetRaidInfoFromPip();
 
 	//删除存储磁盘信息的MegaSAS.log文件
 	int RemoveDir( const std::string &dir);
@@ -79,6 +81,8 @@ private:
 	std::map<int,DiskInfo> mapDiskInfo;//磁盘总信息
 
 	CDataManager * m_ptrDM;
+
+	char m_buf[20480];// Raid日志缓存
 };
 
 #endif //_H_CHECKDISK

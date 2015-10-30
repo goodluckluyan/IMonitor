@@ -597,9 +597,18 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 	}
 	
 	// 如果在本机运行
+	CDataManager * ptrDM = CDataManager::GetInstance();
 	C_Para *ptrPara = C_Para::GetInstance();
 	if(ptr->IsLocal())
 	{
+		int nOtherRaidStatus =ptrDM->GetOtherRaidStatus();
+		if(0 != nOtherRaidStatus )
+		{
+			LOGINFFMT(0,"SwitchSMS:Due To Other Raid Status Error(%d) ,So SwitchSMS Failed!",nOtherRaidStatus);
+			nState = 4;// 对端Raid异常
+			return false;
+		}
+
 		bool bRet = ptr->ShutDownSMS();
 		LOGINFFMT(ERROR_SMSSWITCH_LOCALSHUTDOWN,"SMS:%s Switch local run sms shutdown!",strHallID.c_str());
 		if(C_Para::GetInstance()->IsMain())
@@ -624,6 +633,14 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 	}
 	else//在对端运行
 	{
+		int nLocalRaidStatus =ptrDM->GetLocalRaidStatus();
+		if(0 != nLocalRaidStatus )
+		{
+			LOGINFFMT(0,"SwitchSMS:Due To Other Raid Status Error(%d) ,So SwitchSMS Failed!",nLocalRaidStatus);
+			nState = 4;// 对端Raid异常
+			return false;
+		}
+
 		if(ptrPara->IsMain())
 		{
  			ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);

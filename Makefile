@@ -6,7 +6,7 @@ INC_PATH = src
 CFLAGS += -g -MMD 
 CFLAGS +=  -I$(INC_PATH) -I/usr/local/mysql/include -I/usr/include/sqlpg/ -I/usr/local/xerces-c/include
 LDFLAGS +=  -lpthread  -L/usr/local/mysql/lib -lmysqlclient -lgsoap++ -L/usr/local/xerces-c/lib -lxerces-c -luuid
-TARGET= ./bin/imonitor
+TARGET= ./bin/imonitor_cs
 OUTPUT_PATH = ./obj
 
 

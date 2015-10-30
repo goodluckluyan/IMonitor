@@ -81,6 +81,7 @@ public:
 	int GetTMSStat();
 	int GetOtherIMonitor();
 	int GetOtherRaidStatus();
+	int GetLocalRaidStatus();
 
 	// 其它方法
 	// 打印tms状态
@@ -151,6 +152,9 @@ private:
 
 	// 对端Raid状态
 	int m_nOtherRaidStatus;
+
+	// 对端Raid状态
+	int m_nLocalRaidStatus;
 
 	// ssd 硬盘数量
 	int m_nSSDNum;

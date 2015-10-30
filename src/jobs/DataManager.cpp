@@ -30,6 +30,7 @@ CDataManager::CDataManager()
 	m_nSataNum=0;
 
 	m_nOtherRaidStatus = -1;
+	m_nLocalRaidStatus = -1;
 }
 CDataManager::~CDataManager()
 {
@@ -84,53 +85,79 @@ void CDataManager::SetSMSInfo(std::vector<SMSInfo> vecHall)
 bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 {
 	m_csDisk.EnterCS();
-	if(m_mapdf.size()==0)
-	{
-		m_mapdf = mapdf;
-	}
-	else
-	{
-		std::map<int,DiskInfo>::iterator it = mapdf.begin();
-		for(;it!=mapdf.end();it++)
-		{
-			int index = it->first;
-			std::map<int,DiskInfo>::iterator fmit = m_mapdf.find(index);
-			if(fmit!=m_mapdf.end())
-			{
-				DiskInfo &mdi = fmit->second;
-				DiskInfo &di = it->second;
-
-				mdi.diskGroup=di.diskGroup;
-				mdi.diskNumOfDrives=di.diskNumOfDrives;
-				mdi.diskSize=di.diskSize;
-				mdi.diskState=di.diskState;
-
-				std::map<std::string ,struct DiskDriveInfo>::iterator fddmit = mdi.diskDrives.begin();
-				for(;fddmit!=mdi.diskDrives.end();fddmit++)
-				{
-					std::string strDSN=fddmit->first;
-					DiskDriveInfo &mddi=fddmit->second;
-					if(strDSN.empty())
-					{
-						continue;
-					}
-
-					std::map<std::string ,struct DiskDriveInfo>::iterator fddit = di.diskDrives.find(strDSN);
-					if(fddit!=di.diskDrives.end())
-					{
-						DiskDriveInfo &ddi = fddit->second;
-						mddi=ddi;
-					}
-					else
-					{
-						mddi.driveFirmwareState="offline";
-					}
-
-				}
-
-			}
-		}
-	}
+	m_mapdf = mapdf;
+// 	if(m_mapdf.size()==0)
+// 	{
+// 		m_mapdf = mapdf;
+// 	}
+// 	else
+// 	{
+// 		std::map<int,DiskInfo>::iterator it = mapdf.begin();
+// 		for(;it!=mapdf.end();it++)
+// 		{
+// 			int index = it->first;
+// 			std::map<int,DiskInfo>::iterator fmit = m_mapdf.find(index);
+// 			if(fmit!=m_mapdf.end())
+// 			{
+// 				DiskInfo &mdi = fmit->second;
+// 				DiskInfo &di = it->second;
+// 
+// 				mdi.diskGroup=di.diskGroup;
+// 				mdi.diskNumOfDrives=di.diskNumOfDrives;
+// 				mdi.diskSize=di.diskSize;
+// 				mdi.diskState=di.diskState;
+// 
+// 				// mapdf到m_mapdf中查找对应的更新，没有对应的测添加
+// 				std::map<std::string ,struct DiskDriveInfo>::iterator fddit = di.diskDrives.begin();
+// 				for(;fddit!=di.diskDrives.end();fddit++)
+// 				{
+// 					std::string strDSN=fddit->first;
+// 					DiskDriveInfo &ddi=fddit->second;
+// 					if(strDSN.empty())
+// 					{
+// 						continue;
+// 					}
+// 
+// 					std::map<std::string ,struct DiskDriveInfo>::iterator fddmit = mdi.diskDrives.find(strDSN);
+// 					if(fddmit!=mdi.diskDrives.end())
+// 					{
+// 						DiskDriveInfo &mddi = fddmit->second;
+// 						mddi=ddi;
+// 					}
+// 					else
+// 					{
+// 						mdi.diskDrives[strDSN]=ddi;
+// 					}
+// 
+// 				}
+// 
+// 				// m_mapdf到mapdf中查找对应的更新，没有对应的认为是offline
+// 				std::map<std::string ,struct DiskDriveInfo>::iterator fddmit = mdi.diskDrives.begin();
+// 				for(;fddmit!=mdi.diskDrives.end();fddmit++)
+// 				{
+// 					std::string strDSN=fddmit->first;
+// 					DiskDriveInfo &mddi=fddmit->second;
+// 					if(strDSN.empty())
+// 					{
+// 						continue;
+// 					}
+// 
+// 					std::map<std::string ,struct DiskDriveInfo>::iterator fddit = di.diskDrives.find(strDSN);
+// 					if(fddit!=di.diskDrives.end())
+// 					{
+// 						DiskDriveInfo &ddi = fddit->second;
+// 						mddi=ddi;
+// 					}
+// 					else
+// 					{
+// 						mddi.driveFirmwareState="offline";
+// 					}
+// 
+// 				}
+// 
+// 			}
+// 		}
+// 	}
 	std::map<int,DiskInfo> df=m_mapdf;
 	m_csDisk.LeaveCS();
 
@@ -202,8 +229,13 @@ bool CDataManager::UpdateDevStat(std::map<int,DiskInfo> &mapdf)
 		{
 			m_ptrDispatch->TriggerDispatch(RAIDTask,vecRE);
 		}
+		m_nLocalRaidStatus = 1;
 	}
-
+	else
+	{
+		m_nLocalRaidStatus = 0;
+	}
+	
 	return true;
 }
 
@@ -473,6 +505,12 @@ int CDataManager::GetOtherIMonitor()
 int CDataManager::GetOtherRaidStatus()
 {
 	return m_nOtherRaidStatus;
+}
+
+// 获取对端Raid的状态
+int CDataManager::GetLocalRaidStatus()
+{
+	return m_nLocalRaidStatus;
 }
 
 
@@ -786,11 +824,11 @@ bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 	std::string raidinfo;
 	for(int i=0;i<vecDiskState.size();i++)
 	{
-		char buf[32]={'\0'}
-		snprintf(buf,sizeof(buf)," Raid%d:%d",i,vecDiskState[i]);
+		char buf[8]={'\0'};
+		snprintf(buf,sizeof(buf)," %d:%d ",i,vecDiskState[i]);
 		raidinfo+=buf;
 	}
-	LOGDEBFMT("Other Raid:State:%d,RS:%d,WS:%d List[%s]",nState,nReadSpeed,nWriteSpeed,raidinfo.c_str());
+	LOGDEBFMT("Other Raid:State:%d,RS:%d,WS:%d Raid[%s]",nState,nReadSpeed,nWriteSpeed,raidinfo.c_str());
 	m_nOtherRaidStatus = nState;
 	return true;
 }

@@ -27,7 +27,7 @@ int  CInvoke::Init()
 	// 数据管理模块
 	C_Para * pPara = C_Para::GetInstance();
 	CDataManager *pDM = CDataManager::GetInstance();
-	if(!pDM->Init((void *)this))
+	if(!pDM->Init((void *)this,pPara->m_nSSD_Raid_Num,pPara->m_nSATA_Raid_Num))
 	{
 		return -1;
 	}
@@ -637,11 +637,19 @@ bool CInvoke::NoticTMSSMSPos()
 bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 {
 	int nRole=C_Para::GetInstance()->GetRole();
-	
 
 	// 只有一台主机运行时不允许切换
 	if(nRole == TMPMAINROLE || nRole == ONLYMAINROLE)
 	{
+		nRet = 3;// 调度软件异常
+		return false;
+	}
+
+	CDataManager *ptrDM = CDataManager::GetInstance();
+	int nOtherStatus =ptrDM->GetOtherIMonitor();
+	if(nOtherStatus <= 0)
+	{
+		LOGINFFMT(0,"SwitchSMS:Due To Other IMonitor Status Error(%d) ,So SwitchSMS Failed!",nOtherStatus);
 		nRet = 3;// 调度软件异常
 		return false;
 	}
@@ -697,6 +705,12 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 			 else if(!bDelaySwitch && nState == 2 && C_Para::GetInstance()->IsMain())
 			 {
 				 nRet = 1;//sms繁忙
+				 CDataManager::GetInstance()->EndSwitch();
+				 return false;
+			 }
+			 else
+			 {
+				 nRet = 3;//sms繁忙
 				 CDataManager::GetInstance()->EndSwitch();
 				 return false;
 			 }
@@ -875,6 +889,14 @@ void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
 // 从（只有主）服务器角色改变成为主角色
 void CInvoke::ChangeToMain()
 {
+	 CDataManager * ptrDM = CDataManager::GetInstance();
+	int nOtherRaidStatus =ptrDM->GetOtherRaidStatus();
+	if(0 != nOtherRaidStatus )
+	{
+		LOGINFFMT(0,"ChangeToMain:Due To Other Raid Status %d ,So ChangeToMain Failed!",nOtherRaidStatus);
+		return ;
+	}
+
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find STDBYHost Change To MAINHost!****");
 	C_Para::GetInstance()->SetRoleFlag(MAINROLE);
 	SwtichTakeOverSMS();
@@ -884,6 +906,14 @@ void CInvoke::ChangeToMain()
 // 从临时主服务器改变成为备角色
 void CInvoke::ChangeToStdby()
 {
+	 CDataManager * ptrDM = CDataManager::GetInstance();
+	int nOtherRaidStatus =ptrDM->GetOtherRaidStatus();
+	if(0 != nOtherRaidStatus )
+	{
+		LOGINFFMT(0,"ChangeToStdby:Due To Other Raid Status %d ,So ChangeToStdby Failed!",nOtherRaidStatus);
+		return ;
+	}
+
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To STDBYHost!****");
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
