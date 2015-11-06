@@ -58,6 +58,7 @@
     <sequence>
      <element name="bMain" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::bMain -->
      <element name="iState" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::iState -->
+     <element name="lSynch" type="xsd:long" minOccurs="1" maxOccurs="1"/><!-- mons__MontorStateRes::lSynch -->
     </sequence>
    </complexType>
   </element>
@@ -289,6 +290,66 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="CopyDcp">
+   <complexType>
+    <sequence>
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__CopyDcp::PklUuid -->
+     <element name="srcPath" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__CopyDcp::srcPath -->
+     <element name="desPath" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__CopyDcp::desPath -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="FileOperationResult">
+   <complexType>
+    <sequence>
+     <element name="Result" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__FileOperationResult::Result -->
+     <element name="errorInfo" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__FileOperationResult::errorInfo -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetCopyDcpProgress">
+   <complexType>
+    <sequence>
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__GetCopyDcpProgress::PklUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="DeleteDcp">
+   <complexType>
+    <sequence>
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__DeleteDcp::PklUuid -->
+     <element name="Path" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__DeleteDcp::Path -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="GetDeleteDcpProgress">
+   <complexType>
+    <sequence>
+     <element name="PklUuid" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__GetDeleteDcpProgress::PklUuid -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation request element -->
+  <element name="SetDBSynchSign">
+   <complexType>
+    <sequence>
+     <element name="dbsynch" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__SetDBSynchSign::dbsynch -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="SetDBSynchSignResponse">
+   <complexType>
+    <sequence>
+     <element name="ret" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SetDBSynchSign::ret -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 
 </types>
@@ -413,6 +474,34 @@
  <part name="Body" element="mons:HashCheckPercent"/><!-- mons__ExeGetHashCheckPercent::stResult -->
 </message>
 
+<message name="CopyDcp">
+ <part name="Body" element="mons:CopyDcp"/><!-- mons__CopyDcp::mons__CopyDcp -->
+</message>
+
+<message name="FileOperationResult">
+ <part name="Body" element="mons:FileOperationResult"/><!-- mons__CopyDcp::result -->
+</message>
+
+<message name="GetCopyDcpProgress">
+ <part name="Body" element="mons:GetCopyDcpProgress"/><!-- mons__GetCopyDcpProgress::mons__GetCopyDcpProgress -->
+</message>
+
+<message name="DeleteDcp">
+ <part name="Body" element="mons:DeleteDcp"/><!-- mons__DeleteDcp::mons__DeleteDcp -->
+</message>
+
+<message name="GetDeleteDcpProgress">
+ <part name="Body" element="mons:GetDeleteDcpProgress"/><!-- mons__GetDeleteDcpProgress::mons__GetDeleteDcpProgress -->
+</message>
+
+<message name="SetDBSynchSignRequest">
+ <part name="Body" element="mons:SetDBSynchSign"/><!-- mons__SetDBSynchSign::mons__SetDBSynchSign -->
+</message>
+
+<message name="SetDBSynchSignResponse">
+ <part name="Body" element="mons:SetDBSynchSignResponse"/>
+</message>
+
 <portType name="ServicePortType">
  <operation name="GetMontorState">
   <documentation>Service definition of function mons__GetMontorState</documentation>
@@ -488,6 +577,31 @@
   <documentation>Service definition of function mons__ExeGetHashCheckPercent</documentation>
   <input message="tns:ExeGetHashCheckPercent"/>
   <output message="tns:HashCheckPercent"/>
+ </operation>
+ <operation name="CopyDcp">
+  <documentation>Service definition of function mons__CopyDcp</documentation>
+  <input message="tns:CopyDcp"/>
+  <output message="tns:FileOperationResult"/>
+ </operation>
+ <operation name="GetCopyDcpProgress">
+  <documentation>Service definition of function mons__GetCopyDcpProgress</documentation>
+  <input message="tns:GetCopyDcpProgress"/>
+  <output message="tns:FileOperationResult"/>
+ </operation>
+ <operation name="DeleteDcp">
+  <documentation>Service definition of function mons__DeleteDcp</documentation>
+  <input message="tns:DeleteDcp"/>
+  <output message="tns:FileOperationResult"/>
+ </operation>
+ <operation name="GetDeleteDcpProgress">
+  <documentation>Service definition of function mons__GetDeleteDcpProgress</documentation>
+  <input message="tns:GetDeleteDcpProgress"/>
+  <output message="tns:FileOperationResult"/>
+ </operation>
+ <operation name="SetDBSynchSign">
+  <documentation>Service definition of function mons__SetDBSynchSign</documentation>
+  <input message="tns:SetDBSynchSignRequest"/>
+  <output message="tns:SetDBSynchSignResponse"/>
  </operation>
 </portType>
 
@@ -620,6 +734,51 @@
   </output>
  </operation>
  <operation name="ExeGetHashCheckPercent">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="CopyDcp">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="GetCopyDcpProgress">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="DeleteDcp">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="GetDeleteDcpProgress">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="SetDBSynchSign">
   <SOAP:operation soapAction=""/>
   <input>
      <SOAP:body parts="Body" use="literal"/>

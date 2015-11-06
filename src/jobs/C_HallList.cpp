@@ -352,12 +352,13 @@ bool C_HallList::GetSMSWorkState()
 				time_t tm;
 				time(&tm);
 				int hour=localtime(&tm)->tm_hour;
-				if(hour>=0 && hour <=5)
+				if(hour>=1 && hour <=5)
 				{
 					if(ptr->IsLocal()&&ptr->IsRouteReboot())
 					{
 						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
 						ptr->ShutDownSMS();
+
 
 						// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
 						ptr->GetSMSWorkState(nState,strInfo);
@@ -614,8 +615,17 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 		if(C_Para::GetInstance()->IsMain())
 		{
 			// 调用备机的切换Sms
- 			ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID);
-			LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms!");
+ 			if(ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID)!=0)
+			{
+				int nPid;
+				ptr->StartSMS(nPid);
+				LOGINFFMT(0,"CallStandbySwitchSMS fail ,So Restart %s on localhost!",strHallID.c_str());
+			}
+			else
+			{
+				LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms!");
+			}
+			
 		}
 		if(bRet)
 		{

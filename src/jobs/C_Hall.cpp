@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include "para/C_Para.h"
 #include "C_ErrorDef.h"
@@ -124,6 +125,16 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		return false;
 	}
 
+	int nPos = m_SMS.strExepath.rfind('/');
+	std::string strEXE = m_SMS.strExepath.substr(nPos+1);
+	std::string strDir = m_SMS.strExepath.substr(0,nPos);
+	std::vector<int> vecCurPID;
+	if(Getpid(strEXE,vecCurPID) < 0)
+	{
+		LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
+		return false;
+	}
+
 	struct rlimit rl;
 	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
 	{
@@ -203,16 +214,53 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		}
 	}
 
-	//等待3秒
-	sleep(3);
 
-	if(pid > 0)
-	{	
-        m_pid = pid;
-		nPid = pid;
+	bool bRun = false;
+	int exepid = 0;
+	time_t tm1;
+	time(&tm1);
+	while(!bRun)
+	{
+		sleep(1);
+		std::vector<int> vecNowPID;
+		if(Getpid(strEXE,vecNowPID) < 0)
+		{
+			LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
+			return false;
+		}
+
+		std::vector<int>::iterator fit;
+		for(int i = 0 ;i <vecNowPID.size();i++)
+		{
+			fit = std::find(vecCurPID.begin(),vecCurPID.end(),vecNowPID[i]);
+			if(fit == vecCurPID.end())
+			{
+				exepid = vecNowPID[i];
+				bRun = true;
+				LOGINFFMT(0,"Fork Process(%d) Start SMS_%s ... \n",exepid,m_SMS.strId.c_str());
+				break;
+			}
+		}
+
+		time_t tm2;
+		time(&tm2);
+		if( tm2-tm1 > 5)
+		{
+			LOG(0,"waiting 5 sec ,but SMS not run..\n");
+			break;
+		}
 	}
-	
-	return true;
+
+	if(exepid > 0)
+	{	
+		m_pid = exepid;
+		nPid = exepid;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 // 获取指定命令的pid
@@ -479,7 +527,69 @@ bool C_Hall::ShutDownSMS()
 		int nRet = kill(m_pid,9);
 		if(nRet == 0)
 		{
-			LOGINFFMT(0,"Kill Local SMS(%d) Done!\n",m_pid);
+			LOGINFFMT(0,"Kill Local SMS(%d) Done!",m_pid);
+		}
+		
+		int cnt=0;
+		while(ISSMSRun())
+		{
+			kill(m_pid,9);
+			sleep(1);
+			cnt++;
+			if(cnt>300)
+			{
+				struct rlimit rl;
+				if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+				{
+					LOGERRFMT(0,"service imonitord restart:getrlimit failed!");
+					return false;
+				}
+
+				pid_t pid ;
+				if((pid = fork()) < 0)
+				{
+					LOGERRFMT(0,"service imonitord restart:failed to create process!");
+					return false;
+				}
+				else if(pid == 0)
+				{
+					LOGINFFMT(0,"Fork Process(%d) service imonitord restart",getpid());
+
+					// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
+					if(rl.rlim_max == RLIM_INFINITY)
+					{
+						rl.rlim_max = 1024;
+					}
+					for(int i = 3 ;i < rl.rlim_max;i++)
+					{
+						close(i);
+					}
+
+					// 为了防止子进程要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
+					// 因为子进程会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
+					struct sigaction sa;
+					sa.sa_handler=SIG_DFL;
+					sigemptyset(&sa.sa_mask);
+					sa.sa_flags = 0;
+					if(sigaction(SIGCHLD,&sa,NULL)<0)
+					{
+						LOGINFFMT(ULOG_ERROR,"Cannot Set POPen SIGCHLD Signal Catchfun! ");
+					}
+
+					char buf[64]={'\0'};
+					snprintf(buf,sizeof(buf),"service imonitord restart");
+					LOGINFFMT(0,"kill failed ,popen (%s)",buf);
+
+					FILE *pp = popen(buf,"r");
+					if(!pp)
+					{
+						LOGINFFMT(0,"popen (%s) fail",buf);
+						continue;
+					}
+					pclose(pp);
+				}
+			 	
+			}
 		}
 		return nRet == 0 ? true: false;
 	}
@@ -497,24 +607,51 @@ int C_Hall::ISSMSRun()
 		return false;
 	}
 
-	char buf[64]={'\0'};
-	snprintf(buf,sizeof(buf),"ps %d|grep %d|awk '{print $1}'",(int)m_pid,(int)m_pid);
+// 	char buf[64]={'\0'};
+// 	snprintf(buf,sizeof(buf),"ps %d|grep %d|awk '{print $1}'",(int)m_pid,(int)m_pid);
+// 	
+// 	FILE *pp = popen(buf,"r");
+// 	if(!pp)
+// 	{
+// 		LOG(0,"popen fail\n");
+// 		return -1;
+// 	}
+// 	char tmpbuf[128]={'\0'};
+// 	std::vector<std::string> vecBuf;
+// 	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+// 	{
+// 		vecBuf.push_back(tmpbuf);
+// 	}
+// 	pclose(pp);
+// 	LOGINFFMT(0,"%s (%d)",buf,vecBuf.size());
+// 	bool bshellcheck = vecBuf.size()>0;
+
+	bool bproccheck=false;
+//	if(bshellcheck)
+	{
+		char buf[32]={'\0'};
+		snprintf(buf,sizeof(buf),"/proc/%d",(int)m_pid);
+		struct stat dstat;
+		if(stat(buf,&dstat) == 0)
+		{
+			if(S_ISDIR(dstat.st_mode))
+			{
+				bproccheck=true;	
+				LOGINFFMT(0,"%s:%s (1)",m_SMS.strId.c_str(),buf);
+			}
+			else
+			{
+				LOGINFFMT(0,"%s:%s (0)",m_SMS.strId.c_str(),buf);
+			}
+		}
+		else
+		{
+			LOGINFFMT(0,"%s:%s (0)",m_SMS.strId.c_str(),buf);
+		}
+	}
+
+	return bproccheck;
 	
-	FILE *pp = popen(buf,"r");
-	if(!pp)
-	{
-		LOG(0,"popen fail\n");
-		return -1;
-	}
-	char tmpbuf[128]={'\0'};
-	std::vector<std::string> vecBuf;
-	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
-	{
-		vecBuf.push_back(tmpbuf);
-	}
-	pclose(pp);
-	LOGINFFMT(0,"%s (%d)",buf,vecBuf.size());
-	return vecBuf.size()>0;
 }
 
 //获取SMS 运行状态
