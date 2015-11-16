@@ -21,7 +21,7 @@
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 
 #define BUFFLEN  2048
-
+extern time_t g_tmRun;
 extern int g_nRunType;
 using namespace std;
 using namespace xercesc;
@@ -520,7 +520,7 @@ bool C_Hall::StartSMS_NewTerminal(int &nPid,bool bLocalHost/*=false*/)
 }
 
 // 关闭SMS
-bool C_Hall::ShutDownSMS()
+int C_Hall::ShutDownSMS()
 {
 	if(m_pid > 0)
 	{
@@ -538,65 +538,15 @@ bool C_Hall::ShutDownSMS()
 			cnt++;
 			if(cnt>300)
 			{
-				struct rlimit rl;
-				if(getrlimit(RLIMIT_NOFILE,&rl)<0)
-				{
-					LOGERRFMT(0,"service imonitord restart:getrlimit failed!");
-					return false;
-				}
-
-				pid_t pid ;
-				if((pid = fork()) < 0)
-				{
-					LOGERRFMT(0,"service imonitord restart:failed to create process!");
-					return false;
-				}
-				else if(pid == 0)
-				{
-					LOGINFFMT(0,"Fork Process(%d) service imonitord restart",getpid());
-
-					// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
-					if(rl.rlim_max == RLIM_INFINITY)
-					{
-						rl.rlim_max = 1024;
-					}
-					for(int i = 3 ;i < rl.rlim_max;i++)
-					{
-						close(i);
-					}
-
-					// 为了防止子进程要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
-					// 因为子进程会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
-					struct sigaction sa;
-					sa.sa_handler=SIG_DFL;
-					sigemptyset(&sa.sa_mask);
-					sa.sa_flags = 0;
-					if(sigaction(SIGCHLD,&sa,NULL)<0)
-					{
-						LOGINFFMT(ULOG_ERROR,"Cannot Set POPen SIGCHLD Signal Catchfun! ");
-					}
-
-					char buf[64]={'\0'};
-					snprintf(buf,sizeof(buf),"service imonitord restart");
-					LOGINFFMT(0,"kill failed ,popen (%s)",buf);
-
-					FILE *pp = popen(buf,"r");
-					if(!pp)
-					{
-						LOGINFFMT(0,"popen (%s) fail",buf);
-						continue;
-					}
-					pclose(pp);
-				}
-			 	
+			 	return 2;
 			}
-		}
-		return nRet == 0 ? true: false;
-	}
-	else
-	{
-		return false;
-	}
+ 		}
+ 		return nRet == 0 ? 0: 1;
+ 	}
+ 	else
+ 	{
+ 		return 1;
+ 	}
 
 }
 
@@ -722,7 +672,7 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	{
 		state = 102;
 		info = "error";
-		return 0;
+		return -1;
 	}
 	
 	int nPos = content_c.find("<?");
@@ -1250,11 +1200,12 @@ bool C_Hall::IsRouteReboot()
 {
 	time_t tm;
 	time(&tm);
-	if(tm-m_tmReboot>3600)
+	if(tm-m_tmReboot>3600&&tm-g_tmRun>1800)
 	{
 		if(localtime(&tm)->tm_hour==3)
 		{
 			m_tmReboot=tm;
+
 			return true;
 		}
 	}

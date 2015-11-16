@@ -350,6 +350,23 @@
     </sequence>
    </complexType>
   </element>
+  <!-- operation request element -->
+  <element name="GetSMSPosition">
+   <complexType>
+    <sequence>
+     <element name="strHallId" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__GetSMSPosition::strHallId -->
+    </sequence>
+   </complexType>
+  </element>
+  <!-- operation response element -->
+  <element name="SMSPositionInfo">
+   <complexType>
+    <sequence>
+     <element name="strIP" type="xsd:string" minOccurs="1" maxOccurs="1"/><!-- mons__SMSPositionInfo::strIP -->
+     <element name="nPort" type="xsd:int" minOccurs="1" maxOccurs="1"/><!-- mons__SMSPositionInfo::nPort -->
+    </sequence>
+   </complexType>
+  </element>
  </schema>
 
 </types>
@@ -502,6 +519,14 @@
  <part name="Body" element="mons:SetDBSynchSignResponse"/>
 </message>
 
+<message name="GetSMSPosition">
+ <part name="Body" element="mons:GetSMSPosition"/><!-- mons__GetSMSPosition::mons__GetSMSPosition -->
+</message>
+
+<message name="SMSPositionInfo">
+ <part name="Body" element="mons:SMSPositionInfo"/><!-- mons__GetSMSPosition::PosInfo -->
+</message>
+
 <portType name="ServicePortType">
  <operation name="GetMontorState">
   <documentation>Service definition of function mons__GetMontorState</documentation>
@@ -602,6 +627,11 @@
   <documentation>Service definition of function mons__SetDBSynchSign</documentation>
   <input message="tns:SetDBSynchSignRequest"/>
   <output message="tns:SetDBSynchSignResponse"/>
+ </operation>
+ <operation name="GetSMSPosition">
+  <documentation>Service definition of function mons__GetSMSPosition</documentation>
+  <input message="tns:GetSMSPosition"/>
+  <output message="tns:SMSPositionInfo"/>
  </operation>
 </portType>
 
@@ -779,6 +809,15 @@
   </output>
  </operation>
  <operation name="SetDBSynchSign">
+  <SOAP:operation soapAction=""/>
+  <input>
+     <SOAP:body parts="Body" use="literal"/>
+  </input>
+  <output>
+     <SOAP:body parts="Body" use="literal"/>
+  </output>
+ </operation>
+ <operation name="GetSMSPosition">
   <SOAP:operation soapAction=""/>
   <input>
      <SOAP:body parts="Body" use="literal"/>

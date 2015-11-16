@@ -1,11 +1,17 @@
 
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/resource.h>
+#include <time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/resource.h>
 #include "database/CppMySQL3DB.h"
 #include "para/C_Para.h"
 #include "log/C_LogManage.h"
@@ -352,13 +358,18 @@ bool C_HallList::GetSMSWorkState()
 				time_t tm;
 				time(&tm);
 				int hour=localtime(&tm)->tm_hour;
-				if(hour>=1 && hour <=5)
+				if(hour>=0 && hour <=5)
 				{
 					if(ptr->IsLocal()&&ptr->IsRouteReboot())
 					{
 						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
-						ptr->ShutDownSMS();
 
+						// 如果返回为2则有可能进程僵死，则重启自己
+						 if(ptr->ShutDownSMS()==2)
+						{
+							RebootMyself();
+							break;
+						}
 
 						// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
 						ptr->GetSMSWorkState(nState,strInfo);
@@ -379,7 +390,7 @@ bool C_HallList::GetSMSWorkState()
 		ptrCS->LeaveCS();
 	}
 
-	
+	// 更新运行状态
 	g_RunState = 1;
 	return true;
 }
@@ -510,6 +521,25 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 					UpdateDataBase(stSMSInfo.strId,(int)MAINRUNTYPE);
 				}
 				vecHallid.push_back(stSMSInfo.strId);
+
+				// 确保sms运行正常
+				int nState = 0;
+				std::string strInfo;
+				int i = 0;
+				while(i<=5)
+				{
+					sleep(1);
+					if(ptr->GetSMSWorkState(nState,strInfo)==0)
+					{
+						if(nState!=0)
+						{
+							break;
+						}
+					}
+					i++;
+				}
+				
+
 				LOGINFFMT(ERROR_SMSSWITCH_LOCALRUNOK,"SMS:%s StartAllSMS local run OK!",ptr->GetHallID().c_str());
 			}
 			else
@@ -986,4 +1016,107 @@ bool C_HallList::StartSMS(std::string strHallID)
 	}
 
 	return true;
+}
+
+// 获取sms的运行位置
+bool C_HallList::GetSMSPosition(std::string strHallID,std::string &strPos,int& nPort)
+{
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	C_Hall * ptr = fit->second;
+
+	std::string strIP;
+	ptr->GetRunHost(strIP,nPort);
+	if(ptr->IsLocal())
+	{
+		if(C_Para::GetInstance()->GetRole()>=(int)STDBYROLE)
+		{
+			strPos = "slave";
+		}
+		else
+		{
+			strPos = "master";
+		}
+	}
+	else
+	{
+		if(C_Para::GetInstance()->GetRole()>=(int)STDBYROLE)
+		{
+			strPos = "master";
+		}
+		else
+		{
+			strPos = "slave";
+		}
+	}
+	return true;
+}
+
+
+// 通过service 命令重启自己
+bool  C_HallList::RebootMyself()
+{
+	struct rlimit rl;
+	if(getrlimit(RLIMIT_NOFILE,&rl)<0)
+	{
+		LOGERRFMT(0,"service imonitord restart:getrlimit failed!");
+		return false;
+	}
+
+	pid_t pid ;
+	if((pid = fork()) < 0)
+	{
+		LOGERRFMT(0,"service imonitord restart:failed to create process!");
+		return false;
+	}
+	else if(pid == 0)
+	{
+		LOGINFFMT(0,"Fork Process(%d) service imonitord restart",getpid());
+
+		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
+		if(rl.rlim_max == RLIM_INFINITY)
+		{
+			rl.rlim_max = 1024;
+		}
+		for(int i = 3 ;i < rl.rlim_max;i++)
+		{
+			close(i);
+		}
+
+		// 为了防止子进程要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
+		// 因为子进程会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
+		struct sigaction sa;
+		sa.sa_handler=SIG_DFL;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		if(sigaction(SIGCHLD,&sa,NULL)<0)
+		{
+			LOGINFFMT(ULOG_ERROR,"Cannot Set POPen SIGCHLD Signal Catchfun! ");
+		}
+
+		char buf[64]={'\0'};
+		snprintf(buf,sizeof(buf),"service imonitord restart");
+		LOGINFFMT(0,"kill failed ,popen (%s)",buf);
+
+		FILE *pp = popen(buf,"r");
+		if(!pp)
+		{
+			LOGINFFMT(0,"popen (%s) fail",buf);
+			exit(1);
+		}
+		else
+		{
+			pclose(pp);
+			exit(0);
+		}
+	}
+
+	int nStatus;
+	waitpid(pid,&nStatus,NULL);
+	return true;
+
 }

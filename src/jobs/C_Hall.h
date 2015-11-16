@@ -52,7 +52,7 @@ public:
 	bool StartSMS(int &nPid,bool bLocalHost=false);
 
 	// 关闭SMS
-	bool ShutDownSMS();
+	int ShutDownSMS();
 
 	// 改变SMS的运行主机信息	
 	SMSInfo& ChangeSMSHost(std::string strIP,int nRunType,bool bLocalRun);

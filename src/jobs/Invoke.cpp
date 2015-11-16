@@ -457,7 +457,7 @@ void CInvoke::PrintProductInfo()
 {
 	std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
 	printf("#-----------------------------------------------------------------------------#\n");
-	printf("#                      <<<<<IMonitor1.0(%5s)>>>>                          #\n",strMORS.c_str());
+	printf("#                      <<<<<IMonitor1.0(%5s)>>>>                       #\n",strMORS.c_str());
 	printf("#                                                                             #\n");
 	printf("#-----------------------------------------------------------------------------#\n");
 	printf("# Command Usage:                                                              #\n");
@@ -479,6 +479,21 @@ void CInvoke::PrintLogLevel()
 	printf("# log	-2:print log level ULOG_ERROR\n");
 	printf("# log	-3:print log level ULOG_FATAL\n");
 	printf("#-----------------------------------------------------------------------------#\n");
+}
+
+void CInvoke::PrintVersionInfo()
+{
+	std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
+	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
+	LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.2>>>>                               #");
+	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
+	LOGINFFMT(0,"%s",strMORS.c_str());
+	LOGINFFMT(0,"修改:");
+	LOGINFFMT(0,"	1、增加GetSMSPosition Webservice 接口");
+	LOGINFFMT(0,"	2、规避了sms凌晨重启时出现进程僵死而重启失败的问题。");
+	LOGINFFMT(0,"	3、规避了备接管主时最后一个sms启动紧接着启动tms从而使tms对sms定位出错的问题。");
+	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
+
 }
 
 
@@ -869,6 +884,7 @@ void CInvoke::TakeOverMain(bool bCheckOtherSMSRun)
 
 	//为了防止主数据库恢复时200ip变化时sms状态不正确的问题，在接管主机上的sms时，用localhost数据库ip代替200.
 	StartALLSMS(bCheckOtherSMSRun,true);
+	sleep(1);
 	if(C_Para::GetInstance()->GetRole() != TMPMAINROLE)
 	{
 		C_Para::GetInstance()->SetRoleFlag(TMPMAINROLE);
@@ -880,6 +896,7 @@ void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
 {
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverStdby!");
 	StartALLSMS(bCheckOtherSMSRun);
+	sleep(1);
 	if(C_Para::GetInstance()->GetRole() != ONLYMAINROLE)
 	{
 		C_Para::GetInstance()->SetRoleFlag(ONLYMAINROLE);
@@ -1253,4 +1270,18 @@ bool  CInvoke::CheckDBSynch(long lSynch)
 	{
 		return false;
 	}
+}
+
+bool CInvoke::GetSMSPosition(std::string strHallID,std::string &strPos,int& nPort)
+{
+	LOGINFFMT(0," GetSMSPosition %s!",strHallID.c_str());
+	if(m_ptrLstHall != NULL)
+	{
+		return m_ptrLstHall->GetSMSPosition(strHallID,strPos,nPort);
+	}
+	else
+	{
+		return false;
+	}
+	return true;
 }

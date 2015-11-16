@@ -92,6 +92,9 @@ public:
 	// 更新数据库sms运行的位置
 	bool UpdateDataBase(std::string strHallID,int nPosition);
 
+	// 获取sms的运行位置
+	bool GetSMSPosition(std::string strHallID,std::string &strIP,int& nPort);
+
 private:
 
 	// 在新的里程中执行脚本
@@ -102,6 +105,9 @@ private:
 
 	// 获取进程的启动目录
 	bool GetPIDExeDir(int ,std::string &);
+
+	// 通过service 命令重启自己
+	bool RebootMyself();
 
 
     C_CS m_csHallCurState;//保护m_mapHallCurState

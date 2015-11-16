@@ -119,6 +119,12 @@ public:
 
 	// 通知tms sms位置
 	bool NoticTMSSMSPos();
+
+	// 获取sms位置信息
+	bool GetSMSPosition(std::string strHallID,std::string &strPos,int& nPort);
+
+	// 打印版本信息
+	void PrintVersionInfo();
 private:
 	// 打印帮助信息
 	void PrintProductInfo();

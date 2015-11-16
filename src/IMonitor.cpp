@@ -31,6 +31,7 @@ extern int g_nRunType;  // 1为守护进程 0为交互模式
 bool g_bReread = false; // 是否重读配置文件
 int g_RunState = 0;     // 0为正在启动，1 为运行正常
 time_t g_tmDBSynch = 0;
+time_t g_tmRun=0;
 static void sig_fun(int iSigNum);
 
 
@@ -82,7 +83,8 @@ void InitSigFun(C_LogManage *pLogManage)
 	{
 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGALRM"); 
 	}
-//  防止关闭终端后，程序在后台运行，所有不处理SIGHUP信号，使用默认处理方式即结束进程
+
+    //防止关闭终端后，程序在后台运行，所有不处理SIGHUP信号，使用默认处理方式即结束进程
 // 	if(signal(SIGHUP,sig_fun) == SIG_ERR)
 // 	{
 // 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGHUP"); 
@@ -419,9 +421,9 @@ int main(int argc, char** argv)
 	string strTmpDate;
 	int iTmsWorkState = 0;
 	char strInfo[1024];
+	time(&g_tmRun);
 	while(!g_bQuit)
 	{
-		
 		iMillisecond = pRunPara->GetCurMillisecond(bDateSet);
 		++iCountTime;
 		iCountTime = iCountTime% 3000;
@@ -460,13 +462,8 @@ int main(int argc, char** argv)
 			g_bReread = false;
 			LOGINFFMT(LOG_ERR,"RereadPara Set Log Level:%d",C_Para::GetInstance()->m_nWirteLogLevel);
 			C_LogManage::GetInstance()->SetLogLevel(C_Para::GetInstance()->m_nWirteLogLevel);
-
-			std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
-			LOGINFFMT(0,"#-----------------------------------------------------------------------------#\n");
-			LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.1>>>>                               #\n");
-			LOGINFFMT(0,"#-----------------------------------------------------------------------------#\n");
-			LOGINFFMT(0,"# %s                                                                      #\n",strMORS.c_str());
-			LOGINFFMT(0,"#-----------------------------------------------------------------------------#\n");
+			Invoker.PrintVersionInfo();
+			
 		}
 	}
 

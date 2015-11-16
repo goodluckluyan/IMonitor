@@ -380,12 +380,32 @@ int mons__SetDBSynchSign(struct soap* cSoap,std::string dbsynch,int &ret)
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	if(ptr->UpdateDBSynch(dbsynch))
 	{
-		g_tmDBSynch=atoll(dbsynch.c_str());
-		ret = 0;
+		return 0;
 	}
 	else
 	{
-		ret =1;
+		return 0;
+//		soap_sender_fault_subcode(cSoap, "mons:1", "SetDBSynchSign Fail", "SetDBSynchSign");
 	}
-	return 0;
+	
+}
+
+int mons__GetSMSPosition(struct soap* cSoap,std::string strHallId,struct mons__SMSPositionInfo &PosInfo)
+{
+	LOGINFFMT(0,"WS:GetSMSPosition(%s)",strHallId.c_str());
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	std::string strPos;
+	int nPort;
+	if(ptr->GetSMSPosition(strHallId,strPos,nPort))
+	{	
+		PosInfo.strPos=strPos;
+		PosInfo.nPort=nPort;
+		return 0;
+	}
+	else
+	{
+		soap_sender_fault_subcode(cSoap, "mons:1", "GetSMSPosition Fail", "GetSMSPosition");
+		return 1;
+	}
 }
