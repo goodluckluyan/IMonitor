@@ -1256,7 +1256,7 @@ bool  CInvoke::CheckDBSynch(long lSynch)
 	int nRows = 0 ;
 	if((nRows = query.numRow()) == 0) 
 	{
-		LOGINFFMT(0,"C_HallList Initial failed,hallinfo talbe no rows!\n");
+		LOGINFFMT(0,"find not db_synch field from tms.system_config!\n");
 		return false;
 	}
 

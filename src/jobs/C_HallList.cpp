@@ -640,7 +640,7 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 			return false;
 		}
 
-		bool bRet = ptr->ShutDownSMS();
+		int nRet = ptr->ShutDownSMS();
 		LOGINFFMT(ERROR_SMSSWITCH_LOCALSHUTDOWN,"SMS:%s Switch local run sms shutdown!",strHallID.c_str());
 		if(C_Para::GetInstance()->IsMain())
 		{
@@ -653,11 +653,11 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 			}
 			else
 			{
-				LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms!");
+				LOGINFFMT(ERROR_SMSSWITCH_CALLOTHERSW,"SMS Switch call other switch sms OK!");
 			}
 			
 		}
-		if(bRet)
+		if(0==nRet)
 		{
 			 if(ptrPara->GetRole()>=(int)STDBYROLE)
 			 {
@@ -951,7 +951,7 @@ bool C_HallList::CloseSMS(std::string strHallID)
 	C_Hall *ptr = fit->second;
 	if(ptr->IsLocal())
 	{
-		if(!ptr->ShutDownSMS())
+		if(ptr->ShutDownSMS()!=0)
 		{
 			return false;
 		}

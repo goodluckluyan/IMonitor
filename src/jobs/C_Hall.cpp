@@ -541,7 +541,7 @@ int C_Hall::ShutDownSMS()
 			 	return 2;
 			}
  		}
- 		return nRet == 0 ? 0: 1;
+ 		return 0;
  	}
  	else
  	{
@@ -827,7 +827,7 @@ int  C_Hall::CallStandbySwitchSMS(bool bDelaySwitch,std::string strOtherIP,int n
 	}
 
 	iResult = GetHttpContent( response_c, content_c);
-	if (iResult != 0)
+	if (iResult != 200)
 	{
 		return iResult;//SoftwareSTATE_ERROR_HTTP
 	}
@@ -841,35 +841,90 @@ int  C_Hall::CallStandbySwitchSMS(bool bDelaySwitch,std::string strOtherIP,int n
 // 解析切换结果
 int C_Hall::Parser_SwitchSMS(std::string &content,int &nRet)
 {
-	XercesDOMParser *parser = new XercesDOMParser();
-	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
-	DOMElement *rootChild = NULL;
 
-	int result = GetRootChild( content, parser, errHandler, &rootChild);
-	if (result < 0 || rootChild == NULL)
-		return -1;
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)content.c_str(), content.size(), "bufId");
 
 
-	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "ExeSwitchSMSToOtherResponse");
-	if(child == NULL)
+	try
 	{
-		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();
+
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("ret"));
+		if ( ptrNodeList == NULL)
+		{
+			return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+		}
+		else
+		{
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			char *pstate =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state = pstate;
+			if(!str_state.empty())
+			{
+				nRet = atoi(str_state.c_str());
+			}
+
+			XMLString::release( &pstate);
+		}
+
+		
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		LOG(ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		delete ptrInputsource;
+
 	}
 
-	char *p;
-	DOMElement *root = GetElementByName(child->getFirstChild(), "ret");
-	if ( child == NULL || child->getFirstChild() == NULL || child->getFirstChild()->getNodeValue() == NULL)
-	{
-		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
-	}
-	p = (char *)XMLString::transcode(root->getFirstChild()->getNodeValue());
-	nRet = atoi(p);
-	XMLString::release( &p);
+	delete ptrParser;
+	delete ptrInputsource;
+	return 0;
 
 
-	delete errHandler;
-	delete parser;
-	return result;
+
+
+
+
+
+
+// 	XercesDOMParser *parser = new XercesDOMParser();
+// 	ErrorHandler *errHandler = (ErrorHandler*) new HandlerBase();
+// 	DOMElement *rootChild = NULL;
+// 
+// 	int result = GetRootChild( content, parser, errHandler, &rootChild);
+// 	if (result < 0 || rootChild == NULL)
+// 		return -1;
+// 
+// 
+// 	DOMElement *child = GetElementByName(rootChild->getFirstChild(), "ExeSwitchSMSToOtherResponse");
+// 	if(child == NULL)
+// 	{
+// 		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+// 	}
+// 
+// 	char *p;
+// 	DOMElement *root = GetElementByName(child->getFirstChild(), "ret");
+// 	if ( child == NULL || child->getFirstChild() == NULL || child->getFirstChild()->getNodeValue() == NULL)
+// 	{
+// 		return ERROR_PLAYER_AQ_NEEDSOAPELEM;
+// 	}
+// 	p = (char *)XMLString::transcode(root->getFirstChild()->getNodeValue());
+// 	nRet = atoi(p);
+// 	XMLString::release( &p);
+// 
+// 
+// 	delete errHandler;
+// 	delete parser;
+// 	return result;
 }
 
 // 填充http头
@@ -975,7 +1030,7 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 
 	delete ptrParser;
 	delete ptrInputsource;
-	return true;
+	return 0;
 }
 
 
