@@ -10,7 +10,7 @@ TARGET= ./bin/imonitor_cs
 OUTPUT_PATH = ./obj
 
 
-SUBDIR =database log para contentcheck jobs threadManage timeTask utility webservice .
+SUBDIR =database log para contentcheck jobs threadManage timeTask utility webservice Server .
 
 #…Ë÷√VPATH
 EMPTY = 

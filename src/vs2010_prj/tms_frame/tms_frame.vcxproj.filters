@@ -40,6 +40,9 @@
     <Filter Include="contentcheck">
       <UniqueIdentifier>{83fe04bb-2437-4e7e-87fc-5f4c8058b617}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{3672f82c-198d-4810-acc4-545d802f13fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\IMonitor.cpp">
@@ -176,6 +179,24 @@
     </ClCompile>
     <ClCompile Include="..\..\contentcheck\sha1.cpp">
       <Filter>contentcheck</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Server\C_FileCopyProtocolServer.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Server\C_FileCopyProtSerProxy.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Server\C_FileOperationsTool.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Server\C_Log.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Server\C_RecvDataObserverImp.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Server\C_TcpServer.cpp">
+      <Filter>Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -328,6 +349,30 @@
     </ClInclude>
     <ClInclude Include="..\..\contentcheck\socket_err.h">
       <Filter>contentcheck</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_FileCopyProtocolServer.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_FileCopyProtSerProxy.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_FileOperationsTool.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_ITcpSserver.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_Log.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_RecvDataObserverImp.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_TcpServer.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\ConstDef.h">
+      <Filter>Server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -24,6 +24,7 @@
 #include "log/C_LogManage.h"
 #include "database/CppMySQL3DB.h"
 #include "utility/C_TcpTransport.h"
+#include "Server/C_FileCopyProtSerProxy.h"
 #include "execinfo.h"
 
 extern bool g_bQuit;
@@ -413,6 +414,16 @@ int main(int argc, char** argv)
 	//添加任务; 
 	Invoker.AddInitTask();
 
+	//导片线程
+	CFileCopyProtSerProxy * pProxy =new CFileCopyProtSerProxy;
+	pProxy->SetServerPort(12319);
+	pProxy->SetLogPath(pPara->m_strLogPath+"cpfile/");
+	if (!pProxy->Start() )
+	{
+		LOGINFFMT(LOG_ERR,"导片线程启动失败");
+		return 0;
+	}
+
 	//初试化定时器。
 	int iMillisecond = 0;
 	int iSleepMillisecond = 0;
@@ -468,6 +479,10 @@ int main(int argc, char** argv)
 	}
 
 	// 不要改变析构顺序，否则会出现无法结束线程管理类的情况
+	if(pProxy)
+	{
+		pProxy->Close();
+	}
 	Invoker.DeInit();
 	C_TaskList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
