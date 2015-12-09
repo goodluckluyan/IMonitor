@@ -179,7 +179,9 @@ void CTcpServer::ListenNetData()
 			}else
 			{
 				close(m_clientSocket );
-				CLog::Write(Error, "recv error!");
+				m_bConnectd=false;
+				std::string strErr =strerror(errno );
+				CLog::Write(Error, "recv error,client exit! ErMsg:"+strErr );
 			}
 		}
 	}

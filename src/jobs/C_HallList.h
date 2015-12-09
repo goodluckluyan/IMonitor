@@ -95,6 +95,9 @@ public:
 	// 获取sms的运行位置
 	bool GetSMSPosition(std::string strHallID,std::string &strIP,int& nPort);
 
+	// 改变sms运行位置 pos: 1主机 2备机 只有主机才会调用这个函数
+	bool ChangeSMSHost(std::string strHallID,int nPos);
+
 private:
 
 	// 在新的里程中执行脚本

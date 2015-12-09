@@ -578,6 +578,44 @@ bool C_HallList::StartOrCloseStdBySMS(bool bSoC,std::string strHallID)
 
 }
 
+//改变sms位置,只有主机才会调用这个函数
+bool C_HallList::ChangeSMSHost(std::string strHallID,int nPos)
+{
+	if(strHallID.empty())
+	{
+		return false;
+	}
+	std::map<std::string,C_Hall*>::iterator fit = m_mapHall.find(strHallID);
+	if(fit == m_mapHall.end())
+	{
+		return false;
+	}
+
+	std::map<std::string,C_CS*>::iterator fcit=m_mapCS.find(fit->first);
+	if(fcit==m_mapCS.end())
+	{
+		return false;
+	}
+
+	C_CS * ptrCS=fcit->second;
+	C_GuardCS guardcs(ptrCS);
+	
+	C_Hall * ptr = fit->second;
+
+	// 只有主机才会调用
+	if(nPos == MAINRUNTYPE)
+	{
+		SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,(int)MAINRUNTYPE,true);
+		LOGINFFMT(0,"ChangeSMSHost:%s->%s !",strHallID.c_str(),m_WebServiceLocalIP.c_str());
+	}
+	else if(nPos == STDBYRUNTYPE)
+	{
+		SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)STDBYRUNTYPE,false);
+		LOGINFFMT(0,"ChangeSMSHost:%s->%s !",strHallID.c_str(),m_WebServiceOtherIP.c_str());
+	}
+
+	return true;
+};
 
 //切换SMS nState 返回1:表示没有些hallid 2:表示sms busy 3:启动新sms失败
 bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)

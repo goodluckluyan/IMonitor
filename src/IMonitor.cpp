@@ -474,6 +474,7 @@ int main(int argc, char** argv)
 			LOGINFFMT(LOG_ERR,"RereadPara Set Log Level:%d",C_Para::GetInstance()->m_nWirteLogLevel);
 			C_LogManage::GetInstance()->SetLogLevel(C_Para::GetInstance()->m_nWirteLogLevel);
 			Invoker.PrintVersionInfo();
+//			Invoker.SwitchAllSMS();
 			
 		}
 	}

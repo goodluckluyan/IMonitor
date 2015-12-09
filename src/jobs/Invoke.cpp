@@ -1007,6 +1007,7 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 				LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
 				m_ptrLstHall->CloseSMS(node.strHallID);
 				node.nMainSMSSum--;
+				m_ptrLstHall->ChangeSMSHost(node.strHallID,STDBYRUNTYPE);
 				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
 
 			}
@@ -1015,6 +1016,7 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 				LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
 				m_ptrLstHall->StartOrCloseStdBySMS(false,node.strHallID);
 				node.nStdbySMSSum--;
+				m_ptrLstHall->ChangeSMSHost(node.strHallID,MAINRUNTYPE);
 				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
 
 			}
@@ -1026,6 +1028,7 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 				LOGINFFMT(0," SolveConflict(ALL NORUN %s),Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
 				m_ptrLstHall->StartSMS(node.strHallID);
 				node.nMainSMSSum++;
+				m_ptrLstHall->ChangeSMSHost(node.strHallID,MAINRUNTYPE);
 				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
 
 			}
@@ -1034,6 +1037,7 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 				LOGINFFMT(0," SolveConflict(ALL NORUN %s),Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
 				m_ptrLstHall->StartOrCloseStdBySMS(true,node.strHallID);
 				node.nStdbySMSSum++;
+				m_ptrLstHall->ChangeSMSHost(node.strHallID,STDBYRUNTYPE);
 				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
 
 			}

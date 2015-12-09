@@ -48,7 +48,9 @@ public:
 	*brief：修改文件权限
 	*/
 	bool ChangeFilePermissions(const std::string& path );
-
+private:
+	bool CheckOwn(const std::string& path );
+	
 };
 
 #endif // FILEOPERATIONSTOOL_H

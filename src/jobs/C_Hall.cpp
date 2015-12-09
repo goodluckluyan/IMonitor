@@ -727,7 +727,7 @@ int  C_Hall::CallStandbyStartOrCloseSMS(bool bSoC,std::string strOtherIP,int nPo
 	}
 
 	iResult = GetHttpContent( response_c, content_c);
-	if (iResult != 0)
+	if (iResult != 200)
 	{
 		return iResult;//SoftwareSTATE_ERROR_HTTP
 	}
@@ -782,7 +782,7 @@ int C_Hall::Parser_StartOrCloseSMS(bool bSoC,std::string &content,int &nRet)
 
 	delete errHandler;
 	delete parser;
-	return result;
+	return 0;
 }
 
 

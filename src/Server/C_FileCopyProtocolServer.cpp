@@ -377,7 +377,7 @@ namespace FileCopyProtocol
 			{
 				RecToClient(CHANGEDIRECTORYOWN_REC, Success );
 				CLog::Write(Normal,"Change "+filePath+" Sucess" );
-			}else //´´½¨Ê§°Ü
+			}else //ÐÞ¸ÄÊ§°Ü
 			{
 				RecToClient(CHANGEDIRECTORYOWN_REC, ChangeDirectoryOwnErr );
 				CLog::Write(Error, filePath+","+ChangeDirectoryOwnErrStr );

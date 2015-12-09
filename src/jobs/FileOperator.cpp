@@ -57,6 +57,7 @@ void CFileOperator::ProcessFileOptTask()
 	}
 	stFileOperatorInfo &task = m_lstFileOptTask.front();
 	char strCmd[1024]={'\0'};
+	char strCmdAfter[1024]={'\0'};
 
 	trimall(task.strSrcPath);
 	if(task.enOpt == CP)
@@ -72,14 +73,19 @@ void CFileOperator::ProcessFileOptTask()
  		}
 // 		sprintf(strCmd,"cp -rf %s%s %s%s",task.strSrcPath.c_str(),task.strUUID.c_str(),
 // 			task.strDesPath.c_str(),task.strUUID.c_str());
-		sprintf(strCmd,"cp -rf %s%s %s",task.strSrcPath.c_str(),task.strUUID.c_str(),
+		sprintf(strCmd,"cp -rf %s%s %s  ",task.strSrcPath.c_str(),task.strUUID.c_str(),
 			task.strDesPath.c_str());
+
+		sprintf(strCmdAfter,"chown -R admin %s%s & chgrp -R admin %s%s & chmod -R 755 %s%s",task.strDesPath.c_str(),task.strUUID.c_str(),
+			task.strDesPath.c_str(),task.strUUID.c_str(),task.strDesPath.c_str(),task.strUUID.c_str());
+
 	}
 	else
 	{
 		sprintf(strCmd,"rm -rf %s%s",task.strSrcPath.c_str(),task.strUUID.c_str()); 
 	}
 	LOGINFFMT(0,"%s",strCmd);
+	LOGINFFMT(0,"%s",strCmdAfter);
 	
 	task.status = EXEING;
 	struct sigaction sa;
@@ -97,6 +103,11 @@ void CFileOperator::ProcessFileOptTask()
 	if((pid=fork()) == 0)
 	{
 		int ret = system(strCmd);
+		if(0==ret && strlen(strCmdAfter)>0)
+		{
+			int retafter = system(strCmdAfter);
+			LOGINFFMT(0,"%s <Result:%d>",strCmdAfter,retafter);
+		}
 		exit(ret);
 	}
 
