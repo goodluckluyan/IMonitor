@@ -103,4 +103,4 @@ struct mons__SMSPositionInfo
 	int nPort;
 };
 
-int mons__GetSMSPosition(std::string strHallId,struct mons__SMSPositionInfo &PosInfo);
+int mons__GetDBSynchStatus(int &state);

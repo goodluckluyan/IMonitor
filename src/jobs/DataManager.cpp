@@ -28,6 +28,7 @@ CDataManager::CDataManager()
 	m_bSwitching=false;
 	m_nSSDNum=0;
 	m_nSataNum=0;
+	m_nDBSynchState=-1;
 
 	m_nOtherRaidStatus = -1;
 	m_nLocalRaidStatus = -1;
@@ -948,5 +949,9 @@ bool  CDataManager::UpdateOtherSMSEWState(int nState,std::string  strInfo,std::s
 	return true;
 }
 
-
+bool CDataManager::GetDBSynchStatus(int &state)
+{
+	state = m_nDBSynchState;
+	return true;
+}
 

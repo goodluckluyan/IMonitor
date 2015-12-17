@@ -183,6 +183,8 @@ int  CInvoke::Init()
 	{
 		m_ptrFO = new CFileOperator;
 	}
+
+	GetDBSynchStatus();
 }
 
 void CInvoke::DeInit()
@@ -269,6 +271,12 @@ bool CInvoke::AddInitTask()
 			ptrRunPara->GetCurTime() + pPara->m_nOtherEWCheckDelay);
 	}
 
+	if(0 != pPara->m_nDBSynchCheckDelay)
+	{
+		ptrTaskList->AddTask(TASK_NUMBER_GET_DB_SYNCN_STATUS,NULL,
+			ptrRunPara->GetCurTime() + pPara->m_nDBSynchCheckDelay);
+	}
+
     // 只所以把添加检测对端调度程序放在后边，是为了防止过早的进行恢复接管操作
 	// 添加对对端调度程序的检测的定时任务，必须要有检测对端调度程序的任务。
 	if(0 == pPara->m_nOtherMonitorCheckDelay)
@@ -277,6 +285,8 @@ bool CInvoke::AddInitTask()
 	}
 	ptrTaskList->AddTask(TASK_NUMBER_GET_OTHERMONITOR_STATUS,NULL,
 		ptrRunPara->GetCurTime() + pPara->m_nOtherMonitorCheckDelay);
+
+	
 	
 
 	// 添加调度任务
@@ -344,6 +354,9 @@ int CInvoke::GetCheckDelay(int nStateType)
 	case TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS:
 		nDelay = pPara->m_nOtherEWCheckDelay;
 		break;
+	case TASK_NUMBER_GET_DB_SYNCN_STATUS:
+		nDelay = pPara->m_nDBSynchCheckDelay;
+		break;
 	}
 	return nDelay;
 }
@@ -386,6 +399,9 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		break;
 	case TASK_NUMBER_GET_TMS_STATUS:
 		m_ptrTMS->GetTMSPID();
+		break;
+	case TASK_NUMBER_GET_DB_SYNCN_STATUS:
+		GetDBSynchStatus();
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
 	case TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS:
@@ -485,13 +501,11 @@ void CInvoke::PrintVersionInfo()
 {
 	std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
 	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
-	LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.2>>>>                               #");
+	LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.3>>>>                               #");
 	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
 	LOGINFFMT(0,"%s",strMORS.c_str());
 	LOGINFFMT(0,"修改:");
-	LOGINFFMT(0,"	1、增加GetSMSPosition Webservice 接口");
-	LOGINFFMT(0,"	2、规避了sms凌晨重启时出现进程僵死而重启失败的问题。");
-	LOGINFFMT(0,"	3、规避了备接管主时最后一个sms启动紧接着启动tms从而使tms对sms定位出错的问题。");
+	LOGINFFMT(0,"	1、增加了数据库同步检测功能及其接口");
 	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
 
 }
@@ -1288,4 +1302,35 @@ bool CInvoke::GetSMSPosition(std::string strHallID,std::string &strPos,int& nPor
 		return false;
 	}
 	return true;
+}
+
+bool CInvoke::GetDBSynchStatus()
+{
+	struct sigaction sa;
+	struct sigaction oldsa;
+	sa.sa_handler=SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+
+	if(sigaction(SIGCHLD,&sa,&oldsa)<0)
+	{
+		return false;
+	}
+	std::string strCmd="bash /usr/local/imonitor/mysqlreplication";
+	int nStatus=system(strCmd.c_str());
+	sigaction(SIGCHLD,&oldsa,NULL);
+	if(nStatus < 0) 
+	{ 
+		LOGINFFMT(0,"Get DB Synch Status system return error: %s", strerror(errno));
+		return false; 
+	} 
+	if(WIFEXITED(nStatus))
+	{
+		int nResult = WEXITSTATUS(nStatus);
+		CDataManager *pDM = CDataManager::GetInstance();
+		pDM->SetDBSynchStatus(nResult);
+		LOGINFFMT(0,"Get DB Synch Status: %d",nResult);
+	}
+	return true;
+
 }

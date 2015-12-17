@@ -29,6 +29,7 @@ C_Para::C_Para()
 	m_nOtherEWCheckDelay = 5;
 	m_nSSD_Raid_Num = 0;
 	m_nSATA_Raid_Num = 0;
+	m_nDBSynchCheckDelay = 0;
 
 	pthread_rwlock_init(&m_rwlk_main,NULL);
 
@@ -334,6 +335,14 @@ int C_Para::ReadPara()
 	if(iResult == 0)
 	{
 		m_nOtherEWCheckDelay = atoi(a);
+	}
+
+	
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","DBSynchCheckDelay",a,strInipath.c_str());
+	if(iResult == 0)
+	{
+		m_nDBSynchCheckDelay = atoi(a);
 	}
 
 	return 0;

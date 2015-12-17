@@ -126,6 +126,9 @@ public:
 
 	// Sata RAID数量
 	int m_nSATA_Raid_Num;
+
+    // 数据库同步检测
+	int m_nDBSynchCheckDelay;
 private:
     static C_Para *m_pInstance;
 	pthread_rwlock_t m_rwlk_main;

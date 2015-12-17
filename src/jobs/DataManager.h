@@ -114,6 +114,11 @@ public:
 	{
 			m_bSwitching = false;
 	}
+	void SetDBSynchStatus(int nDBSynch)
+	{
+		m_nDBSynchState=nDBSynch==0?nDBSynch:1;
+	}
+	bool GetDBSynchStatus(int &state);
 private:
 	CDataManager();
 
@@ -161,6 +166,9 @@ private:
 
 	// sata 硬盘数量
 	int m_nSataNum;
+
+	// 数据库同步状态
+	int m_nDBSynchState;
 };
 
 #endif

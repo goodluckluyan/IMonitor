@@ -409,3 +409,20 @@ int mons__GetSMSPosition(struct soap* cSoap,std::string strHallId,struct mons__S
 		return 1;
 	}
 }
+
+int mons__GetDBSynchStatus(struct soap* cSoap,int &state)
+{
+	LOGINFFMT(0,"WS:GetDBSynchStatus(%s)");
+	CDataManager *pDM = CDataManager::GetInstance();
+	int nDBSynch;
+	if(pDM->GetDBSynchStatus(nDBSynch))
+	{
+		state=nDBSynch==0?0:1;
+		return 0;
+	}
+	else
+	{
+		soap_sender_fault_subcode(cSoap, "mons:1", "GetDBSynchStatus Fail", "GetDBSynchStatus");
+		return 1;
+	}
+}
