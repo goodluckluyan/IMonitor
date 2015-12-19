@@ -367,7 +367,8 @@ bool C_HallList::GetSMSWorkState()
 						// 如果返回为2则有可能进程僵死，则重启自己
 						 if(ptr->ShutDownSMS()==2)
 						{
-							RebootMyself();
+							LOGINFFMT(0,"kill  sms:%s failed ,sms is defunc!",ptr->GetHallID().c_str());
+							//RebootMyself();
 							break;
 						}
 

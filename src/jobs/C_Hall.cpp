@@ -149,13 +149,13 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 // 		return false;
 // 	}
 
-	pid_t pid ;
-	if((pid = fork()) < 0)
+	pid_t cpid ;
+	if((cpid = fork()) < 0)
 	{
 		LOGERRFMT(0,"StartSMS_CurTerminal:failed to create process!");
 		return false;
 	}
-	else if(pid == 0)
+	else if(cpid == 0)
 	{
 		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
 
@@ -181,6 +181,17 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 // 			exit(0);
 // 		}
 // 		
+		// 再次fork防止出现僵尸进程
+		int ccpid=0;
+		if((ccpid = fork()) < 0)
+		{
+			LOGERRFMT(0,"StartSMS_CurTerminal:failed to create process!");
+			return false;
+		}
+		else if(ccpid > 0)
+		{
+			exit(0);
+		}
 
 		// 为了防止SMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
 		// 因为SMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
@@ -214,6 +225,17 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		}
 	}
 
+	struct sigaction cursa;
+	if(sigaction(SIGCHLD,NULL,&cursa)<0)
+	{
+		LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
+	}
+
+	if(cursa.sa_handler==SIG_DFL)
+	{
+		int nStatus;
+		waitpid(cpid,&nStatus,NULL);
+	}
 
 	bool bRun = false;
 	int exepid = 0;
@@ -538,7 +560,23 @@ int C_Hall::ShutDownSMS()
 			cnt++;
 			if(cnt>300)
 			{
-			 	return 2;
+				// 打印进程信息到日志文件
+				char buf[64]={'\0'};
+				snprintf(buf,sizeof(buf),"ps -ef|grep oristar_sms_server|grep -v oristar_sms_server",(int)m_pid,(int)m_pid);
+				
+				FILE *pp = popen(buf,"r");
+				if(!pp)
+				{
+					LOGINFFMT(0,"popen fail\n");
+					return 2;
+				}
+				char tmpbuf[512]={'\0'};
+				while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+				{
+					LOGINFFMT(0,"%s",tmpbuf);
+				}
+				pclose(pp);
+				return 2;
 			}
  		}
  		return 0;
