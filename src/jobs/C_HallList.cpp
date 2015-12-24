@@ -339,6 +339,7 @@ bool C_HallList::GetSMSWorkState()
 					break;
 				}
 				i++;
+				sleep(2);
 			}
 			if(i ==2)
 			{
@@ -684,11 +685,14 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 		if(C_Para::GetInstance()->IsMain())
 		{
 			// 调用备机的切换Sms
- 			if(ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID)!=0)
+			int nSwitchRet=0;
+ 			if((nSwitchRet=ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID))!=0)
 			{
+				LOGINFFMT(0,"CallStandbySwitchSMS fail(Result:%d) ,So Restart %s on localhost!",strHallID.c_str(),nSwitchRet);
+
 				int nPid;
 				ptr->StartSMS(nPid);
-				LOGINFFMT(0,"CallStandbySwitchSMS fail ,So Restart %s on localhost!",strHallID.c_str());
+				
 			}
 			else
 			{

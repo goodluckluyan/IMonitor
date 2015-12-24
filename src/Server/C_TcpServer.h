@@ -23,10 +23,10 @@ public:
     void SetServerPort(const unsigned short& port );
     virtual bool WriteData(const NetData&netData );
     virtual void SetRecvDataObserver(IRecvDataObserver*pObserver );
-public:
-	void ListenConnect();
 private:
+	void ListenConnect();
 	bool Init();
+public:
 	void ListenNetData();
 private:
 	int m_serverSocket;

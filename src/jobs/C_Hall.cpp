@@ -225,6 +225,8 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		}
 	}
 
+	// 文件迁移时会把信号SIGCHID处理方式设为默认，为了防止这时进行启动
+	// 所以进行判断SIGCHID处理方式
 	struct sigaction cursa;
 	if(sigaction(SIGCHLD,NULL,&cursa)<0)
 	{

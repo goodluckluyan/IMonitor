@@ -8,10 +8,10 @@
 #include <unistd.h>
 #include "C_TcpServer.h"
 #include "C_Log.h"
-void* listenConnect(void *ptr)
+void* RecvNetData(void *ptr)
 {
 	CTcpServer *p =static_cast<CTcpServer*>(ptr );
-	p->ListenConnect();
+	p->ListenNetData();
 	return NULL;
 }
 
@@ -39,17 +39,11 @@ bool CTcpServer::StartServer()
 		m_bClosed =false;
 		if(flag )
 		{
-			int threadFlag =pthread_create(&m_threadId, NULL,listenConnect,this );
-			pthread_detach(m_threadId );
-			flag =!threadFlag;
-			if (flag)
-			{
-				CLog::Write(Normal, "Server start Sucess");
-				ListenNetData();
-			}else
-			{
-				CLog::Write(Error, "Server start Error");
-			}
+			CLog::Write(Normal, "Server start Sucess");
+			ListenConnect();
+		}else
+		{
+			CLog::Write(Error, "Server start Error");
 		}
     }
     return flag;
@@ -134,10 +128,6 @@ void CTcpServer::ListenNetData()
 	int dataLen =0;
 	while(true )
 	{
-		if (m_bClosed )
-		{
-			break;
-		}
 		if(m_bConnectd)
 		{
 			memset(netData.buffer, 0, MAXBUFFERSZ);
@@ -176,13 +166,20 @@ void CTcpServer::ListenNetData()
 				CLog::Write(Error, "client exit!");
 				close(m_clientSocket );
 				m_bConnectd=false;
+				return;
+				//pthread_cancel(m_threadId );
 			}else
 			{
 				close(m_clientSocket );
 				m_bConnectd=false;
 				std::string strErr =strerror(errno );
 				CLog::Write(Error, "recv error,client exit! ErMsg:"+strErr );
+				return;
+				//pthread_cancel(m_threadId );
 			}
+		}else
+		{
+			break;
 		}
 	}
 }
@@ -207,6 +204,8 @@ void CTcpServer::ListenConnect()
 		{
 			CLog::Write(Normal, "Connected Sucess!");
 			m_bConnectd =true;
+			int threadFlag =pthread_create(&m_threadId, NULL,RecvNetData,this );
+			pthread_detach(m_threadId );
 		}
 	}
 }

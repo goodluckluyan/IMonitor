@@ -385,7 +385,7 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 	{
 		return false;
 	}
-
+	
 	pid_t pid;
 	if((pid = fork()) < 0)
 	{
@@ -403,6 +403,18 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 		for(int i = 3 ;i < rl.rlim_max;i++)
 		{
 			close(i);
+		}
+
+		// 再次fork防止出现僵尸进程
+		int ccpid=0;
+		if((ccpid = fork()) < 0)
+		{
+			LOGFMT(ULOG_INFO,"StartTMS_CurTerminal:failed to create process!");
+			return false;
+		}
+		else if(ccpid > 0)
+		{
+			exit(0);
 		}
 
 		// 为了防止TMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
@@ -424,8 +436,62 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 		}
 	}
 
-	m_nPid = pid;
-	return true;
+	// 文件迁移时会把信号SIGCHID处理方式设为默认，为了防止这时进行启动
+	// 所以进行判断SIGCHID处理方式
+	struct sigaction cursa;
+	if(sigaction(SIGCHLD,NULL,&cursa)<0)
+	{
+		LOGFMT(ULOG_ERROR,"Cannot Set TMS SIGCHLD Signal Catchfun! ");
+	}
+
+	if(cursa.sa_handler==SIG_DFL)
+	{
+		int nStatus;
+		waitpid(pid,&nStatus,NULL);
+	}
+
+	bool bRun = false;
+	int exepid = 0;
+	time_t tm1;
+	time(&tm1);
+	while(!bRun)
+	{
+		sleep(1);
+		std::vector<int> vecNowPID;
+		if(Getpid("Tms20_DeviceService",vecNowPID) < 0)
+		{
+			LOGFMT(ULOG_ERROR,"StartTMS_CurTerminal Get TMS pid Failed!");
+			return false;
+		}
+
+		if(1 == vecNowPID.size())
+		{
+			exepid = vecNowPID[0];
+			bRun = true;
+			LOGFMT(ULOG_ERROR,"Fork Process(%d) Start TMS \n",exepid);
+			break;
+		}
+
+
+		time_t tm2;
+		time(&tm2);
+		if( tm2-tm1 > 5)
+		{
+			LOGFMT(ULOG_ERROR,"waiting 5 sec ,but TMS not run..\n");
+			break;
+		}
+	}
+
+	if(exepid > 0)
+	{	
+		m_nPid = exepid;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
 }
 
 
