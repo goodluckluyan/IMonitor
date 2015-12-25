@@ -32,7 +32,7 @@ void* MonitorSoapServerMain(void *port)
 	csoapExtern.recv_timeout = 5;
 	csoapExtern.accept_timeout = 5;//like tcp timeval, 5 second
 	csoapExtern.max_keep_alive = MaxClientAmount;//it can accept 32 client at same time;
-	csoapExtern.socket_flags = MSG_NOSIGNAL; // use this 
+	csoapExtern.socket_flags = MSG_NOSIGNAL; // set to MSG_NOSIGNAL to disable sigpipe
 //	csoapExtern.accept_flags = SO_NOSIGPIPE; // or this to prevent sigpipe 
 
 	while(!g_bWebServiceQuit)
