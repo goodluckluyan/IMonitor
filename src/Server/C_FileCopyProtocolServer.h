@@ -13,6 +13,7 @@
 #include "C_ITcpSserver.h"
 #include "C_RecvDataObserverImp.h"
 #include "ConstDef.h"
+#include "C_WriteDataThread.h"
 namespace FileCopyProtocol
 {
 	class CFileCopyProtocolServer
@@ -78,12 +79,10 @@ namespace FileCopyProtocol
 		ICTcpServer *m_pTcpServer;
 		CRecvDataObserverImp *m_pRecvDataObserver;
 		unsigned short m_serverPort;
-		int m_fileHandle;//当前写入文件句柄
 		std::string m_curpath;//当前文件路径
 		std::map<int, std::string> m_errNoErrMsgMap;
 		std::string m_LogPath;//日志文件输出文件夹
-		int m_recDataSz; // 接收文件大小
-		int m_syncSz;//清除缓存阈值
+		CWriteDataThread *m_pWriteThread;
 	};
 }
 #endif // C_FILECOPYPROTOCOLSERVER_H

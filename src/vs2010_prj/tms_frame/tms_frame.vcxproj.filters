@@ -198,6 +198,9 @@
     <ClCompile Include="..\..\Server\C_TcpServer.cpp">
       <Filter>Server</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Server\C_WriteDataThread.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\C_constDef.h">
@@ -372,6 +375,12 @@
       <Filter>Server</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Server\ConstDef.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\C_WriteDataThread.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Server\CircularQueue.h">
       <Filter>Server</Filter>
     </ClInclude>
   </ItemGroup>

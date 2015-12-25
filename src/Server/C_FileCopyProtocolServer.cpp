@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <memory.h>
@@ -14,6 +13,7 @@ namespace FileCopyProtocol
 {
 	CFileCopyProtocolServer::CFileCopyProtocolServer():m_pTcpServer(NULL),
 		m_pRecvDataObserver(NULL),
+		m_pWriteThread(NULL ),
 		m_serverPort(12319)
 	{
 		Init();
@@ -62,6 +62,11 @@ namespace FileCopyProtocol
 	bool CFileCopyProtocolServer::Close()
 	{
 		bool flag =true;
+		if (m_pWriteThread )
+		{
+			delete m_pWriteThread;
+			m_pWriteThread =NULL;
+		}
 		if (m_pTcpServer )
 		{
 			flag =m_pTcpServer->CloseServer();
@@ -142,10 +147,15 @@ namespace FileCopyProtocol
 
 	void CFileCopyProtocolServer::CreateFile(const NetData& data )
 	{
-		m_recDataSz =0; // 接收文件大小
-		m_syncSz =0;//清除缓存阈值
-		memcpy(&m_syncSz, data.buffer+HEADERLENGTH, 4);
-		m_syncSz*=1048576;
+		if (m_pWriteThread )
+		{
+			delete m_pWriteThread;
+		}
+		m_pWriteThread =new CWriteDataThread;
+		int syncSz =0;//清除缓存阈值
+		memcpy(&syncSz, data.buffer+HEADERLENGTH, 4);
+		syncSz*=1048576;
+		m_pWriteThread->SetSyncSz(syncSz );
 		char path[500];
 		memset(path, 0, 500 );
 		int len =HEADERLENGTH+4;
@@ -166,49 +176,43 @@ namespace FileCopyProtocol
 		{
 			pInst->RemoveFile(path );
 		}
-		m_fileHandle =open(path, O_WRONLY|O_CREAT , S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH );
-		if (m_fileHandle>=0 )
-		{
-			m_curpath =path;
-			RecToClient(CREATEFILE_REC,Success );
-			CLog::Write(Normal, "Create the"+std::string(path)+"Sucess" );
-
-		}else
-		{
-			RecToClient(CREATEFILE_REC, CreateFileErr );
-			CLog::Write(Error, std::string(path)+","+CreateFileErrStr );
-		}
+		m_pWriteThread->SetFilePath(path );
+		m_curpath =path;
+		RecToClient(CREATEFILE_REC,Success );
+		CLog::Write(Normal, "Create the"+std::string(path)+"Sucess" );
 		char strbuf[255];
 		memset(strbuf,0 ,255 );
-		sprintf(strbuf,"The write buffer is:%dMB", m_syncSz/1048576 );
+		sprintf(strbuf,"The write buffer is:%dMB", syncSz/1048576 );
 		CLog::Write(Normal, filePath+","+strbuf );
+		m_pWriteThread->StartThread();
 	}
 
 	void CFileCopyProtocolServer::TransferFile(const NetData& data )
 	{
-		int writeSize =data.sz-HEADERLENGTH;
-		int retno =write(m_fileHandle, data.buffer+HEADERLENGTH, writeSize );
-		if (retno==writeSize)
+		if (m_pWriteThread->m_bWriteWrong )
 		{
-			m_recDataSz+=writeSize;
-			RecToClient(TRANSFERFILE_REC, Success );
-		}else 
+			RecToClient(TRANSFERFILE_REC, WriteFileFail );
+			return;
+		}
+		int cpSize =data.sz-HEADERLENGTH-1;
+		unsigned char syncFlag =0;
+		memcpy(&syncFlag, data.buffer+data.sz-1, 1);
+		element_Info eleInfo;
+		eleInfo.data =(char*)malloc(QUEUEDATABSIZE);
+		eleInfo.datalen =cpSize;
+		memcpy(eleInfo.data, data.buffer+HEADERLENGTH, cpSize );
+		while(true )
 		{
-			if (retno<0 )//写入失败
+			if (m_pWriteThread->SetWriteData(eleInfo, syncFlag ))
 			{
-				RecToClient(TRANSFERFILE_REC, WriteFileFail );
-				CLog::Write(Error, m_curpath+","+WriteFileFailStr );
-			}else//写入不完全
+				break;
+			}else
 			{
-				RecToClient(TRANSFERFILE_REC, WriteFileIncompletion );
-				CLog::Write(Error, m_curpath+","+WriteFileIncompletionStr );
+				usleep(10000);
 			}
 		}
-		if (m_recDataSz>=m_syncSz)
-		{
-			fsync(m_fileHandle );
-			m_recDataSz =0;
-		}
+		free(eleInfo.data );
+		RecToClient(TRANSFERFILE_REC, Success );
 	}
 
 	void CFileCopyProtocolServer::TransferFileFinish(const NetData& data )
@@ -218,24 +222,25 @@ namespace FileCopyProtocol
 		int len =HEADERLENGTH;
 		memcpy(path, data.buffer+len, data.sz-len );
 		std::string filePath =path;
-		if (m_curpath==path )
+		m_pWriteThread->SetCloseFlag(true );
+		if (m_curpath!=path )//要关闭的文件不是当前打开的文件
 		{
-			int retNo =close(m_fileHandle );
-			if (retNo )//返回关闭文件错误
-			{
-				RecToClient(TRANSFERFILEFINISH_REC, TransferFileFinishErr );
-				CLog::Write(Error, filePath+","+TransferFileFinishErrStr );
-			}else//关闭文件成功,写入正确
-			{
-				RecToClient(TRANSFERFILEFINISH_REC, Success );
-				CLog::Write(Normal, "The "+filePath+" Write finished, Success" );
-			}
-
-		}else//要关闭的文件不是当前打开的文件
-		{
+			m_pWriteThread->SetCloseFlag(true );
 			RecToClient(TRANSFERFILEFINISH_REC, TransferFileFinishNotOpen );
 			CLog::Write(Error, filePath+","+TransferFileFinishNotOpenStr );
 		}
+		for (int i=0;i<10;i++ )
+		{
+			if (m_pWriteThread->IsFileClosed() )
+			{
+				CLog::Write(Normal, "The "+filePath+" Write finished, Success" );
+				break;
+			}
+			sleep(i );
+		}
+		delete m_pWriteThread;
+		m_pWriteThread =NULL;
+		RecToClient(TRANSFERFILEFINISH_REC, Success );
 	}
 
 	void CFileCopyProtocolServer::RemoveDirectoryAll(const NetData& data )

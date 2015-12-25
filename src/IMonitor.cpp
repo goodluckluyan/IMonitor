@@ -132,7 +132,7 @@ void InitSigFun(C_LogManage *pLogManage)
 	}
 
 	// 忽略子进程结束时发送的SIGCLD信号 ，防止僵尸进程
-	signal(SIGCLD,SIG_IGN);
+	signal(SIGCHLD,SIG_IGN);
 }
 
 void daemonize(const char *cmd)
@@ -381,9 +381,6 @@ int main(int argc, char** argv)
 		sleep(1);
 	}
 
-	// 初始化信号处理
-	InitSigFun(pLogManage);
-
 	//初试化线程
 	C_ThreadManage *pThreadManage = C_ThreadManage::GetInstance();
 	iResult = pThreadManage->InitThreadData();
@@ -413,6 +410,9 @@ int main(int argc, char** argv)
 
 	//添加任务; 
 	Invoker.AddInitTask();
+
+	// 初始化信号处理
+	InitSigFun(pLogManage);
 
 	//导片线程
 	CFileCopyProtSerProxy * pProxy =new CFileCopyProtSerProxy;

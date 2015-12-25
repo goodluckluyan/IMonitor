@@ -94,6 +94,7 @@
     <ClCompile Include="..\..\Server\C_Log.cpp" />
     <ClCompile Include="..\..\Server\C_RecvDataObserverImp.cpp" />
     <ClCompile Include="..\..\Server\C_TcpServer.cpp" />
+    <ClCompile Include="..\..\Server\C_WriteDataThread.cpp" />
     <ClCompile Include="..\..\threadManage\C_ThreadManage.cpp" />
     <ClCompile Include="..\..\database\CppMySQL3DB.cpp" />
     <ClCompile Include="..\..\database\CppMySQLQuery.cpp" />
@@ -142,6 +143,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\C_constDef.h" />
     <ClInclude Include="..\..\C_ErrorDef.h" />
+    <ClInclude Include="..\..\Server\CircularQueue.h" />
     <ClInclude Include="..\..\Server\ConstDef.h" />
     <ClInclude Include="..\..\Server\C_FileCopyProtocolServer.h" />
     <ClInclude Include="..\..\Server\C_FileCopyProtSerProxy.h" />
@@ -150,6 +152,7 @@
     <ClInclude Include="..\..\Server\C_Log.h" />
     <ClInclude Include="..\..\Server\C_RecvDataObserverImp.h" />
     <ClInclude Include="..\..\Server\C_TcpServer.h" />
+    <ClInclude Include="..\..\Server\C_WriteDataThread.h" />
     <ClInclude Include="..\..\threadManage\C_CS.h" />
     <ClInclude Include="..\..\threadManage\C_ThreadData.h" />
     <ClInclude Include="..\..\threadManage\C_ThreadManage.h" />
