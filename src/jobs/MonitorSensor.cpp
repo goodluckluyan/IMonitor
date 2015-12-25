@@ -3,6 +3,7 @@
 #include"utility/C_HttpParser.h"
 #include"utility/C_TcpTransport.h"
 #include"log/C_LogManage.h"
+#include "utility/IPMgr.h"
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGFATFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
@@ -62,12 +63,34 @@ int CMonitorSensor::SendAndRecvResponse(const std::string &request, std::string 
 		return 0;
 	}
 
+	std::string strIP=m_strIP;
 	TcpTransport tcp;
-	int result = tcp.TcpConnect(m_strIP.c_str(), m_nPort);
+	int result = tcp.TcpConnect(strIP.c_str(), m_nPort);
 	if(result < 0)
 	{	
-		LOGFATFMT(0,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",m_strIP.c_str(), m_nPort);
-		return  ERROR_SENSOR_TCP_CONNECT;
+		LOGFATFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nPort);
+	
+		IPMgr::GetInstance()->GetNextOtherIP(strIP);
+		if(strIP!=m_strIP)
+		{
+			result = tcp.TcpConnect(strIP.c_str(), m_nPort);
+			if(result < 0)
+			{
+				LOGFATFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nPort);
+				return  ERROR_SENSOR_TCP_CONNECT;
+			}
+			else
+			{
+				m_strIP=strIP;
+				LOGFATFMT(ULOG_ERROR,"CMonitorSensor::Set Default Other IP=%s!\n",strIP.c_str());
+			}
+		}
+	
+		if(result<0)
+		{
+			return  ERROR_SENSOR_TCP_CONNECT;
+		}
+		
 	}
 
 	result = tcp.BlockSend(request.c_str(), request.size());

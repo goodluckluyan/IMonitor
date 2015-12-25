@@ -16,6 +16,10 @@
 #include "FileOperator.h"
 
 #define SAFE_DELETE(ptr) if(ptr != NULL) {delete ptr ; ptr = NULL;}
+
+
+
+
 class CInvoke
 {
 public:

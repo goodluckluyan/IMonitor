@@ -383,5 +383,8 @@
     <ClInclude Include="..\..\Server\CircularQueue.h">
       <Filter>Server</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\utility\IPMgr.h">
+      <Filter>utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

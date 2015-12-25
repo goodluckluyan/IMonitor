@@ -182,6 +182,7 @@
     <ClInclude Include="..\..\jobs\Invoke.h" />
     <ClInclude Include="..\..\jobs\MonitorSensor.h" />
     <ClInclude Include="..\..\jobs\TMSSensor.h" />
+    <ClInclude Include="..\..\utility\IPMgr.h" />
     <ClInclude Include="..\..\webservice\C_SoapServer.h" />
     <ClInclude Include="..\..\webservice\soapH.h" />
     <ClInclude Include="..\..\webservice\soapStub.h" />

@@ -15,6 +15,8 @@
 #include "para/C_Para.h"
 #include "C_ErrorDef.h"
 #include "log/C_LogManage.h"
+#include "utility/IPMgr.h"
+
 
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
@@ -1081,8 +1083,24 @@ int C_Hall::TcpOperator(std::string strIp,int nPort ,const string &send, string 
 	int result = m_tcp.TcpConnect(strIp.c_str(), nPort);
 	if(result < 0)
 	{
-		//SetAq10Error(-ERROR_PLAYER_CTRL_DEVICECONNECTFAILED, "Player can not connect! 01");
-		return ERROR_PLAYER_AQ_TCPCONNECT;
+		LOGERRFMT(0,"C_Hall::TcpOperator TcpConnect %s:%d Fail !\n",strIp.c_str(), nPort);
+
+		std::string strOldIP=strIp;
+		IPMgr::GetInstance()->GetNextOtherIP(strIp);
+		if(strOldIP!=strIp)
+		{
+			result = m_tcp.TcpConnect(strIp.c_str(), nPort);
+			if(result < 0)
+			{
+				LOGERRFMT(0,"C_Hall::TcpOperator TcpConnect %s:%d Fail !\n",strIp.c_str(), nPort);
+				return  ERROR_PLAYER_AQ_TCPCONNECT;
+			}
+		}
+
+		if(result<0)
+		{
+			return  ERROR_PLAYER_AQ_TCPCONNECT;
+		}
 	}
 
 	result = SendAndRecvInfo(send, recv, overtime);

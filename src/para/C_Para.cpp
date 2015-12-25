@@ -172,6 +172,13 @@ int C_Para::ReadPara()
 	m_nWebServicePort = atoi(a) ;
 	m_nWebServicePort = m_nWebServicePort <= 0 ?12316 :m_nWebServicePort;
 
+	memset(a,0,64);
+	iResult = config.readvalue("PARA","LocalMonitorIP",a,strInipath.c_str());
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	m_strLIP = a;
 
 	memset(a,0,64);
 	iResult = config.readvalue("PARA","OtherMonitorIP",a,strInipath.c_str());

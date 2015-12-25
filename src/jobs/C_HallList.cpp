@@ -141,6 +141,7 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 		node.strConfpath = query.getStringField("confpath");
 		query.nextRow();
 		vecSMSInfo.push_back(node);
+
 	}
 
 	// 如果已有sms运行，则关联
@@ -205,6 +206,13 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 // 	ExeShell_Fork(ptrPara->m_strTOMCATPath,"startup.sh");
 
 	return 0;
+}
+
+// 获取WebServiceIP
+void C_HallList::GetWebServiceIP(std::string &strLocalIP,std::string &strOtherIP)
+{
+	strLocalIP=m_WebServiceLocalIP;
+	strOtherIP=m_WebServiceOtherIP;
 }
 
 //启动tomcat

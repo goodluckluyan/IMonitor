@@ -20,7 +20,7 @@
 #include "MonitorSensor.h"
 #include "log/C_LogManage.h"
 #include "database/CppMySQL3DB.h"
-
+#include "utility/IPMgr.h"
 
 #define  LOGFMT(level,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(level,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
 #define  LOGIDFMT(level,errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(level,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
@@ -839,14 +839,38 @@ int CTMSSensor::SendAndRecvResponse(bool bTMSWS,const std::string &request, std:
 	result = tcp.TcpConnect(strIP.c_str(), m_nTMSWBPort,delayTime);
 	if(result < 0)
 	{	
-		LOGFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nTMSWBPort);
-		return  ERROR_SENSOR_TCP_CONNECT;
+		LOGFMT(ULOG_ERROR,"CTMSSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nTMSWBPort);
+		if(!bTMSWS)
+		{
+			
+			IPMgr::GetInstance()->GetNextOtherIP(strIP);
+			if(strIP!=m_strIP)
+			{
+				result = tcp.TcpConnect(strIP.c_str(), m_nTMSWBPort,delayTime);
+				if(result < 0)
+				{
+					LOGFMT(ULOG_ERROR,"CTMSSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nTMSWBPort);
+					return  ERROR_SENSOR_TCP_CONNECT;
+				}
+				else
+				{
+					m_strIP=strIP;
+					LOGFMT(ULOG_ERROR,"CTMSSensor::Set Default Other IP=%s!\n",strIP.c_str());
+				}
+			}
+		}
+		
+		if(result < 0)
+		{
+			return  ERROR_SENSOR_TCP_CONNECT;
+		}
+		
 	}
 
 	result = tcp.BlockSend(request.c_str(), request.size());
 	if(result < 0)
 	{
-		LOGFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse Tcp Send %s Fail(%s:%d) !\n",request.c_str(),
+		LOGFMT(ULOG_ERROR,"CTMSSensor::SendAndRecvResponse Tcp Send %s Fail(%s:%d) !\n",request.c_str(),
 			m_strIP.c_str(),m_nTMSWBPort);
 		return  ERROR_SENSOR_TCP_SEND;
 	}

@@ -55,6 +55,9 @@ public:
 	//std::string m_strWebServiceIP;
 	int m_nWebServicePort;
 
+	//本地调度程序的IP
+	std::string m_strLIP;
+
 	//对端的调度程序的IP
 	std::string m_strOIP;
 

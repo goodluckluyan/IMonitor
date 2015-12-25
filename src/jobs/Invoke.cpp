@@ -6,15 +6,14 @@
 #include "check_netcard.h"
 #include "database/CppMySQL3DB.h"
 #include "database/CppMySQLQuery.h"
-
+#include "utility/IPMgr.h"
 extern time_t g_tmDBSynch;
 bool g_bQuit = false;
 int g_LogLevel = 0;
 int g_nRunType = 0; // 1为守护进程 0为交互模式
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
-
-
+IPMgr* IPMgr::m_ptrIpMgr=NULL;
 int  CInvoke::Init()
 {
 	// 运行在交互模式
@@ -23,9 +22,10 @@ int  CInvoke::Init()
 		PrintProductInfo();
 	}
 	
+	C_Para * pPara = C_Para::GetInstance();
+	IPMgr::GetInstance()->AddIP(pPara->m_strLIP,pPara->m_strOIP);
 
 	// 数据管理模块
-	C_Para * pPara = C_Para::GetInstance();
 	CDataManager *pDM = CDataManager::GetInstance();
 	if(!pDM->Init((void *)this,pPara->m_nSSD_Raid_Num,pPara->m_nSATA_Raid_Num))
 	{
@@ -134,6 +134,10 @@ int  CInvoke::Init()
 		}
 		
 	}
+
+	std::string strLocalIP,strOtherIP;
+	m_ptrLstHall->GetWebServiceIP(strLocalIP,strOtherIP);
+	IPMgr::GetInstance()->AddIP(strLocalIP,strOtherIP);
 
 	// 调度模块
 	if(m_ptrDispatch == NULL)
@@ -705,15 +709,23 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 			 {
 				 bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 				 LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",strHallID.c_str(),
-					 strNewIP.c_str(),nNewPort,bRet?1:0);
+					 strNewIP.c_str(),nNewPort,bRet?0:1);
 
-				 // 如果没能成功则延时2秒再试一次
-				 if(!bRet)
+				 // 如果没能成功则一直尝试
+				 int ndelay=2;
+				 while(!bRet)
 				 {
-					 sleep(2);
-					 bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
+					 if(ndelay>100)
+					 {
+						 break;
+					 }
+
+					 sleep(ndelay);
+					 bRet = m_ptrTMS->NotifyTMSSMSSwitch(strHallID,strNewIP,nNewPort);
 					 LOGINFFMT(0,"SwitchSMS:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",strHallID.c_str(),
-						 strNewIP.c_str(),nNewPort,bRet?1:0);
+						 strNewIP.c_str(),nNewPort,bRet?0:1);
+					 ndelay=ndelay<<1;					 
+					 
 				 }
 			 }
 			 nRet = 0;
@@ -948,6 +960,7 @@ void CInvoke::ChangeToStdby()
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To STDBYHost!****");
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
+	sleep(10);
 	SwtichTakeOverSMS();
 	g_tmDBSynch = 0;
 }

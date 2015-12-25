@@ -98,6 +98,9 @@ public:
 	// 改变sms运行位置 pos: 1主机 2备机 只有主机才会调用这个函数
 	bool ChangeSMSHost(std::string strHallID,int nPos);
 
+	// 获取WebServiceIP
+	void GetWebServiceIP(std::string &IP1,std::string &IP2);
+
 private:
 
 	// 在新的里程中执行脚本
