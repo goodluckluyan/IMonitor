@@ -31,9 +31,9 @@
 # vc10 solution file
 *.opensdf
 *.xml
+*.htm
 *.sdf
-*.vcxproj
-*.filters
+*.ipch
 #dir
 bin/
 

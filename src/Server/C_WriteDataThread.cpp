@@ -20,6 +20,7 @@ CWriteDataThread::CWriteDataThread():m_pCircularQueue(NULL )
 	m_recDataSz =0;
 	m_bFileClosed =false;
 	m_bWriteWrong =false;
+	pthread_mutex_init(&mutex, NULL ); 
 }
 
 CWriteDataThread::~CWriteDataThread()
@@ -27,11 +28,13 @@ CWriteDataThread::~CWriteDataThread()
 	if (!m_bColseFile )
 	{
 		pthread_cancel(m_threadId );
+		usleep(10000);
 	}
 	if (m_pCircularQueue )
 	{
 		delete m_pCircularQueue;
 	}
+	pthread_mutex_destroy(&mutex ); 
 }
 
 void CWriteDataThread::SetFilePath(const std::string& path )
