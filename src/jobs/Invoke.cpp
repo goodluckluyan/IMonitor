@@ -189,6 +189,7 @@ int  CInvoke::Init()
 	}
 
 	GetDBSynchStatus();
+	//GetDBSynchStatus_PIP();
 }
 
 void CInvoke::DeInit()
@@ -405,6 +406,7 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		m_ptrTMS->GetTMSPID();
 		break;
 	case TASK_NUMBER_GET_DB_SYNCN_STATUS:
+		//GetDBSynchStatus_PIP();
 		GetDBSynchStatus();
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
@@ -1345,5 +1347,58 @@ bool CInvoke::GetDBSynchStatus()
 		LOGINFFMT(0,"Get DB Synch Status: %d",nResult);
 	}
 	return true;
+
+}
+
+bool CInvoke::GetDBSynchStatus_PIP()
+{
+	FILE *fp;
+	int nStatus=0;
+	struct sigaction sa;
+	struct sigaction oldsa;
+	sa.sa_handler=SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+
+	if(sigaction(SIGCHLD,&sa,&oldsa)<0)
+	{
+		return false;
+	}
+
+	std::string strCmd="bash /usr/local/imonitor/mysqlreplication";
+	if((fp=popen(strCmd.c_str(),"r"))==NULL)
+	{ 
+		LOGINFFMT(0,"Get DB Synch Status popen return error: %s", strerror(errno));
+		sigaction(SIGCHLD,&oldsa,NULL);
+		return false; 
+	} 
+
+// 	char buffer[256]={'\0'};
+// 	while(fgets(buffer,256,fp)!=NULL)
+// 	{
+// 		if('\n' == buffer[strlen(buffer)-1]) 
+// 		{ 
+// 			buffer[strlen(buffer)-1] = '\0'; 
+// 		} 
+// 		LOGINFFMT(0,"mysqlreplication output: %s", buffer);
+// 		memset(buffer,0,256);
+// 	}
+	nStatus=pclose(fp);
+	if(nStatus!=-1&&!WIFEXITED(nStatus))
+	{
+		int nResult = WEXITSTATUS(nStatus);
+		CDataManager *pDM = CDataManager::GetInstance();
+		pDM->SetDBSynchStatus(nResult);
+		LOGINFFMT(0,"Get DB Synch Status: %d",nResult);
+		sigaction(SIGCHLD,&oldsa,NULL);
+		return true;
+	}
+	else
+	{
+		LOGINFFMT(0,"Get DB Synch Status pclose return error: %s", strerror(errno));
+		sigaction(SIGCHLD,&oldsa,NULL);
+		return false;
+	}
+	
 
 }

@@ -143,6 +143,8 @@ private:
 	void ParseCmd(std::string strCmd, std::vector<std::string> &vecParam);
 
 	bool GetDBSynchStatus();
+
+	bool GetDBSynchStatus_PIP();
 	
 private:
 

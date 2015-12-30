@@ -72,13 +72,20 @@ void CTcpServer::SetServerPort(const unsigned short& port )
 
 bool CTcpServer::WriteData(const NetData&netData )
 {
-	int len=send(m_clientSocket, netData.buffer, netData.sz, 0 );
-	if(len!=netData.sz)
+	if(m_bConnectd )
 	{
-		CLog::Write(Error, "send error!");
-		return false;
+		int len=send(m_clientSocket, netData.buffer, netData.sz, 0 );
+		if(len!=netData.sz)
+		{
+			close(m_clientSocket );
+			m_bConnectd=false;
+			std::string strErr =strerror(errno );
+			CLog::Write(Error, "send error,client Socket closed! ErMsg:"+strErr );
+			return false;
+		}
+		return true;
 	}
-	return true;
+	return false;
 }
 
 void CTcpServer::SetRecvDataObserver(IRecvDataObserver*pObserver )
