@@ -18,24 +18,38 @@ SPACE = $(EMPTY)$(EMPTY)
 VPATH = $(subst $(SPACE), : ,$(strip $(foreach n,$(SUBDIR), $(INC_PATH)/$(n)))) : $(OUTPUT_PATH)
 
 CXX_SOURCES = $(notdir $(foreach n, $(SUBDIR), $(wildcard $(INC_PATH)/$(n)/*.cpp)))
+ifeq ($(findstring soapC.cpp,$(CXX_SOURCES)),)
+  CXX_SOURCES:=soapC.cpp $(CXX_SOURCES)
+endif
+
+ifeq "$(findstring soapServer.cpp,$(CXX_SOURCES))" ""
+  CXX_SOURCES:=soapServer.cpp $(CXX_SOURCES) 
+endif
 CXX_OBJECTS = $(patsubst  %.cpp,  %.o, $(CXX_SOURCES))
 DEP_FILES = $(patsubst  %.cpp,  $(OUTPUT_PATH)/%.d, $(CXX_SOURCES))
-	
-$(TARGET):$(CXX_OBJECTS) 
+
+$(TARGET):$(CXX_OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $(foreach n, $(CXX_OBJECTS), $(OUTPUT_PATH)/$(n))
+	rm -f mons* soap*
 	#******************************************************************************#
 	#                          Bulid successful !                                  #
 	#******************************************************************************#
 
 %.o:%.cpp
 	$(CXX) -c $(CFLAGS) -MT $@ -MF $(OUTPUT_PATH)/$(notdir $(patsubst  %.cpp, %.d,  $<)) -o $(OUTPUT_PATH)/$@ $< 
-	
+
+soapC.cpp soapServer.cpp:%.cpp:webservice.h
+	soapcpp2 -S -xL $< ;cp mons* src/webservice/;cp soap* src/webservice/
+
 -include $(DEP_FILES)
+
+
 
 
 test:
 	@echo $(VPATH)
-	
+	@echo $(CXX_OBJECTS)
+	@echo $(CXX_SOURCES)
 mkdir:
 	mkdir -p $(dir $(TARGET))
 	mkdir -p $(OUTPUT_PATH)
@@ -46,3 +60,4 @@ rmdir:
 
 clean:
 	rm -f $(OUTPUT_PATH)/*
+	
