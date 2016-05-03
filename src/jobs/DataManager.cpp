@@ -6,6 +6,7 @@
 #include"DataManager.h"
 #include"log/C_LogManage.h"
 extern time_t g_tmDBSynch;
+extern int g_RunState;
 #define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGINF(msg)	  C_LogManage::GetInstance()->WriteLog(ULOG_INFO,LOG_MODEL_JOBS,0,0,msg)
 #define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
@@ -526,7 +527,9 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch%lld",bMain,nState,lSynch);
-	if(lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
+
+	// 只有在刚启动时才能赋值并退出，否则进行冲突判断
+	if(0 == g_RunState && lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
 	{
 		m_lSynch = lSynch;
 		return true;
@@ -675,10 +678,10 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	{
 		LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d",vecSMSStatus[i].hallid.c_str(),
 			vecSMSStatus[i].nRun,vecSMSStatus[i].nStatus);
-		if(vecSMSStatus[i].nRun == 0)
-		{
-			continue;
-		}
+// 		if(vecSMSStatus[i].nRun == 0)
+// 		{
+// 			continue;
+// 		}
 
 		std::string strID = vecSMSStatus[i].hallid;
 		std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.find(strID);
@@ -693,12 +696,24 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			m_mapOtherSMSStatus[strID].stStatus=vecSMSStatus[i];
 		}
 	}
+	if(nLen > 0)
+	{
+		time(&m_tmUpdateOSMS);
+	}
+
+	//在接管和恢复接管状态及正在处理冲突时不进行判断和解决冲突
+	if(g_RunState==2 && g_RunState==3)
+	{
+		return true;
+	}
 
 	//只有主机才能判断和解决冲突
 	if(C_Para::GetInstance()->GetRole()!=(int)MAINROLE)
 	{
 		return true;
 	}
+
+
 
 	// 判断冲突
 	m_csSMS.EnterCS();
@@ -782,10 +797,25 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		er.ErrorVal="smsconflict";
 		vecRE.push_back(er);
 		m_ptrDispatch->TriggerDispatch(SMSTask,vecRE);
+		g_RunState=3; // 设置全局状态为处理冲突状态
 
 	}
 
 	return true;
+}
+
+
+time_t CDataManager::GetOtherSMSstatus(std::vector<SMSStatus> &vecSMSStatus )
+{
+	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
+	for(;it != m_mapOtherSMSStatus.end();it++)
+	{
+		SMSStatus status;
+		status=it->second.stStatus;
+		vecSMSStatus.push_back(status);
+	}
+
+	return m_tmUpdateOSMS;
 }
 
 // 过滤检测到的冲突，防止误报

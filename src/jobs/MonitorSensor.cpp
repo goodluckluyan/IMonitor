@@ -4,6 +4,7 @@
 #include"utility/C_TcpTransport.h"
 #include"log/C_LogManage.h"
 #include "utility/IPMgr.h"
+#include "para/C_Para.h"
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGFATFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
@@ -259,6 +260,7 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 
 	// 解析xml读取结果
 	bool bRet = false; 
+	int nRole= C_Para::GetInstance()->GetRole();
 	switch(nStateType)
 	{
 	case TASK_NUMBER_GET_OTHERMONITOR_STATUS:
@@ -275,82 +277,108 @@ bool CMonitorSensor::GetOtherMonitorState(int nStateType,bool bNoticeDM)
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_TMS_STATUS:
 		{
-			bool bRun;	
-			int nWorkState;
-			int nState;	
-			bRet = ParseOtherMonitorTMSState(retXml,bRun,nWorkState,nState);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherTMSState(bRun,nWorkState,nState);
+				bool bRun;	
+				int nWorkState;
+				int nState;	
+
+				bRet = ParseOtherMonitorTMSState(retXml,bRun,nWorkState,nState);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherTMSState(bRun,nWorkState,nState);
+				}
 			}
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SMS_STATUS:
 		{
-			std::vector<SMSStatus> vecSMSStatus;
-			bRet = ParseOtherMonitorSMSState(retXml,vecSMSStatus);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			
+			if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherSMSState(vecSMSStatus);
+				std::vector<SMSStatus> vecSMSStatus;
+				bRet = ParseOtherMonitorSMSState(retXml,vecSMSStatus);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherSMSState(vecSMSStatus);
+				}
 			}
 		}
 		
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_RAID_STATUS:
 		{
-			int nState;
-			int nReadSpeed;
-			int nWriteSpeed;
-			std::vector<int> vecDiskState;
-			bRet = ParseOtherMonitorRaidState(retXml,nState,nReadSpeed,nWriteSpeed,vecDiskState);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			//因为恢复接管时要知道RAID的状态所以在接管状态也要获取状态
+			//if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherRaidState(nState,nReadSpeed,nWriteSpeed,vecDiskState);
+				int nState;
+				int nReadSpeed;
+				int nWriteSpeed;
+				std::vector<int> vecDiskState;
+
+				bRet = ParseOtherMonitorRaidState(retXml,nState,nReadSpeed,nWriteSpeed,vecDiskState);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherRaidState(nState,nReadSpeed,nWriteSpeed,vecDiskState);
+				}
 			}
+			
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_ETH_STATUS:
 		{
-			std::vector<EthStatus> vecEthStatus;
-			bRet = ParseOtherMonitorEthState(retXml,vecEthStatus);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherEthState(vecEthStatus);
+				std::vector<EthStatus> vecEthStatus;
+				bRet = ParseOtherMonitorEthState(retXml,vecEthStatus);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherEthState(vecEthStatus);
+				}
 			}
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SWITCH_STATUS:
 		{
-			int nSwitch1State;
-			int nSwitch2State;
-			bRet = ParseOtherMonitorSwitchState(retXml,nSwitch1State, nSwitch2State);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherSwitchState(nSwitch1State,nSwitch2State);
+				int nSwitch1State;
+				int nSwitch2State;
+				bRet = ParseOtherMonitorSwitchState(retXml,nSwitch1State, nSwitch2State);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherSwitchState(nSwitch1State,nSwitch2State);
+				}
 			}
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SPEEDLIMIT_STATUS:
 		{
-			bool bEnableIngest;
-			int nSpeedLimit;
-			bRet = ParseOtherMonitorSpeedLmtState(retXml,bEnableIngest, nSpeedLimit);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherSpeedLmtState(bEnableIngest,nSpeedLimit);
+				bool bEnableIngest;
+				int nSpeedLimit;
+				bRet = ParseOtherMonitorSpeedLmtState(retXml,bEnableIngest, nSpeedLimit);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherSpeedLmtState(bEnableIngest,nSpeedLimit);
+				}
 			}
-				
+
 		}
 		break;
 	case TASK_NUMBER_GET_OTHERMONITOR_SMSEW_STATUS:
 		{
-			int nState;
-			std::string strInfo;
-			std::string strHall;
-			bRet = ParseOtherMonitorSMSEWState(retXml,nState, strInfo, strHall);
-			if(bNoticeDM && bRet && m_ptrDM != NULL)
+			if(nRole!=TMPMAINROLE && nRole!=ONLYMAINROLE)
 			{
-				m_ptrDM->UpdateOtherSMSEWState(nState, strInfo, strHall);
+				int nState;
+				std::string strInfo;
+				std::string strHall;
+				bRet = ParseOtherMonitorSMSEWState(retXml,nState, strInfo, strHall);
+				if(bNoticeDM && bRet && m_ptrDM != NULL)
+				{
+					m_ptrDM->UpdateOtherSMSEWState(nState, strInfo, strHall);
+				}
 			}
 		}
 		break;
@@ -618,6 +646,7 @@ bool CMonitorSensor::ParseOtherMonitorTMSState(std::string &retXml,bool &bRun,in
 // 解析SMS状态
 bool CMonitorSensor::ParseOtherMonitorSMSState(std::string &retXml,std::vector<SMSStatus> &vecSMSStatus)
 {
+
 	XercesDOMParser *ptrParser = new  XercesDOMParser;
 	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
 	ptrParser->setDoNamespaces( true );

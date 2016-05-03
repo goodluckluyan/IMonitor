@@ -119,6 +119,8 @@ public:
 		m_nDBSynchState=nDBSynch==0?nDBSynch:1;
 	}
 	bool GetDBSynchStatus(int &state);
+
+	time_t GetOtherSMSstatus(std::vector<SMSStatus> &vecSMSStatus);
 private:
 	CDataManager();
 
@@ -130,6 +132,7 @@ private:
 	std::map<std::string,EthStatus> m_mapEthStatus;
 	std::map<std::string,SMSInfo> m_mapSmsStatus;
 	std::map<std::string,SMSInfo> m_mapOtherSMSStatus;
+	time_t  m_tmUpdateOSMS;
 	int m_nTMSState;
 
 	C_CS m_csDisk;

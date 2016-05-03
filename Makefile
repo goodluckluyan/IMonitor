@@ -27,7 +27,8 @@ ifeq "$(findstring soapServer.cpp,$(CXX_SOURCES))" ""
 endif
 CXX_OBJECTS = $(patsubst  %.cpp,  %.o, $(CXX_SOURCES))
 DEP_FILES = $(patsubst  %.cpp,  $(OUTPUT_PATH)/%.d, $(CXX_SOURCES))
-
+all:mkdir $(TARGET)
+.PHONY:all
 $(TARGET):$(CXX_OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $(foreach n, $(CXX_OBJECTS), $(OUTPUT_PATH)/$(n))
 	rm -f mons* soap*

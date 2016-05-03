@@ -373,7 +373,7 @@ bool C_HallList::GetSMSWorkState()
 					{
 						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
 
-						// 如果返回为2则有可能进程僵死，则重启自己
+						// 如果返回为2则有可能进程僵死
 						 if(ptr->ShutDownSMS()==2)
 						{
 							LOGINFFMT(0,"kill  sms:%s failed ,sms is defunc!",ptr->GetHallID().c_str());
@@ -696,7 +696,7 @@ bool C_HallList::SwitchSMS(bool bDelaySwitch,std::string strHallID,int &nState)
 			int nSwitchRet=0;
  			if((nSwitchRet=ptr->CallStandbySwitchSMS(bDelaySwitch,ptrPara->m_strOIP,ptrPara->m_nOPort,strHallID))!=0)
 			{
-				LOGINFFMT(0,"CallStandbySwitchSMS fail(Result:%d) ,So Restart %s on localhost!",strHallID.c_str(),nSwitchRet);
+				LOGINFFMT(0,"CallStandbySwitchSMS fail(Result:%d) ,So Restart %s on localhost!",nSwitchRet,strHallID.c_str());
 
 				int nPid;
 				ptr->StartSMS(nPid);

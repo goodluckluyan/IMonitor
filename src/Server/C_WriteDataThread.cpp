@@ -4,6 +4,9 @@
 #include <sys/wait.h> 
 #include <cstdlib>
 #include "C_WriteDataThread.h"
+#include "C_Log.h"
+#include "ConstDef.h"
+
 static const size_t QueueLen =1000;
 pthread_mutex_t mutex ;
 void* writeThread(void *ptr )
@@ -80,6 +83,14 @@ void CWriteDataThread::WriteToFile()
 	element_Info element;
 	element.data =(char*)malloc(QUEUEDATABSIZE );
 	int fileHandle =open(m_filePath.c_str(), O_WRONLY|O_CREAT , S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH );
+	if ( fileHandle == -1 )
+	{
+		free( element.data );
+		m_bWriteWrong = true;
+		CLog::Write(Error, "Error:open() Failed "+ m_filePath + ","+ FileCopyProtocol::CreateFileErrStr );
+		return;
+	}
+
 	while(true )
 	{
 		if (m_syncFlag )
@@ -92,7 +103,7 @@ void CWriteDataThread::WriteToFile()
 		}
 		if (m_pCircularQueue->IsEmpty()&&m_bColseFile )
 		{
-			close(fileHandle );
+			close( fileHandle );
 			m_bFileClosed =true;
 			free(element.data );
 			return;
@@ -110,6 +121,11 @@ void CWriteDataThread::WriteToFile()
 			if (sz!=element.datalen )
 			{
 				m_bWriteWrong =true;
+				//add zhangmiao
+				close(fileHandle);
+				m_bFileClosed =true;
+				free(element.data );
+				return;
 			}
 			m_recDataSz+=element.datalen;
 		}

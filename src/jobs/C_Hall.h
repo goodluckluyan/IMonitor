@@ -96,6 +96,12 @@ private:
 	// 检测本进程是否在运行
 	int ISSMSRun();
 
+	// 获取针定进程的pid
+	int GetPID(std::string strName,std::vector<int>& vecPID);
+
+	// 获取进程执行的路径
+	bool GetPIDExeDir(int nPID,std::string &strDir);
+
 	// 在当前终端启动SMS
 	bool StartSMS_CurTerminal(int &nPid,bool bLocalHost=false);
 

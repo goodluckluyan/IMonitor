@@ -229,7 +229,7 @@ namespace FileCopyProtocol
 			RecToClient(TRANSFERFILEFINISH_REC, TransferFileFinishNotOpen );
 			CLog::Write(Error, filePath+","+TransferFileFinishNotOpenStr );
 		}
-		for (int i=0;i<10;i++ )
+		for (int i=1;i<10;i++ )
 		{
 			if (m_pWriteThread->IsFileClosed() )
 			{

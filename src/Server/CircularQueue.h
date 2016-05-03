@@ -18,7 +18,7 @@ History    £º
 #include <string.h>
 #include <sys/stat.h>  
 
-#define QUEUEDATABSIZE 8192 
+#define QUEUEDATABSIZE 1024*80 /*8192 */
 
 struct element_Info
 {

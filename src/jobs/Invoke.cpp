@@ -7,7 +7,9 @@
 #include "database/CppMySQL3DB.h"
 #include "database/CppMySQLQuery.h"
 #include "utility/IPMgr.h"
+#include "C_constDef.h"
 extern time_t g_tmDBSynch;
+extern int g_RunState;
 bool g_bQuit = false;
 int g_LogLevel = 0;
 int g_nRunType = 0; // 1为守护进程 0为交互模式
@@ -21,7 +23,8 @@ int  CInvoke::Init()
 	{
 		PrintProductInfo();
 	}
-	
+	LOGINFFMT(0,"Invoke Init...");
+
 	C_Para * pPara = C_Para::GetInstance();
 	IPMgr::GetInstance()->AddIP(pPara->m_strLIP,pPara->m_strOIP);
 
@@ -834,22 +837,69 @@ void CInvoke::SwtichTakeOverSMS()
 	sleep(3);
 	std::vector<std::string> vecSMS;
 	m_ptrLstHall->GetTakeOverSMS(vecSMS);
+	C_Para * pPara = C_Para::GetInstance();
+
+	std::vector<SMSStatus> vecSMSStatus;
+
+	bool bDirty=true;
+	while(bDirty)
+	{
+		time_t tmUpdate=CDataManager::GetInstance()->GetOtherSMSstatus(vecSMSStatus);
+		time_t tmCur;
+		time(&tmCur);
+		if(tmCur-tmUpdate<pPara->m_nOtherSMSCheckDelay)
+		{
+			LOGINFFMT(0,"Get Other SMS Lastest Status(uptm:%ld:curtm:%ld)(delay:%d)!",
+				tmUpdate,tmCur,pPara->m_nOtherSMSCheckDelay);
+			bDirty=false;
+		}
+		else
+		{
+			sleep(1);
+		}
+
+	}
+	
 
 	for(int i=0;i<vecSMS.size();i++)
 	{
+		SMSStatus OtherStatus;
 		if(!vecSMS[i].empty())
 		{
-			if(!C_Para::GetInstance()->IsMain())
+			for(int j=0;j<vecSMSStatus.size();j++)
 			{
-				// 调用主的切换接口,支持延时切换
-				m_ptrLstHall->SwitchSMSByStdby(true,vecSMS[i]);
+				if(vecSMSStatus[j].hallid==vecSMS[i])
+				{
+					OtherStatus=vecSMSStatus[j];
+					break;
+				}
 			}
-			else
+			
+			if(!OtherStatus.hallid.empty())
 			{
-				//支持延时切换
-				int nState;
-				SwitchSMS(vecSMS[i],true,nState);
+				// 对端没有运行,则执行切换命令
+				if(OtherStatus.nRun==0)
+				{
+					LOGINFFMT(0,"Get Other SMS(%s) Lastest Status(nRun:%d),So Run Switch SMS!",vecSMS[i].c_str(),OtherStatus.nRun);
+					if(!C_Para::GetInstance()->IsMain())
+					{
+						// 调用主的切换接口,支持延时切换
+						m_ptrLstHall->SwitchSMSByStdby(true,vecSMS[i]);
+					}
+					else
+					{
+						//支持延时切换
+						int nState;
+						SwitchSMS(vecSMS[i],true,nState);
+					}
+				}//对端相周的sms在运行则开闭本地sms
+				else if(OtherStatus.nRun == 1)
+				{
+					LOGINFFMT(0,"Get Other SMS(%s) Lastest Status(nRun:%d),So Run Close SMS!",vecSMS[i].c_str(),OtherStatus.nRun);
+					CloseSMS(vecSMS[i]);
+				}
 			}
+			
 		}
 	}
 }
@@ -943,9 +993,12 @@ void CInvoke::ChangeToMain()
 	}
 
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find STDBYHost Change To MAINHost!****");
+	g_RunState=2;// 设置运行状态为恢复接管状态
 	C_Para::GetInstance()->SetRoleFlag(MAINROLE);
 	SwtichTakeOverSMS();
+
 	g_tmDBSynch = 0;
+	g_RunState=1;// 设置运行状态为正常运行状态
 }
 
 // 从临时主服务器改变成为备角色
@@ -960,11 +1013,14 @@ void CInvoke::ChangeToStdby()
 	}
 
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To STDBYHost!****");
+	g_RunState=2;// 设置运行状态为恢复接管状态
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
 	sleep(10);
 	SwtichTakeOverSMS();
+
 	g_tmDBSynch = 0;
+	g_RunState=1;// 设置运行状态为正常运行状态
 }
 
 // 开始TMS
@@ -1010,6 +1066,7 @@ bool CInvoke::StartSMS(std::string strHallID)
 bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 {	
 	
+
 	int nLen = vecCI.size();
 	for(int i=0;i<nLen ;i++)
 	{
@@ -1073,6 +1130,7 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 		}
 		
 	}
+	g_RunState=1; // 设置全局状态为正常运行状态
 }
 
 int CInvoke::DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo)

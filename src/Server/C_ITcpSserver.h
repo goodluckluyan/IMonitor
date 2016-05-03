@@ -9,7 +9,7 @@
 #define C_ITCPSERVER
 
 //接收或发送的数据
-const int MAXBUFFERSZ =9000;
+const int MAXBUFFERSZ =90000; /*9000;*/
 typedef struct NetData
 {
     int sz;

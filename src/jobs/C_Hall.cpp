@@ -70,7 +70,7 @@ SMSInfo&  C_Hall::Init(bool bRun,int nPID)
 		 }
 		 else
 		 {
-			 (int)STDBYRUNTYPE;
+			 m_SMS.nRole = (int)STDBYRUNTYPE;
 		 }
 	 }
 	 else 
@@ -642,8 +642,85 @@ int C_Hall::ISSMSRun()
 		}
 	}
 
+	// 从运行的sms中查找
+	if(!bproccheck)
+	{
+		LOGINFFMT(0,"Not fount %s:%d,seach running oristart_sms_server!",m_SMS.strId.c_str(),m_pid);
+		std::vector<int> vecPID;
+		GetPID("oristar_sms_server",vecPID);
+		for(int i = 0 ;i < vecPID.size();i++)
+		{
+			std::string strDir;
+			if(!GetPIDExeDir(vecPID[i],strDir))
+			{
+				continue;
+			}
+
+			if(m_SMS.strExepath==strDir)
+			{
+				LOGINFFMT(0,"It is found which running oristart_sms_server(%s:%d)!",m_SMS.strId.c_str(),vecPID[i]);
+				m_pid=vecPID[i];
+				bproccheck=true;
+				break;
+			}
+		}
+	}
 	return bproccheck;
 	
+}
+
+
+// 获取针定进程的pid
+int C_Hall::GetPID(std::string strName,std::vector<int>& vecPID)
+{	
+	char acExe[256]={'\0'};
+	snprintf(acExe,sizeof(acExe),"ps -ef|grep %s|grep -v \"grep %s\"|awk '{print $2}'",strName.c_str(),strName.c_str());
+	FILE *pp = popen(acExe,"r");
+	if(!pp)
+	{
+		LOG(0,"popen fail\n");
+		return -1;
+	}
+	char tmpbuf[128]={'\0'};
+	std::vector<std::string> vecBuf;
+	while(fgets(tmpbuf,sizeof(tmpbuf),pp)!=NULL)
+	{
+		vecBuf.push_back(tmpbuf);
+	}
+
+	int nLen = vecBuf.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+		std::string &strtmp=vecBuf[i];
+		int nStart = 0;
+		int nPos = strtmp.find(' ',nStart);
+		while(nPos != std::string::npos)
+		{
+			vecPID.push_back(atoi(strtmp.substr(nStart,nPos-nStart).c_str()));
+			nStart = nPos+1;
+			nPos = strtmp.find(' ',nStart);
+		}
+		vecPID.push_back(atoi(strtmp.substr(nStart).c_str()));
+	}
+
+	pclose(pp);
+	return 0;
+}
+
+
+// 获取进程执行的路径
+bool C_Hall::GetPIDExeDir(int nPID,std::string &strDir)
+{
+	char buff[256]={'\0'};
+	char dir[256]={'\0'};
+	snprintf(buff,sizeof(buff),"/proc/%d/exe",nPID);
+	if(readlink(buff,dir,256) <=0)
+	{
+		return false;
+	}
+
+	strDir = dir ;
+	return true;
 }
 
 //获取SMS 运行状态
