@@ -58,6 +58,7 @@ SMSInfo&  C_Hall::Init(bool bRun,int nPID)
 		 // 本机运行
 		m_pid = nPID;
 		m_SMS.stStatus.nRun = 1;	
+		LOGINFFMT(0,"C_Hall::Init:%s! pos:%s ",m_SMS.strId.c_str(),m_SMS.strIp.c_str());
 	 }
 	 else if(!bRun && nPID != 0)//不应在本机运行但在本机运行，则也认为是本机的sms
 	 {

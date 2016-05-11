@@ -702,7 +702,7 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	}
 
 	//在接管和恢复接管状态及正在处理冲突时不进行判断和解决冲突
-	if(g_RunState==2 && g_RunState==3)
+	if(g_RunState==2 || g_RunState==3)
 	{
 		return true;
 	}

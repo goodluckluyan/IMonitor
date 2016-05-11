@@ -46,6 +46,11 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	std::vector<SMSStatus> vecSMSState;
+	// 处于恢复状态不进行状态获取
+	if(g_RunState==2)
+	{
+		return 0;
+	}
 	pDM->GetSMSStat(vecSMSState);
 	int nLen = vecSMSState.size();
 	for(int i = 0 ;i < nLen ;i++)
