@@ -20,9 +20,12 @@ CDispatch::CDispatch(void * ptrInvoker)
 
 CDispatch::~CDispatch()
 {
+	struct DispatchTask nodeTask;
+	nodeTask.nDTriggerType = NULLTask;
 	m_csLDTask.EnterCS();
-	pthread_cond_signal(&cond);
+	m_lstDTask.push_back(nodeTask);
 	m_csLDTask.LeaveCS();
+	pthread_cond_signal(&cond);
 
 	pthread_cond_destroy(&cond);
 }
@@ -203,8 +206,9 @@ bool CDispatch::TriggerDispatch(int nTaskType,std::vector<stError> &vecErr)
 	nodeTask.vecErr = vecErr;
 	m_csLDTask.EnterCS();
 	m_lstDTask.push_back(nodeTask);
-	pthread_cond_signal(&cond);
 	m_csLDTask.LeaveCS();
+	pthread_cond_signal(&cond);
+	
 
 	return true;
 }
@@ -216,16 +220,12 @@ bool CDispatch::Routine()
 {
 	struct DispatchTask nodeTask;
 	m_csLDTask.EnterCS();
-	if(m_lstDTask.size() == 0)
+	while(m_lstDTask.size() == 0)
 	{
 		pthread_cond_wait(&cond,&(m_csLDTask.m_CS));
 	}
 
-	if(m_lstDTask.size() == 0)
-	{
-		m_csLDTask.LeaveCS();
-		return false;
-	}
+	
 	nodeTask = m_lstDTask.front();
 	m_lstDTask.pop_front();
 	

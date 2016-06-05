@@ -8,6 +8,7 @@
 #ifndef _TMS20_PARA
 #define _TMS20_PARA
 #include <string>
+#include <pthread.h>
 using namespace std;
 
 // 主机角色，主机只有MAINROLE一种状态，备机有STDBYROLE和TMPMAINROLE两种状态
@@ -135,5 +136,63 @@ public:
 private:
     static C_Para *m_pInstance;
 	pthread_rwlock_t m_rwlk_main;
+};
+class GlobalStatus
+{
+public:
+	static GlobalStatus *GetInstinct()
+	{
+		return m_globalstatus;
+	}
+	~GlobalStatus()
+	{
+		pthread_mutex_destroy(&m_mutx);
+		pthread_cond_destroy(&m_cond);
+	}
+
+	int GetStatus()
+	{
+		return m_RunState;
+	}
+
+	int SetStatus(int stat)
+	{
+		int nRet = 0;
+		if(stat == 1)
+		{
+			m_RunState = 1;
+			pthread_cond_signal(&m_cond);
+		}
+		else
+		{
+			// 状态变为非正常状态时，要求当前状态为正常状态，否则等待！
+			pthread_mutex_lock(&m_mutx);
+			while(m_RunState != 1)
+			{
+				pthread_cond_wait(&m_cond,&m_mutx);
+				
+			}
+			m_RunState = stat;
+			pthread_mutex_unlock(&m_mutx);
+		}
+		
+
+	}
+
+
+private:
+	GlobalStatus()
+	{
+		pthread_mutex_init(&m_mutx,NULL);
+		pthread_cond_init(&m_cond,NULL);
+		m_RunState = 0;
+
+	}
+
+
+	int m_RunState;// 0为正在启动，1为运行正常 2为在接管或恢复接管阶段 3为解决冲突阶段
+	static GlobalStatus * m_globalstatus;
+	pthread_mutex_t m_mutx;
+	pthread_cond_t m_cond;
 };
 #endif //_TMS20_PARA

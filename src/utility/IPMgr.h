@@ -35,6 +35,11 @@ public:
 			return false;
 		}
 
+		// 形成交叉表如
+		//10.7.75.78->192.168.1.10
+		//192.168.1.10->10.7.75.78
+		//10.7.75.79->192.168.1.20
+		//192.168.1.20->10.7.75.79
 		std::vector<std::string> vecMaster;
 		std::vector<std::string> vecSlave;
 

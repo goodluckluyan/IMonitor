@@ -38,7 +38,7 @@ static void sig_fun(int iSigNum);
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,errid,msg)
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_OTHER,0,errid,fmt,##__VA_ARGS__)
-
+GlobalStatus * GlobalStatus::m_globalstatus = new GlobalStatus;
 
 void sig_fun(int iSigNum)
 {

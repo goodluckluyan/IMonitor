@@ -600,7 +600,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
 		//本机为备机时 发现主机出现时，把临时主改回备
-		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE )
+		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && g_RunState == 1)
 		{	
 			stError er;
 			std::vector<stError> vecRE;
@@ -613,7 +613,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 			}
 		}
 		// 真正存在两个真正的主时做如下处理
-		else if(nState == MAINROLE)
+		else if(nState == MAINROLE && g_RunState == 1)
 		{
 			stError er;
 			std::vector<stError> vecRE;
@@ -628,7 +628,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		
 	}
 	// 两端都是备
-	else if(C_Para::GetInstance()->IsMain() == bMain && !bMain )
+	else if(C_Para::GetInstance()->IsMain() == bMain && !bMain && g_RunState == 1)
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -640,7 +640,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 		}
 	}
-	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain )
+	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain && g_RunState == 1 )
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -676,8 +676,19 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	int nLen = vecSMSStatus.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
-		LOGDEBFMT("Other SMS State:strHallId:%s,bRun:%d,nState:%d",vecSMSStatus[i].hallid.c_str(),
-			vecSMSStatus[i].nRun,vecSMSStatus[i].nStatus);
+		std::string pos ;
+		int bMain = C_Para::GetInstance()->IsMain();
+		if(bMain)
+		{
+			pos = vecSMSStatus[i].nRun==1 ? "slave":"main";
+		}
+		else
+		{
+			pos = vecSMSStatus[i].nRun==1 ? "main":"slave";
+		}
+		
+		LOGDEBFMT("Other SMS State:strHallId:%s,RunPos:%s,nState:%d",vecSMSStatus[i].hallid.c_str(),
+			pos.c_str(),vecSMSStatus[i].nStatus);
 // 		if(vecSMSStatus[i].nRun == 0)
 // 		{
 // 			continue;

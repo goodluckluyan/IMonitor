@@ -725,6 +725,58 @@ bool C_Hall::GetPIDExeDir(int nPID,std::string &strDir)
 }
 
 //获取SMS 运行状态
+int C_Hall::GetSMSWorkState(std::string strIp,int nPort, int &state, string &info)
+{
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:sms=\"http://localhost/WebServiceForAQ33/sms.wsdl\" ";
+	xml += "> <SOAP-ENV:Body> ";
+	xml += "<sms:GetWorkState_CS></sms:GetWorkState_CS>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	//refer to wsdl file.
+	std::string strUsherLocation = "/";
+	std::string strUsherNs = "http://webservices.oristar.com/XP/Usher/2009-09-29/GetWorkState_CS";
+
+	int iResult;
+	string response_c;
+	string content_c;
+	string http;
+	LOGINFFMT(0,"GetSMSWorkState %s specified IP(%s:%d)",m_SMS.strId.c_str(),strIp.c_str(),nPort);
+	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
+	iResult = TcpOperator(strIp,nPort, http, response_c,2);
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_TCP
+	}
+
+	iResult = GetHttpContent( response_c, content_c);
+	if (iResult < 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_HTTP
+	}
+	//java定义为,如果sms连接异常, 返回的xml, http抛出500。定义状态为102
+	else if (iResult == 500)
+	{
+		state = 102;
+		info = "error";
+		return -1;
+	}
+
+	int nPos = content_c.find("<?");
+	std::string strContent = content_c.substr(nPos,content_c.size()-nPos);
+	iResult = Parser_GetSMSWorkState( strContent, state, info);
+	if (iResult != 0)
+	{
+		return iResult;//SoftwareSTATE_ERROR_XMLPARSER
+	}
+	return 0;
+}
+
+//获取SMS 运行状态
 int C_Hall::GetSMSWorkState( int &state, string &info)
 {
 	//初始化获取AQ33的ip和port

@@ -102,8 +102,11 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 		int nPort2 = atoi(query.getStringField("port"));
 		int nDefPos = query.getIntField("default_position");// 0为主，1为备
 		int nCurPos = query.getIntField("cur_position");//1为主，2为备
-		
+
+		LOGINFFMT(0,"mysql record:sms %s(defpos:%d-curpos:%d)!",node.strId.c_str(),nDefPos,nCurPos);
 		int nTmp=-1;
+
+		// 如果当前位置无值则用默认位置
 		if(nCurPos<0||nCurPos>2)
 		{
 			nTmp = nDefPos;
@@ -164,7 +167,6 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 	{
 		SMSInfo &node = vecSMSInfo[i];
 		bool bRun = ptrPara->IsMain() ? node.nRole == 1 : node.nRole == 2;
-		C_Hall * ptrHall = new C_Hall(node);
 		
 		// 是否已经存在
 		std::map<int,std::string>::iterator it = mapDir.begin();
@@ -172,11 +174,21 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 		{
 			if(it->second == node.strExepath)
 			{
-				LOGINFFMT(0,"SMS %s(%d) has been ,To Associate!",it->second.c_str(),it->first);
+				LOGINFFMT(0,"SMS %s:%s(%d) has been ,To Associate!",node.strIp.c_str(),it->second.c_str(),it->first);
+
+				// node中的IP设置依据数据库记录的sms的当前位置，如果要关联本机运行的sms，
+				// 有可能本机不是数据库中记录的sms运行的主机,所以要判断一下
+				if(node.strIp != m_WebServiceLocalIP)
+				{
+					node.strIp = m_WebServiceLocalIP;
+					node.nRole = ptrPara->IsMain() ? MAINRUNTYPE :STDBYRUNTYPE;
+				}
 				break;
 			}
 		}
 
+		// 创建sms管理实例
+		C_Hall * ptrHall = new C_Hall(node);
 
 		//关联已经存在的sms
 		if(it != mapDir.end())
@@ -333,6 +345,7 @@ bool C_HallList::GetSMSWorkState()
 		int nState = 0;
 		std::string strInfo;
 
+
 		ptr->GetSMSWorkState(nState,strInfo);
 
 		// 获取失败时，重复获取3次，如果还是失败则把本地的sms kill后再获取！
@@ -346,24 +359,66 @@ bool C_HallList::GetSMSWorkState()
 				{
 					break;
 				}
+
 				i++;
 				sleep(2);
 			}
+
 			if(i ==2)
 			{
-				if(ptr->IsLocal())
+				int j = 0;
+
+				// 尝试到对端去查看
+				int role = C_Para::GetInstance()->GetRole();
+				if(role!= 2 && role != 4)//4=TMPMAINROLE ,2=ONLYMAINROLE
 				{
-					ptr->ShutDownSMS();
+					std::string strIP;
+					int nPort;
+					int nRunType;
+					ptr->GetRunHost(strIP,nPort);
+					if(strIP == m_WebServiceLocalIP)
+					{
+						strIP = m_WebServiceOtherIP;
+						nRunType = role == MAINROLE ? STDBYRUNTYPE:MAINRUNTYPE;//改变运行位置
+					}
+					else if(strIP == m_WebServiceOtherIP)
+					{
+						strIP = m_WebServiceLocalIP;
+						nRunType = role == MAINROLE ? STDBYRUNTYPE:MAINRUNTYPE;//改变运行位置
+					}
+					while(j < 2)
+					{
+						ptr->GetSMSWorkState(strIP,nPort,nState,strInfo);
+						if(0 != nState || !strInfo.empty())
+						{
+							SMSInfo stSMSInfo = ptr->ChangeSMSHost(strIP,nRunType,strIP==m_WebServiceLocalIP);
+							m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+							break;
+						}
+						j++;
+					}
+
+					// 两端都无法获取状态，则重启本地sms。
+					if(j ==2)
+					{
+						if(ptr->IsLocal())
+						{
+							ptr->ShutDownSMS();
+
+							// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
+							ptr->GetSMSWorkState(nState,strInfo);
+
+						}
+					}
 					
-					// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
-					ptr->GetSMSWorkState(nState,strInfo);
-				}
-			}
-		}
+				}//if(role!= 2 && role != 4)//4=TMPMAINROLE ,2=ONLYMAINROLE	
+			}//if(i ==2)
+		}//if(0 == nState && strInfo.empty())
 		else
 		{
 			if(nState == 101)
 			{
+				//每天在零晨三点重启sms
 				time_t tm;
 				time(&tm);
 				int hour=localtime(&tm)->tm_hour;
@@ -381,7 +436,7 @@ bool C_HallList::GetSMSWorkState()
 							break;
 						}
 
-						// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
+						// 再次获取状态，GetSMSWorkState内部可以检测是否运行,如果没有运行则启动！
 						ptr->GetSMSWorkState(nState,strInfo);
 					}
 				}
@@ -616,11 +671,13 @@ bool C_HallList::ChangeSMSHost(std::string strHallID,int nPos)
 	if(nPos == MAINRUNTYPE)
 	{
 		SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,(int)MAINRUNTYPE,true);
+		m_ptrDM->UpdateSMSStat(strHallID,stSMSInfo);
 		LOGINFFMT(0,"ChangeSMSHost:%s->%s !",strHallID.c_str(),m_WebServiceLocalIP.c_str());
 	}
 	else if(nPos == STDBYRUNTYPE)
 	{
 		SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)STDBYRUNTYPE,false);
+		m_ptrDM->UpdateSMSStat(strHallID,stSMSInfo);
 		LOGINFFMT(0,"ChangeSMSHost:%s->%s !",strHallID.c_str(),m_WebServiceOtherIP.c_str());
 	}
 

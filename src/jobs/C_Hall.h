@@ -47,6 +47,9 @@ public:
 
 	 // 获取SMS工作状态
 	int  GetSMSWorkState( int &state, std::string &info);
+
+	 // 获取SMS工作状态,指定IP
+	int GetSMSWorkState(std::string strIp,int nPort,int &state,std::string &info);
 	
 	// 启动SMS
 	bool StartSMS(int &nPid,bool bLocalHost=false);
