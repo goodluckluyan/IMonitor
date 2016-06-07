@@ -527,6 +527,7 @@ void * CDataManager::GetInvokerPtr()
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 {
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch%lld",bMain,nState,lSynch);
+	m_nOtherMonitorState = nState;
 
 	// 只有在刚启动时才能赋值并退出，否则进行冲突判断
 	if(0 == g_RunState && lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
@@ -593,7 +594,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		return true;
 	}   
 
-	m_nOtherMonitorState = nState;
+	
 
 	// 启动正常后，nState的状态为对端机所处的角色
 	// 两端都是主
@@ -713,8 +714,9 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	}
 
 	//在接管和恢复接管状态及正在处理冲突时不进行判断和解决冲突
-	if(g_RunState==2 || g_RunState==3)
+	if(g_RunState==2 || g_RunState==3 )
 	{
+		LOGDEBFMT("localhost run status: %d, not conflict check",g_RunState);
 		return true;
 	}
 
@@ -724,6 +726,12 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		return true;
 	}
 
+	// 当对方角色不为正常备时（包括未知和处于恢复和冲突状态）不能进行冲突判断
+	if(m_nOtherMonitorState != 3 )
+	{
+		LOGDEBFMT("slave host run status: %d(not eq 3), not conflict check",m_nOtherMonitorState);
+		return true;
+	}
 
 
 	// 判断冲突

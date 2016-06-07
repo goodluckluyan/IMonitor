@@ -393,6 +393,10 @@ bool C_HallList::GetSMSWorkState()
 						{
 							SMSInfo stSMSInfo = ptr->ChangeSMSHost(strIP,nRunType,strIP==m_WebServiceLocalIP);
 							m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+							bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(stSMSInfo.strId,strIP,nPort);
+							LOGINFFMT(0,"NoticTMSSMSPos:< %s Switch To %s:%d Host Result:%s>"stSMSInfo.strId.c_str(),
+								strIP.c_str(),nPort,bRet?"ok":"fail");
+							
 							break;
 						}
 						j++;
@@ -673,12 +677,19 @@ bool C_HallList::ChangeSMSHost(std::string strHallID,int nPos)
 		SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceLocalIP,(int)MAINRUNTYPE,true);
 		m_ptrDM->UpdateSMSStat(strHallID,stSMSInfo);
 		LOGINFFMT(0,"ChangeSMSHost:%s->%s !",strHallID.c_str(),m_WebServiceLocalIP.c_str());
+		bool bRet =  m_ptrTMS->NotifyTMSSMSSwitch(strHallID,m_WebServiceLocalIP,stSMSInfo.nPort);
+		LOGINFFMT(0,"%s NotifyTMSSMSSwitch to %s !",strHallID.c_str(),
+			m_WebServiceLocalIP.c_str(),bRet ?"ok":"failed");
+
 	}
 	else if(nPos == STDBYRUNTYPE)
 	{
 		SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)STDBYRUNTYPE,false);
 		m_ptrDM->UpdateSMSStat(strHallID,stSMSInfo);
 		LOGINFFMT(0,"ChangeSMSHost:%s->%s !",strHallID.c_str(),m_WebServiceOtherIP.c_str());
+		bool bRet =  m_ptrTMS->NotifyTMSSMSSwitch(strHallID,m_WebServiceOtherIP,stSMSInfo.nPort);
+		LOGINFFMT(0,"%s NotifyTMSSMSSwitch to %s (%s)!",strHallID.c_str(),
+			m_WebServiceOtherIP.c_str(),bRet ?"ok":"failed");
 	}
 
 	return true;
@@ -1067,11 +1078,13 @@ bool C_HallList::CloseSMS(std::string strHallID)
 		{
 			SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)MAINRUNTYPE,false);
 			m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+		
 		}
 		else
 		{
 			SMSInfo stSMSInfo = ptr->ChangeSMSHost(m_WebServiceOtherIP,(int)STDBYRUNTYPE,false);
 			m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
+			
 		}
 	}
 	else
