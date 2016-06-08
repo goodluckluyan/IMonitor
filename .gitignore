@@ -34,6 +34,12 @@
 *.htm
 *.sdf
 *.ipch
+# qt creator file
+*.config
+*.creator
+*.files
+*.includes
+
 #dir
 bin/
 

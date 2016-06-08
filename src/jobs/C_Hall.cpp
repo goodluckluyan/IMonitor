@@ -49,8 +49,8 @@ SMSInfo&  C_Hall::Init(bool bRun,int nPID)
 	 if(bRun && nPID == 0)
 	 {
 		 // 本机运行
-		int nPid;
-		StartSMS(nPid);
+// 		int nPid;
+// 		StartSMS(nPid);
 		 m_SMS.stStatus.nRun = 1;
 	 }
 	 else if(bRun && nPID != 0)

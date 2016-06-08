@@ -107,12 +107,16 @@ public:
 
 	void StartSwitch()
 	{
+		m_csSwitch.EnterCS();
 		m_bSwitching = true;
+		m_csSwitch.LeaveCS();
 	}
 	
 	void EndSwitch()
 	{
-			m_bSwitching = false;
+		m_csSwitch.EnterCS();
+		m_bSwitching = false;
+		m_csSwitch.LeaveCS();
 	}
 	void SetDBSynchStatus(int nDBSynch)
 	{
@@ -139,6 +143,7 @@ private:
 	C_CS m_csNet;
 	C_CS m_csSMS;
 	C_CS m_csTMS;
+	C_CS m_csSwitch;
 	static CDataManager * m_pinstance;
 	CDispatch * m_ptrDispatch;
 	void * m_ptrInvoker;

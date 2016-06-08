@@ -394,7 +394,7 @@ bool C_HallList::GetSMSWorkState()
 							SMSInfo stSMSInfo = ptr->ChangeSMSHost(strIP,nRunType,strIP==m_WebServiceLocalIP);
 							m_ptrDM->UpdateSMSStat(stSMSInfo.strId,stSMSInfo);
 							bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(stSMSInfo.strId,strIP,nPort);
-							LOGINFFMT(0,"NoticTMSSMSPos:< %s Switch To %s:%d Host Result:%s>"stSMSInfo.strId.c_str(),
+							LOGINFFMT(0,"NoticTMSSMSPos:< %s Switch To %s:%d Host Result:%s>",stSMSInfo.strId.c_str(),
 								strIP.c_str(),nPort,bRet?"ok":"fail");
 							
 							break;
@@ -405,14 +405,14 @@ bool C_HallList::GetSMSWorkState()
 					// 两端都无法获取状态，则重启本地sms。
 					if(j ==2)
 					{
-						if(ptr->IsLocal())
-						{
-							ptr->ShutDownSMS();
-
-							// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
-							ptr->GetSMSWorkState(nState,strInfo);
-
-						}
+// 						if(ptr->IsLocal())
+// 						{
+// 							ptr->ShutDownSMS();
+// 
+// 							// 再次获取状态，GetSMSWorkState内部可以检测是否运行！
+// 							ptr->GetSMSWorkState(nState,strInfo);
+// 
+// 						}
 					}
 					
 				}//if(role!= 2 && role != 4)//4=TMPMAINROLE ,2=ONLYMAINROLE	
@@ -460,7 +460,8 @@ bool C_HallList::GetSMSWorkState()
 	}
 
 	// 更新运行状态
-	g_RunState = 1;
+	GlobalStatus::GetInstinct()->SetStatus(1);
+	//g_RunState = 1;
 	return true;
 }
 

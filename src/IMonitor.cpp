@@ -490,6 +490,7 @@ int main(int argc, char** argv)
 	C_LogManage::DestoryInstance();
 	C_RunPara::DestoryInstance();
 	C_Para::DestoryInstance();
+	GlobalStatus::DestoryInstinct();
 	LOGINFFMT(0,"IMonitor Exit!\n");
 	return 0;
 }

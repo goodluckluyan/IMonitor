@@ -9,7 +9,7 @@
 #include "utility/IPMgr.h"
 #include "C_constDef.h"
 extern time_t g_tmDBSynch;
-extern int g_RunState;
+//extern int g_RunState;
 bool g_bQuit = false;
 int g_LogLevel = 0;
 int g_nRunType = 0; // 1为守护进程 0为交互模式
@@ -994,12 +994,16 @@ void CInvoke::ChangeToMain()
 	}
 
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find STDBYHost Change To MAINHost!****");
-	g_RunState=2;// 设置运行状态为恢复接管状态
+
+	GlobalStatus::GetInstinct()->SetStatus(2);// 设置运行状态为恢复接管状态
+	//g_RunState=2;// 设置运行状态为恢复接管状态
+
 	C_Para::GetInstance()->SetRoleFlag(MAINROLE);
 	SwtichTakeOverSMS();
 
 	g_tmDBSynch = 0;
-	g_RunState=1;// 设置运行状态为正常运行状态
+	GlobalStatus::GetInstinct()->SetStatus(1);// 设置运行状态为恢复接管状态
+	//g_RunState=1;// 设置运行状态为正常运行状态
 }
 
 // 从临时主服务器改变成为备角色
@@ -1014,14 +1018,17 @@ void CInvoke::ChangeToStdby()
 	}
 
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"****Find MainHost Change To STDBYHost!****");
-	g_RunState=2;// 设置运行状态为恢复接管状态
+
+	GlobalStatus::GetInstinct()->SetStatus(2);// 设置运行状态为恢复接管状态
+	//g_RunState=2;// 设置运行状态为恢复接管状态
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
 	sleep(10);
 	SwtichTakeOverSMS();
 
 	g_tmDBSynch = 0;
-	g_RunState=1;// 设置运行状态为正常运行状态
+	GlobalStatus::GetInstinct()->SetStatus(1);// 设置运行状态为恢复接管状态
+	//g_RunState=1;// 设置运行状态为正常运行状态
 }
 
 // 开始TMS
@@ -1086,27 +1093,51 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 
 		nMWeight += 8 - node.nMainSMSSum;
 		nSWeight += 8 - node.nStdbySMSSum;
+		
       
 		if(node.nType==1)// 两端都启动了，则关闭一方
 		{
-			if(nMWeight < nSWeight)// 权重小的一方关闭
+			if(node.nMainState == 101 && node.nStdbyState == 101)
 			{
-				LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
-				m_ptrLstHall->CloseSMS(node.strHallID);
-				node.nMainSMSSum--;
-				m_ptrLstHall->ChangeSMSHost(node.strHallID,STDBYRUNTYPE);
-				m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
+				if(nMWeight < nSWeight)// 权重小的一方关闭
+				{
+					LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At MainHost(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+					m_ptrLstHall->CloseSMS(node.strHallID);
+					node.nMainSMSSum--;
+					m_ptrLstHall->ChangeSMSHost(node.strHallID,STDBYRUNTYPE);
+					m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
 
+				}
+				else
+				{
+					LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
+					m_ptrLstHall->StartOrCloseStdBySMS(false,node.strHallID);
+					node.nStdbySMSSum--;
+					m_ptrLstHall->ChangeSMSHost(node.strHallID,MAINRUNTYPE);
+					m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+
+				}
 			}
 			else
 			{
-				LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At STDBY(M%d:S%d) ",node.strHallID.c_str(),nMWeight,nSWeight);
-				m_ptrLstHall->StartOrCloseStdBySMS(false,node.strHallID);
-				node.nStdbySMSSum--;
-				m_ptrLstHall->ChangeSMSHost(node.strHallID,MAINRUNTYPE);
-				m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
-
+				if(node.nMainState == 201)
+				{
+					LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At STDBY(due to Main Playing) ",node.strHallID.c_str());
+					m_ptrLstHall->StartOrCloseStdBySMS(false,node.strHallID);
+					node.nStdbySMSSum--;
+					m_ptrLstHall->ChangeSMSHost(node.strHallID,MAINRUNTYPE);
+					m_ptrLstHall->UpdateDataBase(node.strHallID,MAINRUNTYPE);
+				}
+				else if(node.nStdbyState == 201)
+				{
+					LOGINFFMT(0," SolveConflict(ALL RUN %s),Close SMS At MainHost(due to STDBY Playing) ",node.strHallID.c_str());
+					m_ptrLstHall->CloseSMS(node.strHallID);
+					node.nMainSMSSum--;
+					m_ptrLstHall->ChangeSMSHost(node.strHallID,STDBYRUNTYPE);
+					m_ptrLstHall->UpdateDataBase(node.strHallID,STDBYRUNTYPE);
+				}
 			}
+			
 		}
 		else if(node.nType==2) // 两端都没有启动，则在一方开启
 		{
@@ -1131,7 +1162,8 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 		}
 		
 	}
-	g_RunState=1; // 设置全局状态为正常运行状态
+	//g_RunState=1; // 设置全局状态为正常运行状态
+	GlobalStatus::GetInstinct()->SetStatus(1);// 设置全局状态为正常运行状态
 }
 
 int CInvoke::DcpHashCheck(std::string strPath,std::string strPklUuid,std::string &strErrInfo)

@@ -137,6 +137,8 @@ private:
     static C_Para *m_pInstance;
 	pthread_rwlock_t m_rwlk_main;
 };
+
+
 class GlobalStatus
 {
 public:
@@ -144,6 +146,16 @@ public:
 	{
 		return m_globalstatus;
 	}
+
+	static void DestoryInstinct()
+	{
+		if(m_globalstatus)
+		{
+			delete m_globalstatus;
+			m_globalstatus = NULL;
+		}
+	}
+
 	~GlobalStatus()
 	{
 		pthread_mutex_destroy(&m_mutx);
@@ -152,7 +164,10 @@ public:
 
 	int GetStatus()
 	{
-		return m_RunState;
+		pthread_mutex_lock(&m_mutx);
+		int nRet = m_RunState;
+		pthread_mutex_unlock(&m_mutx);
+		return nRet;
 	}
 
 	int SetStatus(int stat)
@@ -160,7 +175,9 @@ public:
 		int nRet = 0;
 		if(stat == 1)
 		{
+			pthread_mutex_lock(&m_mutx);
 			m_RunState = 1;
+			pthread_mutex_unlock(&m_mutx);
 			pthread_cond_signal(&m_cond);
 		}
 		else
@@ -170,7 +187,6 @@ public:
 			while(m_RunState != 1)
 			{
 				pthread_cond_wait(&m_cond,&m_mutx);
-				
 			}
 			m_RunState = stat;
 			pthread_mutex_unlock(&m_mutx);

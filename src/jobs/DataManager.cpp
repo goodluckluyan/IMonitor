@@ -6,7 +6,7 @@
 #include"DataManager.h"
 #include"log/C_LogManage.h"
 extern time_t g_tmDBSynch;
-extern int g_RunState;
+//extern int g_RunState;
 #define  LOG(errid,msg)   C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGINF(msg)	  C_LogManage::GetInstance()->WriteLog(ULOG_INFO,LOG_MODEL_JOBS,0,0,msg)
 #define  LOGINFFMT(fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,0,fmt,##__VA_ARGS__)
@@ -529,8 +529,10 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch%lld",bMain,nState,lSynch);
 	m_nOtherMonitorState = nState;
 
+	int nRunState = GlobalStatus::GetInstinct()->GetStatus();
 	// 只有在刚启动时才能赋值并退出，否则进行冲突判断
-	if(0 == g_RunState && lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
+	//if(0 == g_RunState && lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
+	if(0 == nRunState && lSynch!=0 && (nState == TMPMAINROLE || nState == ONLYMAINROLE))
 	{
 		m_lSynch = lSynch;
 		return true;
@@ -600,8 +602,10 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 	// 两端都是主
 	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
+		int nRunState = GlobalStatus::GetInstinct()->GetStatus();
 		//本机为备机时 发现主机出现时，把临时主改回备
-		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && g_RunState == 1)
+		//if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && g_RunState == 1)
+		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && nRunState == 1)
 		{	
 			stError er;
 			std::vector<stError> vecRE;
@@ -614,7 +618,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 			}
 		}
 		// 真正存在两个真正的主时做如下处理
-		else if(nState == MAINROLE && g_RunState == 1)
+		else if(nState == MAINROLE && nRunState == 1)
 		{
 			stError er;
 			std::vector<stError> vecRE;
@@ -629,7 +633,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		
 	}
 	// 两端都是备
-	else if(C_Para::GetInstance()->IsMain() == bMain && !bMain && g_RunState == 1)
+	else if(C_Para::GetInstance()->IsMain() == bMain && !bMain && nRunState == 1)
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -641,7 +645,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 		}
 	}
-	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain && g_RunState == 1 )
+	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain && nRunState == 1 )
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -713,10 +717,13 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		time(&m_tmUpdateOSMS);
 	}
 
+	int nRunState = GlobalStatus::GetInstinct()->GetStatus();
+
 	//在接管和恢复接管状态及正在处理冲突时不进行判断和解决冲突
-	if(g_RunState==2 || g_RunState==3 )
+	//if(g_RunState==2 || g_RunState==3 )
+	if(nRunState==2 || nRunState==3 )
 	{
-		LOGDEBFMT("localhost run status: %d, not conflict check",g_RunState);
+		LOGDEBFMT("localhost run status: %d, not conflict check",nRunState);
 		return true;
 	}
 
@@ -741,7 +748,10 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 
 	int nStdbyRun =0;
 	std::vector<ConflictInfo> vecConflict;
-	if(!m_bSwitching)//在切换期间不进行冲突判断
+	m_csSwitch.EnterCS();
+	int bSwitching = m_bSwitching;
+	m_csSwitch.LeaveCS();
+	if(!bSwitching)//在切换期间不进行冲突判断
 	{
 		std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
 		for(;it != m_mapOtherSMSStatus.end();it++)
@@ -816,7 +826,9 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		er.ErrorVal="smsconflict";
 		vecRE.push_back(er);
 		m_ptrDispatch->TriggerDispatch(SMSTask,vecRE);
-		g_RunState=3; // 设置全局状态为处理冲突状态
+
+		GlobalStatus::GetInstinct()->SetStatus(3);// 设置全局状态为处理冲突状态
+		//g_RunState=3; // 设置全局状态为处理冲突状态
 
 	}
 

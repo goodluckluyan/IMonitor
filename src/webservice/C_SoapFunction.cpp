@@ -7,7 +7,7 @@
 #include "jobs/Invoke.h"
 #include "log/C_LogManage.h"
 using namespace std;
-extern int g_RunState;
+//extern int g_RunState;
 extern time_t g_tmDBSynch;
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
@@ -27,8 +27,9 @@ int mons__GetMontorState(struct soap* cSoap, struct mons__MontorStateRes &ret)
 		ret.lSynch = 0;
 	}
 
+	int nRunState = GlobalStatus::GetInstinct()->GetStatus();
 	// 如果正在启动时状态为0，启动完成后状态为本机现在的角色
-	ret.iState = (0 == g_RunState || 2 == g_RunState || 3 == g_RunState) ? 0 :nRole;
+	ret.iState = (0 == nRunState || 2 == nRunState || 3 == nRunState) ? 0 :nRole;
 	
 	return 0;
 }
@@ -46,8 +47,11 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 {
 	CDataManager *pDM = CDataManager::GetInstance();
 	std::vector<SMSStatus> vecSMSState;
+
 	// 处于恢复状态不进行状态获取
-	if(g_RunState==2)
+	int nRunState = GlobalStatus::GetInstinct()->GetStatus();
+	//if(2 == g_RunState)
+	if(2 == nRunState)
 	{
 		return 0;
 	}
