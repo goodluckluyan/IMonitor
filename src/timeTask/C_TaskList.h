@@ -12,6 +12,7 @@
 #include "C_Task.h"
 #include <string>
 #include "C_constDef.h"
+#include "threadManage/C_CS.h"
 class C_TaskList
 {
 public:
@@ -28,6 +29,9 @@ public:
 
 	// 初始化任务队列
 	int InitTaskList(CInvoke * ptrInvoker);
+
+	// 删除任务
+	bool DeleteTask(int nCommandNumber);
 protected:
 	C_TaskList();
 
@@ -35,5 +39,6 @@ private:
 	static C_TaskList *m_pInstance;
 	std::list<C_Task*> m_TackList;
 	int GetIdleTask(C_Task **ppTask); 
+	C_CS m_cs;
 };
 #endif //TASK_LIST

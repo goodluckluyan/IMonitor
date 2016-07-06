@@ -189,7 +189,7 @@ bool CDispatch::GetPolicyNode(DOMDocument* ptrDoc,std::string strNodeName,std::m
 					}
 					XMLString::release(&attrValue);//สอทลืสิด
 				}
-
+				XMLString::release(&name);
 				XMLString::release(&nodeName);
 			}
 		}

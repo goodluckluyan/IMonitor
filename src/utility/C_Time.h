@@ -41,6 +41,11 @@ public:
     {
         return m_time.tm_sec;
     }
+
+	int getWeek()
+	{
+		return m_time.tm_wday;
+	}
 	//@author liuhongjun@oristartech.com
 	//date 2012-07-19
 	//added begin

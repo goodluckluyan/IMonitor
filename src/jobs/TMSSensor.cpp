@@ -554,7 +554,7 @@ bool CTMSSensor::GetTMSWorkState()
 	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
 	xml += "xmlns:ns1=\"http://tempuri.org/ns1.xsd\" ";
 	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
-	xml += "<ns1:GetTMSState></ns1:GetTMSState>";
+	xml += "<ns1:IfReboot></ns1:IfReboot>";
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
 	// 通过http方式调用另一个调度软件的WebService服务
@@ -565,7 +565,7 @@ bool CTMSSensor::GetTMSWorkState()
 		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
 	{
 		// 写错误日志
-		LOGFMT(ULOG_ERROR,"GetTMSState InvokerWebServer Fail(%d)!",nInvokeRes);
+		LOGFMT(ULOG_ERROR,"IfReboot InvokerWebServer Fail(%d)!",nInvokeRes);
 		return false;
 	}
 
@@ -575,7 +575,7 @@ bool CTMSSensor::GetTMSWorkState()
 
 	if(retXml.empty())
 	{
-		LOGFMT(ULOG_ERROR,"GetTMSState:Parse Fail! xml is empty!\n");
+		LOGFMT(ULOG_ERROR,"IfReboot:Parse Fail! xml is empty!\n");
 		return false;
 	}
 
@@ -588,6 +588,119 @@ bool CTMSSensor::GetTMSWorkState()
 	{
 		return false;
 	}
+}
+
+bool CTMSSensor::AskTMSReboot()
+{
+	if(m_nPid <= 0)
+	{
+		//m_vecSwitchInfo.push_back(stNotifySmsSwitchInfo(strHallId,strNewIp,port));
+		return false;
+	}
+
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/ns1.xsd\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns1:IsReboot></ns1:IsReboot>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	// 通过http方式调用另一个调度软件的WebService服务
+	std::string strResponse;
+	std::string strURI = "/";
+	int nInvokeRes = InvokerWebServer(true,strURI,xml,strResponse);
+	if( nInvokeRes == ERROR_SENSOR_TCP_RECV || nInvokeRes == ERROR_SENSOR_TCP_CONNECT 
+		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
+	{
+		// 写错误日志
+		LOGFMT(ULOG_ERROR,"NotifyTMSSMSSwitch InvokerWebServer Fail(%d)!",nInvokeRes);
+		return false;
+	}
+
+	// 提取xml
+	std::string retXml;
+	int result = GetHttpContent(strResponse, retXml);
+
+	if(retXml.empty())
+	{
+		LOGFMT(ULOG_ERROR,"NotifyTMSSMSSwitch:Parse Fail! xml is empty!");
+		return false;
+	}
+
+	int nRet = -1 ;
+
+
+	//if(ParseXmlFromTMS(retXml,nRet))解析返回值
+	if(ParseIsRebootXml(retXml,nRet))
+	{
+		return nRet == 0 ? true:false;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// 解析TMS状态返回xml
+bool  CTMSSensor::ParseIsRebootXml(std::string &retXml,int &nRet)
+{
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)retXml.c_str(), retXml.size(), "bufId");
+
+	try
+	{
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();	
+
+		// 读取ret节点
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("tmsState"));
+		if(ptrNodeList == NULL)
+		{
+			LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
+			return false;
+		}
+		else 
+		{
+			if(ptrNodeList->getLength() == 0)
+			{
+				LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
+				return false;
+			}
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			char* pstate =  XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state = pstate;
+			if(!str_state.empty())
+			{
+				nRet = atoi(str_state.c_str());
+			}
+			XMLString::release(&pstate);
+			//LOGINFFMT("%s,%s\n",str_name.c_str(),str_state.c_str());
+		}
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		ptrInputsource = NULL;
+		delete ptrInputsource;
+		ptrParser = NULL;
+	}
+
+
+	delete ptrParser;
+	delete ptrInputsource;
+	ptrInputsource = NULL;
+	ptrParser = NULL;
+	return true;
 }
 
 // 通过webservice调用对端的切换tms接口

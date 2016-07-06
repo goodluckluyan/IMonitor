@@ -41,6 +41,11 @@ public:
 	int Exec();
 
 	void ExeFinal();
+
+	int GetCommandNumber()
+	{
+		return  m_iCommandNumber;
+	}
 public:
 	// 要执行的操作编号；
 	int m_iCommandNumber;

@@ -86,6 +86,7 @@ int C_TaskList::InitTaskList(CInvoke * ptrInvoker)
 *******************************************************************************/
 int C_TaskList::GetIdleTask(C_Task **ppTask)
 {
+	C_GuardCS guard(&m_cs);
 	std::list<C_Task*>::iterator it = m_TackList.begin();
 	for(; it != m_TackList.end(); ++it)
 	{
@@ -98,6 +99,35 @@ int C_TaskList::GetIdleTask(C_Task **ppTask)
 	C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_TIMETASK,0,ERROR_TASK_LIST_FULL,"任务对列已满，无空闲任务。");
 	return C_LogManage::GetInstance()->CreateLogNumber(3,18,0,ERROR_TASK_LIST_FULL); 
 	
+}
+
+/*******************************************************************************
+* 函数名称：	DeleteTask
+* 功能描述：	删除任务
+* 输入参数：	命令号
+* 输出参数：	
+* 返 回 值：	0：成功，非0失败
+* 修改日期		修改人	      修改内容
+* ------------------------------------------------------------------------------
+* 2014-09-01					创建
+*******************************************************************************/
+bool C_TaskList::DeleteTask(int nCommandNumber)
+{
+	bool bRet = false;
+	C_GuardCS guard(&m_cs);
+	std::list<C_Task*>::iterator it = m_TackList.begin();
+	for(; it != m_TackList.end(); ++it)
+	{
+		if((*it)->GetCommandNumber() == nCommandNumber)
+		{
+			it = m_TackList.erase(it);
+			bRet = true;
+			break;
+		}			
+	}
+	
+	return bRet;
+
 }
 
 /*******************************************************************************
@@ -161,6 +191,8 @@ int C_TaskList::RunTasks(int iCurTime)
 	C_ThreadManage *pThreadManage = C_ThreadManage::GetInstance();
 	C_ThreadData *pThreadData = NULL;
 	int iResult = -1;
+
+	C_GuardCS guard(&m_cs);
 	std::list<C_Task*>::iterator it = m_TackList.begin();
 	for(;it != m_TackList.end(); ++it)
 	{

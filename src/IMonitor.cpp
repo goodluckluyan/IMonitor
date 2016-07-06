@@ -443,6 +443,7 @@ int main(int argc, char** argv)
 		if(bDateSet != 0)
 		{
 			pLogManage->ReInitLog();
+			Invoker.SetupRebootTimer();
 		}
 
 		//轮询定时任务。

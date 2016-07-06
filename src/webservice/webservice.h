@@ -104,3 +104,7 @@ struct mons__SMSPositionInfo
 };
 
 int mons__GetDBSynchStatus(int &state);
+
+int mons__ShutdownServer(int nType,int &state);
+
+int mons__TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,int nRepeat,int nRepeatCnt,int &state);

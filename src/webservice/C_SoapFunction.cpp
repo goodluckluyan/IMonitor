@@ -421,7 +421,7 @@ int mons__GetSMSPosition(struct soap* cSoap,std::string strHallId,struct mons__S
 
 int mons__GetDBSynchStatus(struct soap* cSoap,int &state)
 {
-	LOGINFFMT(0,"WS:GetDBSynchStatus(%s)");
+	LOGINFFMT(0,"WS:GetDBSynchStatus");
 	CDataManager *pDM = CDataManager::GetInstance();
 	int nDBSynch;
 	if(pDM->GetDBSynchStatus(nDBSynch))
@@ -434,4 +434,25 @@ int mons__GetDBSynchStatus(struct soap* cSoap,int &state)
 		soap_sender_fault_subcode(cSoap, "mons:1", "GetDBSynchStatus Fail", "GetDBSynchStatus");
 		return 1;
 	}
+}
+
+int mons__ShutdownServer(struct soap* cSoap,int nType,int &state)
+{
+	LOGINFFMT(0,"WS:ShutdownServer(%s)",nType==0 ? "reboot":"shutdown");
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	std::string strDesc;
+	ptr->ShutdownServer(nType,state,strDesc);
+	return 0;
+}
+
+int mons__TimingRebootServer(struct soap* cSoap,int nDay,int nWeek,int nHour,int nMinute,
+	int nRepeat,int nRepeatCnt,int &state)
+{
+	LOGINFFMT(0,"WS:TimingRebootServer(%d,%d,%d,%d,%d,%d)",nDay,nWeek,nHour,nMinute,nRepeat,nRepeatCnt);
+	CDataManager *pDM = CDataManager::GetInstance();
+	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+	std::string strDesc;
+	ptr->TimingRebootServer(nDay,nWeek,nHour,nMinute,nRepeat,nRepeatCnt,state,strDesc);
+	return 0;
 }

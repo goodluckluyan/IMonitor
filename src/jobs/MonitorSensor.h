@@ -25,6 +25,10 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 #include <xercesc/util/XMLString.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/util/OutOfMemoryException.hpp>
+#include <xercesc/framework/LocalFileFormatTarget.hpp>
 
 class Char2XMLCh
 {
@@ -87,6 +91,20 @@ public:
 	// 解析调用SetOtherDBSynch返回
 	int Parser_SetOtherDBSynch(std::string &content,int &nRet);
 
+	// 调用备机的重启接口
+	bool SlaveReboot(int nType,int &nState,std::string strDesc);
+
+	bool FixRebootXmlAttribute(std::string strAttr ,int nValue);
+
+	int ReadRebootTask(int &nEnable,int& nDay,int& nWeek,int& nHour,int& nMinute,int &nType,int &nRepeatCnt,int &nExecnt);
+
+	// 保存至xml文件
+    bool WriteTimerFile(int nDay,int nWeek,int nHour,int nMinute,int nRepeatType,int nRepeatCnt,int &nState,std::string &strDesc);
+
+	int WriteXmlFile(xercesc::DOMDocument * ptrDoc,std::string xmlFile);
+
+	
+
 private:
 
 	// 获取http中的xml 
@@ -123,6 +141,9 @@ private:
 
 	// 解析网卡状态
 	bool ParseOtherMonitorEthState(std::string &retXml,std::vector<EthStatus> &vecEthStatus);
+
+	// 解析重启返回状态
+	bool ParseSlaveRebootState(std::string &retXml,int &nState,std::string &strDesc);
 	
 private:
 	std::string m_strURI;

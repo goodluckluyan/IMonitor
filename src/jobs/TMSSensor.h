@@ -92,6 +92,9 @@ public:
 	// 通知tms sms切换到新的主机
 	bool NotifyTMSSMSSwitch(std::string strHallId,std::string strNewIp,unsigned short port);
 
+	// 询问tms是否可以重启服务器
+	bool AskTMSReboot();
+
 	// kill tms PID
 	bool ShutDownTMS();
 
@@ -109,6 +112,7 @@ private:
 	bool ParseXmlFromOtherMonitor(std::string &retXml,int &nRet);
 	bool ParseXmlFromTMS(std::string &retXml,int &nRet);
 	bool ParseXmlFromTMSState(std::string &retXml,int &nRet);
+	bool ParseIsRebootXml(std::string &retXml,int &nRet);
 
 	// 调用备机上的切换tms接口
 	bool CallStandbySwitchTMS();

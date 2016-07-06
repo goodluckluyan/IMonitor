@@ -8,6 +8,8 @@
 #include "database/CppMySQLQuery.h"
 #include "utility/IPMgr.h"
 #include "C_constDef.h"
+#include "utility/C_Time.h"
+
 extern time_t g_tmDBSynch;
 //extern int g_RunState;
 bool g_bQuit = false;
@@ -426,11 +428,19 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 	case TASK_NUMBER_PROCESS_USERINPUT:
 		Controller();
 		break;
+	case TASK_NUMBER_REBOOT:
+		shutdown(0);//重启
+		break;
+	case TASK_NUMBER_SHUTDOWN:
+		shutdown(1);//关机
+		break;
 	default:
 	    nResult = 2;
 	}
 	return nResult;
 }
+
+
 
 //解析输入字符串
 void CInvoke::ParseCmd(std::string strCmd, std::vector<std::string> &vecParam)
@@ -1493,3 +1503,167 @@ bool CInvoke::GetDBSynchStatus_PIP()
 	
 
 }
+
+// 重启或关闭服务器
+int CInvoke::ShutdownServer(int nType,int &state,std::string &strDesc)
+{
+	C_Para * ptrPara = C_Para::GetInstance();
+	C_RunPara *ptrRunPara = C_RunPara::GetInstance();
+	C_TaskList * ptrTaskList = C_TaskList::GetInstance();
+	if(ptrPara->IsMain())
+	{
+		std::vector<SMSStatus> vecState;
+		CDataManager::GetInstance()->GetSMSStat(vecState);
+		int len = vecState.size();
+		bool bBusy = false;
+		for(int i = 0 ;i < len ;i++)
+		{
+			SMSStatus &node = vecState[i];
+			if(node.nStatus != 101)
+			{
+				bBusy = true;
+				break;
+			}
+		}
+
+		if(bBusy)
+		{
+			state = 1;
+			strDesc = "system busy ,can not reboot!";
+			return 1;
+		}
+		
+		// 询问tms是否可以重启
+		if(!m_ptrTMS->AskTMSReboot())
+		{
+			state = 1;
+			strDesc = "system busy ,can not reboot!";
+			return 1;
+		}
+		else
+		{
+			int nRole = ptrPara->GetRole();
+
+			// 先让备机执行 
+			// 成为接管角色后不对对端主机进行操作
+			if(nRole != 2 && nRole != 4)
+			{
+				int state;
+				std::string desc;
+				m_ptrMonitor->SlaveReboot(nType,state,desc);
+			}
+			
+
+			//再让主机执行
+			ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,
+				ptrRunPara->GetCurTime()+3);
+			state = 0;
+			strDesc = "OK";
+			return 0;
+		}
+
+
+	}
+	else
+	{
+		ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,
+			ptrRunPara->GetCurTime()+3);
+		state = 0;
+		strDesc = "OK";
+		return 0;
+	}
+}
+
+//重启或关机 0：为重启 1：关机
+void CInvoke::shutdown(int nType)
+{
+	if(nType == 0)
+	{
+		system("sudo reboot");
+	}
+	else
+	{
+		system("sudo shutdown -h now");
+	}
+}
+
+// 设置定时重启服务器
+int CInvoke::TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,
+	int nRepeatType,int nRepeatCnt,int &nState,std::string &strDesc)
+{
+
+	m_ptrMonitor->WriteTimerFile(nDay,nWeek,nHour,nMinute,nRepeatType,
+		nRepeatCnt,nState,strDesc);
+
+	// 如果不是第二天才生效,则立即设置
+	if(nRepeatType != 4)
+	{
+		SetupRebootTimer();
+	}
+	if(nRepeatType == 0)
+	{
+		C_TaskList * ptrTaskList = C_TaskList::GetInstance();
+		ptrTaskList->DeleteTask(TASK_NUMBER_REBOOT);
+		ptrTaskList->DeleteTask(TASK_NUMBER_SHUTDOWN);
+	}
+	return 0;
+}
+
+int CInvoke::SetupRebootTimer()
+{
+	int nEnable;
+	int nDay;
+	int nWeek;
+	int nHour;
+	int nMinute;
+	int nType;
+	int nRepeatCnt;
+	int nExecnt;
+	int iRet = m_ptrMonitor->ReadRebootTask(nEnable,nDay,nWeek,nHour,nMinute,nType,nRepeatCnt,nExecnt);
+	
+
+	if(!nEnable||nExecnt>=nRepeatCnt)
+	{
+		return 0;
+	}
+
+	C_TaskList * ptrTaskList = C_TaskList::GetInstance();
+	C_Time t1,t2;
+	std::string strCurDate;
+	t1.setCurTime();
+	t1.getDateStr(strCurDate); 
+	char buf[10]={'\0'};
+	snprintf(buf,10," %2d:%2d:00",nHour,nMinute);
+	std::string strDT = strCurDate + std::string(buf);
+	t2.setTimeStr(strDT);
+
+	switch(nType)
+	{
+	case 1:
+		if(t1.getDay() == nDay)
+		{
+			ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
+				t2.getTimeInt());
+			m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
+		}
+		break;
+	case 2:
+		if(t1.getWeek() == nWeek)
+		{
+			ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
+				t2.getTimeInt());
+			m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
+		}
+		break;
+	case 3:
+		ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
+			t2.getTimeInt());
+		m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
+		break;
+	}
+
+}
+
+
+
+

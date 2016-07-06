@@ -127,6 +127,16 @@ public:
 	// 获取sms位置信息
 	bool GetSMSPosition(std::string strHallID,std::string &strPos,int& nPort);
 
+	// 重启或关闭服务器
+	int ShutdownServer(int nType,int &state,std::string &strDesc);
+
+	// 定时重启服务器
+	int TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,
+		int nRepeat,int nRepeatCnt,int &state,std::string &strDesc);
+
+	// 添加定时重启任务
+	int SetupRebootTimer();
+
 	// 打印版本信息
 	void PrintVersionInfo();
 private:
@@ -145,6 +155,9 @@ private:
 	bool GetDBSynchStatus();
 
 	bool GetDBSynchStatus_PIP();
+
+	//重启或关机 0：为重启 1：关机
+	void shutdown(int nType);
 	
 private:
 

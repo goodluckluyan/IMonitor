@@ -5,6 +5,8 @@
 #include"log/C_LogManage.h"
 #include "utility/IPMgr.h"
 #include "para/C_Para.h"
+#include <unistd.h>
+#include <stdlib.h>
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGFATFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
@@ -1178,3 +1180,400 @@ bool  CMonitorSensor::ParseOtherMonitorSMSEWState(std::string &retXml,int &nStat
 	ptrParser = NULL;
 	return true;
 }
+
+// 解析重启返回状态
+bool  CMonitorSensor::ParseSlaveRebootState(std::string &retXml,int &nState,std::string &strDesc)
+{
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)retXml.c_str(), retXml.size(), "bufId");
+
+	try
+	{
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();
+
+		// 读取state节点
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("state"));
+		if(ptrNodeList == NULL)
+		{
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
+				"ParseSlaveRebootState:没有找到state节点");
+			return false;
+		}
+		else
+		{
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			char *pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
+			if(!str_state.empty())
+			{
+				nState = atoi(str_state.c_str());
+			}
+			XMLString::release(&pstate);
+		}
+
+		// 读取desc节点
+		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(C2X("desc"));
+		if(ptrInfoNodeList == NULL)
+		{
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
+				"ParseSlaveRebootState:没有找到desc节点");
+			return false;
+		}
+		else
+		{
+			DOMNode* ptrNode = ptrInfoNodeList->item(0);
+			char *pinfo = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			strDesc =  pinfo;
+			XMLString::release(&pinfo);
+		}
+
+		
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		ptrInputsource = NULL;
+		delete ptrInputsource;
+		ptrParser = NULL;
+	}
+
+
+	delete ptrParser;
+	delete ptrInputsource;
+	ptrInputsource = NULL;
+	ptrParser = NULL;
+	return true;
+}
+
+// 调用备机的重启接口
+bool CMonitorSensor::SlaveReboot(int nType,int &nState,std::string strDesc)
+{
+	bool bRet = false;
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns2:ShutdownServer></ns2:ShutdownServer>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+
+	// 通过http方式调用另一个调度软件的WebService服务
+	std::string strResponse;
+	int nInvokeRes = InvokerWebServer(xml,strResponse);
+	
+
+	// 提取xml
+	std::string retXml;
+	int result = GetHttpContent(strResponse, retXml);
+	if(retXml.empty())
+	{
+		LOGFATFMT(0,"GetOtherMonitorState:Parse Fail! xml is empty!\n");
+		return false;
+	}
+
+	// 解析xml读取结果
+	bRet = ParseSlaveRebootState(retXml,nState,strDesc);
+	return bRet;
+}
+
+int CMonitorSensor::ReadRebootTask(int &nEnable,int& nDay,int& nWeek,int& nHour,int& nMinute,
+	int &nType,int &nRepeatCnt,int &nExecnt)
+{
+	
+	if(access("./timer.xml",F_OK)<0)
+	{
+		return -1;
+	}
+
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme( XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	ptrParser->parse("./timer.xml");
+	DOMDocument * ptrDoc = ptrParser->getDocument();
+	DOMNodeList *ptrDevNode = ptrDoc->getElementsByTagName(XMLString::transcode ("Timer"));
+	if(ptrDevNode->getLength() == 0)
+	{
+		return -1;
+	}
+
+	DOMNode *node = ptrDevNode->item(0);
+	DOMElement * ptrEle = (DOMElement *)node;
+
+	char *val_enable = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Enable")));
+	nEnable = atoi(val_enable);
+	XMLString::release(&val_enable);
+
+	char *val_day = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Day")));
+	nDay = atoi(val_day);
+	XMLString::release(&val_day);
+
+	char *val_week = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Week")));
+	nWeek = atoi(val_week);
+	XMLString::release(&val_week);
+
+	char *val_hour = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Hour")));
+	nHour = atoi(val_hour);
+	XMLString::release(&val_hour);
+
+	char *val_min = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Minute")));
+	nMinute = atoi(val_min);
+	XMLString::release(&val_min);
+
+	char *val_type = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Type")));
+	nType = atoi(val_type);
+	XMLString::release(&val_type);
+
+	char *val_cnt = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Cnt")));
+	nRepeatCnt = atoi(val_cnt);
+	XMLString::release(&val_cnt);
+
+	char *val_ecnt = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("ExeCnt")));
+	nExecnt = atoi(val_ecnt);
+	XMLString::release(&val_ecnt);
+
+	if(ptrParser != NULL)
+	{
+		delete ptrParser;
+	}
+
+	return 0;
+
+}
+
+bool CMonitorSensor::WriteTimerFile(int nDay,int nWeek,int nHour,int nMinute,int nRepeatType,int nRepeatCnt,
+	int &nState,std::string &strDesc)
+{
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	ptrParser->parse("./timer.xml");
+	DOMDocument * ptrDoc = ptrParser->getDocument();
+	DOMNodeList *ptrDevNode = ptrDoc->getElementsByTagName(XMLString::transcode ("Timer"));
+	if(ptrDevNode->getLength() == 0)
+	{
+		nState = 1;
+		strDesc = "xml error,cannot find timer tag";
+		return false;
+	}
+
+	DOMNode *node = ptrDevNode->item(0);
+	DOMElement * ptrEle = (DOMElement *)node;
+	if(nRepeatType == 0)
+	{
+		ptrEle->setAttribute(XMLString::transcode("Enable"),XMLString::transcode("0"));
+		char *new_enable = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Enable")));
+		XMLString::release(&new_enable);
+	}
+	else
+	{
+		ptrEle->setAttribute(XMLString::transcode("Enable"),XMLString::transcode("1"));
+		char *new_enable = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Enable")));
+		XMLString::release(&new_enable);
+
+		char buf[4]={'\0'};
+		snprintf(buf,4,"%d",nDay);
+		ptrEle->setAttribute(XMLString::transcode("Day"),XMLString::transcode(buf));
+		char *new_day = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Day")));
+		XMLString::release(&new_day);
+
+		memset(buf,0,sizeof(buf));
+		snprintf(buf,4,"%d",nWeek);
+		ptrEle->setAttribute(XMLString::transcode("Week"),XMLString::transcode(buf));
+		char *new_week = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Week")));
+		XMLString::release(&new_week);
+
+		memset(buf,0,sizeof(buf));
+		snprintf(buf,4,"%d",nHour);
+		ptrEle->setAttribute(XMLString::transcode("Hour"),XMLString::transcode(buf));
+		char *new_hour = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Hour")));
+		XMLString::release(&new_hour);
+
+		memset(buf,0,sizeof(buf));
+		snprintf(buf,4,"%d",nMinute);
+		ptrEle->setAttribute(XMLString::transcode("Minute"),XMLString::transcode(buf));
+		char *new_min = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Minute")));
+		XMLString::release(&new_min);
+
+		memset(buf,0,sizeof(buf));
+		snprintf(buf,4,"%d",nRepeatType);
+		ptrEle->setAttribute(XMLString::transcode("Type"),XMLString::transcode(buf));
+		char *new_type = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Type")));
+		XMLString::release(&new_type);
+
+		memset(buf,0,sizeof(buf));
+		snprintf(buf,4,"%d",nRepeatCnt);
+		ptrEle->setAttribute(XMLString::transcode("Cnt"),XMLString::transcode(buf));
+		char *new_cnt = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("Cnt")));
+		XMLString::release(&new_cnt);
+
+		ptrEle->setAttribute(XMLString::transcode("ExeCnt"),XMLString::transcode("0"));
+		char *new_ecnt = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode("ExeCnt")));
+		XMLString::release(&new_ecnt);
+
+	}
+	
+	
+	WriteXmlFile(ptrDoc,"./timer.xml");
+
+	if(ptrParser != NULL)
+	{
+		delete ptrParser;
+	}
+	nState = 0;
+	strDesc = "Done";
+
+	return true;
+}
+
+bool CMonitorSensor::FixRebootXmlAttribute(std::string strAttr ,int nValue)
+{
+
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	ptrParser->parse("./timer.xml");
+	DOMDocument * ptrDoc = ptrParser->getDocument();
+	DOMNodeList *ptrDevNode = ptrDoc->getElementsByTagName(XMLString::transcode ("Timer"));
+	if(ptrDevNode->getLength() == 0)
+	{
+		return false;
+	}
+
+	DOMNode *node = ptrDevNode->item(0);
+	DOMElement * ptrEle = (DOMElement *)node;
+	if(!ptrEle->hasAttribute(XMLString::transcode(strAttr.c_str())))
+	{
+		return false;
+	}
+
+	char buf[4]={'\0'};
+	snprintf(buf,4,"%d",nValue);
+	ptrEle->setAttribute(XMLString::transcode(strAttr.c_str()),XMLString::transcode(buf));
+	char *new_val = XMLString::transcode(ptrEle->getAttribute(XMLString::transcode(strAttr.c_str())));
+	XMLString::release(&new_val);
+
+	WriteXmlFile(ptrDoc,"./timer.xml");
+
+	if(ptrParser != NULL)
+	{
+		delete ptrParser;
+	}
+
+	return true;
+}
+int CMonitorSensor::WriteXmlFile(DOMDocument * ptrDoc,std::string xmlFile)
+{
+
+	int iRet = 0;
+	XMLFormatTarget* xmlFormatTarget = NULL; // 本地文件保存目标
+	DOMLSSerializer * serializer = NULL;
+	DOMLSOutput *output = NULL;
+	DOMImplementation *domImplementation  = NULL;
+	try
+	{
+		if( xmlFormatTarget == NULL )
+		{
+			xmlFormatTarget = new LocalFileFormatTarget( xmlFile.c_str());
+
+			if( xmlFormatTarget == NULL )
+			{
+				return iRet;
+			}
+		}
+
+		if( domImplementation == NULL )
+		{
+			XMLCh tempStr[100];
+			XMLString::transcode("LS", tempStr, 99);
+			domImplementation = DOMImplementationRegistry::getDOMImplementation(tempStr);
+			if( domImplementation == NULL )
+			{
+				return iRet;
+			}
+		}
+
+
+		if( serializer == NULL )
+		{
+			serializer = ((DOMImplementationLS *)domImplementation)->createLSSerializer();
+			if( serializer == NULL )
+			{
+				return iRet;
+			}
+		}
+
+		if( output == NULL )
+		{
+			output = ((DOMImplementationLS *)domImplementation)->createLSOutput();
+			if( output == NULL )
+			{
+				return iRet;
+			}
+		}
+
+		//是否设置格式化输出.(如自动换行) 
+		if ( serializer->getDomConfig()->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true) ) 
+		{
+			serializer->getDomConfig()->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true); 
+		}
+
+		serializer->setNewLine(NULL);
+
+		output->setByteStream( xmlFormatTarget );
+
+		serializer->write( ptrDoc , output );
+
+		//xmlFormatTarget->flush();
+
+		if( output != NULL )
+		{
+			delete output;
+			output = NULL;
+		}
+
+		if( serializer != NULL )
+		{
+			delete serializer;
+			serializer = NULL;
+		}
+
+		if( xmlFormatTarget != NULL )
+		{
+			delete xmlFormatTarget;
+			xmlFormatTarget = NULL;
+		}
+
+		if( ptrDoc != NULL )
+		{
+			delete ptrDoc;
+			ptrDoc = NULL;
+		}
+
+	}
+	catch ( XMLException& e )
+	{
+		printf("%s",XMLString::transcode(e.getMessage())) ;
+		return iRet;
+	}
+
+}
+
+	
+
+	
