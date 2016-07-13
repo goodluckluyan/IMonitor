@@ -377,5 +377,8 @@
     <ClInclude Include="..\..\utility\IPMgr.h">
       <Filter>utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\parser_xml.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

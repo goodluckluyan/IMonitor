@@ -471,7 +471,7 @@ int CheckDisk::getkey( const char *pbuf, string &temp_key, string &temp_value)
 	memset(ctmp,0,MAX_BUFF_LEN);
 	memcpy(ctmp,&pbuf[ipos_eq + 2], ipos_end2 - ipos_eq-1);
 
-	temp_value = ctmp;
+	temp_value = std::string(ctmp);
 
 	return 1;
 }

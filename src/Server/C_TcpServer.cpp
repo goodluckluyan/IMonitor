@@ -20,7 +20,8 @@ CTcpServer::CTcpServer():m_serverSocket(0 ),
     m_clientSocket(0 ),
     m_pObserver(NULL ),
 	m_bConnectd(false ),
-	m_bClosed(true )
+	m_bClosed(true ),
+	m_threadId(0)
 {
 
 }
@@ -58,10 +59,23 @@ bool CTcpServer::StartServer(const unsigned short& port )
 
 bool CTcpServer::CloseServer()
 {
-	pthread_cancel(m_threadId );
+	if(m_threadId)
+	{
+		pthread_cancel(m_threadId );
+	}
+	
+	shutdown(m_serverSocket,2);
 	int no =close(m_serverSocket );
 	no &=close(m_clientSocket );
-	m_bClosed =!no;
+	m_bClosed =true;
+	while(true)
+	{
+		if(m_serverSocket == 0)
+		{
+			break;
+		}
+		sleep(1);
+	}
 	return !no;
 }
 
@@ -199,7 +213,22 @@ void CTcpServer::ListenConnect()
 	{
 		if (m_bClosed )
 		{
+			m_serverSocket = 0;
 			break;
+		}
+		struct timeval tv;
+		tv.tv_sec = 3;
+		tv.tv_usec = 0;
+		fd_set fdset;
+		FD_ZERO(&fdset);
+		FD_SET(m_serverSocket,&fdset);
+		if(select(m_serverSocket+1,&fdset,NULL,NULL,&tv)<=0)
+		{
+			continue;
+		}
+		if(!FD_ISSET(m_serverSocket,&fdset))
+		{
+			continue;
 		}
 		if( (m_clientSocket=accept(m_serverSocket,
 			(struct sockaddr* )&clientAddr,
@@ -215,6 +244,7 @@ void CTcpServer::ListenConnect()
 			pthread_detach(m_threadId );
 		}
 	}
+
 }
 
 ICTcpServer* createTcpServer( )
@@ -226,6 +256,7 @@ void releaseTcpServer(ICTcpServer* pServer )
 {
 	if(pServer)
 	{
+
 		delete pServer;
 		pServer =NULL;
 	}

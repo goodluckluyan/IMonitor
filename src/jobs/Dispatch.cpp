@@ -28,32 +28,33 @@ CDispatch::~CDispatch()
 	pthread_cond_signal(&cond);
 
 	pthread_cond_destroy(&cond);
+//	xercesc::XMLPlatformUtils::Terminate();
 }
 
 // 初始化
 bool CDispatch::Init(std::string strPath)
 {
-	try
-	{
-		xercesc::XMLPlatformUtils::Initialize();
-	}
-	catch( xercesc::XMLException& e )
-	{
-		char* message = xercesc::XMLString::transcode( e.getMessage() );
-		xercesc::XMLString::release( &message );
-	}
+// 	try
+// 	{
+// 		xercesc::XMLPlatformUtils::Initialize();
+// 	}
+// 	catch( xercesc::XMLException& e )
+// 	{
+// 		char* message = xercesc::XMLString::transcode( e.getMessage() );
+// 		xercesc::XMLString::release( &message );
+// 	}
 
 	if(access(strPath.c_str(),R_OK) < 0)
 	{
 		LOGERRFMT(0,"CDispatch Init Read %s Failed!",strPath.c_str());
-		xercesc::XMLPlatformUtils::Terminate();
+		//xercesc::XMLPlatformUtils::Terminate();
 		return false;
 	}
 
 	ParsePolicy(strPath);
 	
 
-	xercesc::XMLPlatformUtils::Terminate();
+	
 	return true;
 }
 
@@ -106,7 +107,7 @@ bool CDispatch::ParsePolicy(std::string strPath)
 // 解析内部节点
 bool CDispatch::GetPolicyNode(DOMDocument* ptrDoc,std::string strNodeName,std::map<std::string,PolicyInfoEle> &mapPInfo)
 {
-	DOMNodeList *ptrDevNode = ptrDoc->getElementsByTagName(XMLString::transcode (strNodeName.c_str()));
+	DOMNodeList *ptrDevNode = ptrDoc->getElementsByTagName(C2X(strNodeName.c_str()));
 	if(ptrDevNode->getLength() == 0)
 	{
 		return false;
@@ -153,8 +154,8 @@ bool CDispatch::GetPolicyNode(DOMDocument* ptrDoc,std::string strNodeName,std::m
 				}
 				XMLString::release(&name);
 			}
-			XMLString::release(&nodeName);
 		}
+		XMLString::release(&nodeName);
 
 		if (node->hasChildNodes()) 
 		{

@@ -25,6 +25,7 @@
 #include "database/CppMySQL3DB.h"
 #include "utility/C_TcpTransport.h"
 #include "Server/C_FileCopyProtSerProxy.h"
+#include "parser_xml.h"
 #include "execinfo.h"
 
 extern bool g_bQuit;
@@ -293,6 +294,17 @@ int main(int argc, char** argv)
 	{
 		return -1;
 	}
+
+	try
+	{
+		xercesc::XMLPlatformUtils::Initialize();
+	}
+	catch( xercesc::XMLException& e )
+	{
+		char* message = xercesc::XMLString::transcode( e.getMessage() );
+		xercesc::XMLString::release( &message );
+	}
+
 	int iResult = -1;
 
 	//初始化运行时参数设置---时间设置。
@@ -421,6 +433,7 @@ int main(int argc, char** argv)
 	if (!pProxy->Start() )
 	{
 		LOGINFFMT(LOG_ERR,"导片线程启动失败");
+		delete pProxy;
 		return 0;
 	}
 
@@ -484,15 +497,18 @@ int main(int argc, char** argv)
 	if(pProxy)
 	{
 		pProxy->Close();
+		delete pProxy;
 	}
 	Invoker.DeInit();
 	C_TaskList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
+	
+	GlobalStatus::DestoryInstinct();
+	LOGINFFMT(0,"IMonitor Exit!\n");
 	C_LogManage::DestoryInstance();
 	C_RunPara::DestoryInstance();
 	C_Para::DestoryInstance();
-	GlobalStatus::DestoryInstinct();
-	LOGINFFMT(0,"IMonitor Exit!\n");
+	xercesc::XMLPlatformUtils::Terminate();
 	return 0;
 }
 

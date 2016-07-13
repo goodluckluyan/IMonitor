@@ -111,7 +111,8 @@ int C_Task::IsEnableRun(int iCurTime)
 		return 0;
 	}
 
-	if(m_iTaskState == TASK_NO_STATE && m_emTaskType == ONCE_TASK)
+	if(m_iTaskState == TASK_NO_STATE && m_emTaskType == ONCE_TASK
+		&& m_iStartTime <= iCurTime)
 	{
 		m_iTaskState = TASK_RUNNING_STATE;
 		return 0;

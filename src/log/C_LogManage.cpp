@@ -23,7 +23,30 @@ C_LogManage::C_LogManage()
 
 C_LogManage::~C_LogManage()
 {
-	
+	list<PTMP_LOG>::iterator it = m_listTmpLog.begin();
+	for(;it != m_listTmpLog.end(); ++it)
+	{
+		WriteLog((*it)->iLevel, (*it)->iModule, (*it)->iSubModule,
+			(*it)->errorCode,(*it)->strError);
+		delete (*it);
+	}
+	m_listTmpLog.clear();
+
+	list<PLOG_STRUCT>::iterator logit = m_listLog.begin();
+	for(;logit != m_listLog.end();++logit)
+	{
+		LogManage * ptrLM = (*logit)->pLogManage;
+		if(ptrLM)
+		{
+			delete ptrLM;
+		}
+
+		PLOG_STRUCT  ptrPS = (*logit);
+		if(ptrPS)
+		{
+			delete ptrPS;
+		}
+	}
 }
 
 C_LogManage* C_LogManage::GetInstance()
@@ -303,6 +326,7 @@ int C_LogManage::DeletePreLog(string &strPath)
 				}
 		}
 	}
+	closedir(dp);
 	return 0;
 }
 

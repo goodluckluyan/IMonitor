@@ -5,22 +5,6 @@
 #ifndef DISPATCH_INC
 #define DISPATCH_INC
 #include <map>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/util/XercesDefs.hpp>
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/dom/DOMNode.hpp>	
-#include <xercesc/dom/DOMDocument.hpp>
-#include <xercesc/dom/DOMDocumentType.hpp>
-#include <xercesc/dom/DOMElement.hpp>
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMImplementationLS.hpp>
-#include <xercesc/dom/DOMNodeIterator.hpp>
-#include <xercesc/dom/DOMNodeList.hpp>
-#include <xercesc/dom/DOMText.hpp>
-#include <xercesc/framework/MemBufInputSource.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/util/XMLUni.hpp>
-#include <xercesc/util/XMLString.hpp>
 #include <pthread.h>
 #include <map>
 #include <list>
@@ -28,7 +12,7 @@
 #include <string>
 #include "threadManage/C_CS.h"
 #include "C_constDef.h"
-
+#include "parser_xml.h"
 
 enum enDTriggerType{NULLTask=0,RAIDTask=1,ETHTask=2,SMSTask=3,TMSTask=4,IMonitorTask=5,ETH=6};
 enum enCMDType{NULLCMD=0,LOGCmd=1,POLICYCmd =2};

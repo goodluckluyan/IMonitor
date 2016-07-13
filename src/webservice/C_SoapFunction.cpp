@@ -436,23 +436,30 @@ int mons__GetDBSynchStatus(struct soap* cSoap,int &state)
 	}
 }
 
-int mons__ShutdownServer(struct soap* cSoap,int nType,int &state)
+int mons__ShutdownServer(struct soap* cSoap,int nType,struct mons__RebootServerResult &result)
 {
 	LOGINFFMT(0,"WS:ShutdownServer(%s)",nType==0 ? "reboot":"shutdown");
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	std::string strDesc;
+	int state;
 	ptr->ShutdownServer(nType,state,strDesc);
+	result.strDesc = strDesc;
+	result.state = state;
+
 	return 0;
 }
 
 int mons__TimingRebootServer(struct soap* cSoap,int nDay,int nWeek,int nHour,int nMinute,
-	int nRepeat,int nRepeatCnt,int &state)
+	int nRepeat,int nRepeatCnt,struct mons__RebootServerResult &result)
 {
 	LOGINFFMT(0,"WS:TimingRebootServer(%d,%d,%d,%d,%d,%d)",nDay,nWeek,nHour,nMinute,nRepeat,nRepeatCnt);
 	CDataManager *pDM = CDataManager::GetInstance();
 	CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
 	std::string strDesc;
+	int state;
 	ptr->TimingRebootServer(nDay,nWeek,nHour,nMinute,nRepeat,nRepeatCnt,state,strDesc);
+	result.strDesc = strDesc;
+	result.state = state;
 	return 0;
 }

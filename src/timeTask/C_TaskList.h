@@ -23,6 +23,10 @@ public:
 	// 增加任务
 	int AddTask(int iTaskNum,  void *pPara, int iStartTime);
 
+	// 增加任务可以设置任务类型
+	int AddTask(int iTaskNum,  void *pPara, int iStartTime,int nType);
+
+
 	//运行定时任务 条件 C_Task.m_iStartTime <= 当前时间iCurTime
 	//时执行该定时任务
 	int RunTasks(int iCurTime);

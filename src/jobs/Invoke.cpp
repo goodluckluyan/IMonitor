@@ -199,6 +199,7 @@ int  CInvoke::Init()
 
 void CInvoke::DeInit()
 {
+	LOGINFFMT(0,"CInvoke::DeInit.");
 	SAFE_DELETE(m_ptrDisk);
 	SAFE_DELETE(m_ptrNet);
 	SAFE_DELETE(m_ptrLstHall);
@@ -311,12 +312,16 @@ bool CInvoke::AddInitTask()
 	// 添加文件任务
 	ptrTaskList->AddTask(TASK_NUMBER_FILEOPERATION_ROUTINE,NULL,-1);
 
+
+	SetupRebootTimer();
+
 	// 运行在交互模式
 	if(0 == g_nRunType)
 	{
 		// 添加处理用户输入命令
 		ptrTaskList->AddTask(TASK_NUMBER_PROCESS_USERINPUT,NULL,0);
 	}
+
 
 
 }
@@ -1534,40 +1539,26 @@ int CInvoke::ShutdownServer(int nType,int &state,std::string &strDesc)
 		}
 		
 		// 询问tms是否可以重启
-		if(!m_ptrTMS->AskTMSReboot())
+// 		if(!m_ptrTMS->AskTMSReboot())
+// 		{
+// 			state = 1;
+// 			strDesc = "system busy ,can not reboot!";
+// 			return 1;
+// 		}
+// 		else
 		{
-			state = 1;
-			strDesc = "system busy ,can not reboot!";
-			return 1;
-		}
-		else
-		{
-			int nRole = ptrPara->GetRole();
-
-			// 先让备机执行 
-			// 成为接管角色后不对对端主机进行操作
-			if(nRole != 2 && nRole != 4)
-			{
-				int state;
-				std::string desc;
-				m_ptrMonitor->SlaveReboot(nType,state,desc);
-			}
-			
-
 			//再让主机执行
-			ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,
-				ptrRunPara->GetCurTime()+3);
+			ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,ptrRunPara->GetCurTime() + 3,ONCE_TASK);
+			LOGINFFMT(0,"-----------Reboot Or Shutdown After 3 Sec -------------------");
 			state = 0;
 			strDesc = "OK";
 			return 0;
 		}
-
-
 	}
 	else
 	{
-		ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,
-			ptrRunPara->GetCurTime()+3);
+		ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,ptrRunPara->GetCurTime() + 3,ONCE_TASK);
+		LOGINFFMT(0,"-----------Reboot Or Shutdown After 3 Sec -------------------");
 		state = 0;
 		strDesc = "OK";
 		return 0;
@@ -1577,13 +1568,28 @@ int CInvoke::ShutdownServer(int nType,int &state,std::string &strDesc)
 //重启或关机 0：为重启 1：关机
 void CInvoke::shutdown(int nType)
 {
+	C_Para * ptrPara = C_Para::GetInstance();
+	int nRole = ptrPara->GetRole();
+
+	// 先让备机执行 
+	// 成为接管角色后不对对端主机进行操作
+	if(nRole == 1)
+	{
+		int state;
+		std::string desc;
+		m_ptrMonitor->SlaveReboot(nType,state,desc);
+	}
+
 	if(nType == 0)
 	{
-		system("sudo reboot");
+		LOGINFFMT(0,"-----------exe reboot command-------------------");
+		system("reboot");
 	}
 	else
 	{
-		system("sudo shutdown -h now");
+		LOGINFFMT(0,"-----------exe shutdown command-------------------");
+		system("shutdown -h now");
+		
 	}
 }
 
@@ -1596,11 +1602,21 @@ int CInvoke::TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,
 		nRepeatCnt,nState,strDesc);
 
 	// 如果不是第二天才生效,则立即设置
-	if(nRepeatType != 4)
+	C_Para * ptrPara = C_Para::GetInstance();
+	bool bMain = ptrPara->IsMain();
+
+	if(bMain)
+	{
+		m_ptrMonitor->InvokeSlaveTimingReboot(nDay,nWeek,nHour,nMinute,nRepeatType,
+			nRepeatCnt,nState,strDesc);
+	}
+
+	
+	if(nRepeatType != 4 && bMain)
 	{
 		SetupRebootTimer();
 	}
-	if(nRepeatType == 0)
+	if(nRepeatType == 0 && bMain)
 	{
 		C_TaskList * ptrTaskList = C_TaskList::GetInstance();
 		ptrTaskList->DeleteTask(TASK_NUMBER_REBOOT);
@@ -1619,15 +1635,29 @@ int CInvoke::SetupRebootTimer()
 	int nType;
 	int nRepeatCnt;
 	int nExecnt;
-	int iRet = m_ptrMonitor->ReadRebootTask(nEnable,nDay,nWeek,nHour,nMinute,nType,nRepeatCnt,nExecnt);
-	
 
-	if(!nEnable||nExecnt>=nRepeatCnt)
+	C_Para * ptrPara = C_Para::GetInstance();
+	bool bMain = ptrPara->IsMain();
+	if(!bMain)
 	{
 		return 0;
 	}
 
+
+	int iRet = m_ptrMonitor->ReadRebootTask(nEnable,nDay,nWeek,nHour,nMinute,nType,nRepeatCnt,nExecnt);
+
+
+	if(!nEnable||nExecnt>=nRepeatCnt)
+	{
+		LOGINFFMT(0,"-----------!nEnable:%d||nExecnt>=nRepeatCnt(%d:%d)---------",nEnable,nExecnt,nRepeatCnt);
+		return 0;
+	}
+
+	// 删除之前已有的定时重启
 	C_TaskList * ptrTaskList = C_TaskList::GetInstance();
+	ptrTaskList->DeleteTask(TASK_NUMBER_REBOOT);
+
+	
 	C_Time t1,t2;
 	std::string strCurDate;
 	t1.setCurTime();
@@ -1640,25 +1670,33 @@ int CInvoke::SetupRebootTimer()
 	switch(nType)
 	{
 	case 1:
-		if(t1.getDay() == nDay)
+		if(t1.getDay() == nDay && t1.getHour() < nHour)
 		{
 			ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
-				t2.getTimeInt());
+				t2.getTimeInt(),ONCE_TASK);
+			LOGINFFMT(0,"-----------Add Timer Reboot(each month day:%d) -------------------",nDay);
 			m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
 		}
 		break;
 	case 2:
-		if(t1.getWeek() == nWeek)
+		if(t1.getWeek() == nWeek && t1.getHour() < nHour)
 		{
+
 			ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
-				t2.getTimeInt());
+				t2.getTimeInt(),ONCE_TASK);
+			LOGINFFMT(0,"-----------Add Timer Reboot(each week:%d) -------------------",nWeek);
 			m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
 		}
 		break;
 	case 3:
-		ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
-			t2.getTimeInt());
-		m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
+		if(t1.getHour() < nHour)
+		{
+			ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,
+				t2.getTimeInt(),ONCE_TASK);
+			LOGINFFMT(0,"-----------Add Timer Reboot(each day:%d:%d) -------------------",nHour,nMinute);
+			m_ptrMonitor->FixRebootXmlAttribute("ExeCnt",++nExecnt);
+		}
+		
 		break;
 	}
 

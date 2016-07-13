@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\C_constDef.h" />
     <ClInclude Include="..\..\C_ErrorDef.h" />
+    <ClInclude Include="..\..\parser_xml.h" />
     <ClInclude Include="..\..\Server\ConstDef.h" />
     <ClInclude Include="..\..\Server\C_FileCopyProtocolServer.h" />
     <ClInclude Include="..\..\Server\C_FileCopyProtSerProxy.h" />

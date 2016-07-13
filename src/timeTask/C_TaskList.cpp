@@ -7,6 +7,7 @@
 #include "C_TaskList.h"
 #include "log/C_LogManage.h"
 #include "C_ErrorDef.h"
+#include "para/C_RunPara.h"
 
 #define  LOGFAT(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_TIMETASK,0,errid,msg)
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_TIMETASK,0,errid,fmt,##__VA_ARGS__)
@@ -25,6 +26,7 @@ C_TaskList* C_TaskList::GetInstance()
 
 void  C_TaskList::DestoryInstance()
 {
+
 	if(m_pInstance != NULL)
 	{
 		delete m_pInstance;
@@ -170,6 +172,41 @@ int C_TaskList::AddTask(int iTaskNum,  void *pPara, int iStartTime)
 		pTask->m_iStartTime = iStartTime;
 	}
 
+	pTask->SetTaskState(TASK_NO_STATE);
+	return 0;
+}
+
+/*******************************************************************************
+* 函数名称：	AddTask
+* 功能描述：	增加任务到任务队列
+* 输入参数：	iTaskNum：命令字
+				pPara :参数指针
+				iStarTime:定时任务开时时间，0为单次任务，-1为固定任务
+* 输出参数：	
+* 返 回 值：	0：成功，非0失败
+* 其它说明：	
+* 修改日期		修改人	      修改内容
+* ------------------------------------------------------------------------------
+* 2014-09-01				创建
+*******************************************************************************/
+int C_TaskList::AddTask(int iTaskNum,  void *pPara, int iStartTime,int nType)
+{
+	C_Task *pTask;
+	int iResult = GetIdleTask(&pTask);
+	if(iResult != 0)
+	{
+		return iResult;
+	}
+	
+	if(nType != ONCE_TASK && nType != ALWAYS_TASK && nType != TIME_TASK )
+	{
+		return -1;
+	}
+
+	pTask->m_iCommandNumber = iTaskNum;
+	pTask->m_pPara = pPara;
+	pTask->m_emTaskType = (TASK_TYPE )nType;
+	pTask->m_iStartTime = iStartTime;
 	pTask->SetTaskState(TASK_NO_STATE);
 	return 0;
 }

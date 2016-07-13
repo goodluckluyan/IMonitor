@@ -103,8 +103,14 @@ struct mons__SMSPositionInfo
 	int nPort;
 };
 
+struct mons__RebootServerResult
+{
+	int state;
+	std::string strDesc;
+};
+
 int mons__GetDBSynchStatus(int &state);
 
-int mons__ShutdownServer(int nType,int &state);
+int mons__ShutdownServer(int nType,struct mons__RebootServerResult &result);
 
-int mons__TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,int nRepeat,int nRepeatCnt,int &state);
+int mons__TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,int nRepeatType,int nRepeatCnt,struct mons__RebootServerResult &result);

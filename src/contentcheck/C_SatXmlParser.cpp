@@ -26,16 +26,16 @@ using namespace std;
 
 C_SatXmlParser::C_SatXmlParser(const char* str)
 {
-	try
-	{
-		XMLPlatformUtils::Initialize();
-	}
-	catch( XMLException& e )
-	{
-		char* message = XMLString::transcode( e.getMessage() );
-		XMLString::release( &message );
-		m_xml_parser = NULL;
-	}
+// 	try
+// 	{
+// 		XMLPlatformUtils::Initialize();
+// 	}
+// 	catch( XMLException& e )
+// 	{
+// 		char* message = XMLString::transcode( e.getMessage() );
+// 		XMLString::release( &message );
+// 		m_xml_parser = NULL;
+// 	}
 
 	m_xml_parser = new XercesDOMParser;
 	assert(m_xml_parser);
@@ -75,16 +75,16 @@ C_SatXmlParser::~C_SatXmlParser()
 
 	// Terminate Xerces
 
-	try
-	{
-		XMLPlatformUtils::Terminate();  // Terminate after release of memory
-	}
-	catch( xercesc::XMLException& e )
-	{
-		char* message = xercesc::XMLString::transcode( e.getMessage() );
-		//cerrout 
-		XMLString::release( &message );
-	}
+// 	try
+// 	{
+// 		XMLPlatformUtils::Terminate();  // Terminate after release of memory
+// 	}
+// 	catch( xercesc::XMLException& e )
+// 	{
+// 		char* message = xercesc::XMLString::transcode( e.getMessage() );
+// 		//cerrout 
+// 		XMLString::release( &message );
+// 	}
 }
 
 int C_SatXmlParser::GetDcpInfoList_parser( std::vector< Satellite::DCPInfo > &DcpList )

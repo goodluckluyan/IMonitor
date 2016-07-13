@@ -1027,7 +1027,7 @@ int C_Hall::Parser_SwitchSMS(std::string &content,int &nRet)
 		ptrParser->parse(*ptrInputsource);
 		DOMDocument* ptrDoc = ptrParser->getDocument();
 
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("ret"));
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if ( ptrNodeList == NULL)
 		{
 			return ERROR_PLAYER_AQ_NEEDSOAPELEM;
@@ -1155,7 +1155,7 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 		ptrParser->parse(*ptrInputsource);
 		DOMDocument* ptrDoc = ptrParser->getDocument();
 			
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("sms:state"));
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("sms:state"));
 		if ( ptrNodeList == NULL)
 		{
 			return ERROR_PLAYER_AQ_NEEDSOAPELEM;
@@ -1173,7 +1173,7 @@ int C_Hall::Parser_GetSMSWorkState( const string &content, int &state, string &i
 			XMLString::release( &pstate);
 		}
 
-		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(XMLString::transcode ("sms:info"));
+		DOMNodeList *ptrInfoNodeList = ptrDoc->getElementsByTagName(C2X("sms:info"));
 		if ( ptrNodeList == NULL)
 		{
 			return ERROR_PLAYER_AQ_NEEDSOAPELEM;

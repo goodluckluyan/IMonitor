@@ -36,7 +36,7 @@ m_ptrDM(NULL)
 
 CTMSSensor::~CTMSSensor()
 {
-	xercesc::XMLPlatformUtils::Terminate();
+//	xercesc::XMLPlatformUtils::Terminate();
 }
 
 // 设置对端主机信息
@@ -51,15 +51,16 @@ bool CTMSSensor ::Init(std::string strIP,int nPort,int nTMSWSPort)
 	m_nPort = nPort;
 	m_nTMSWBPort = nTMSWSPort;
 
-	try
-	{
-		xercesc::XMLPlatformUtils::Initialize();
-	}
-	catch( xercesc::XMLException& e )
-	{
-		char* message = xercesc::XMLString::transcode( e.getMessage() );
-		xercesc::XMLString::release( &message );
-	}
+// 	try
+// 	{
+// 		xercesc::XMLPlatformUtils::Initialize();
+// 	}
+// 	catch( xercesc::XMLException& e )
+// 	{
+// 		char* message = xercesc::XMLString::transcode( e.getMessage() );
+// 		printf("%s\n",message);
+// 		xercesc::XMLString::release( &message );
+// 	}
 
 	//StartTMS();
 	return true;
@@ -616,7 +617,7 @@ bool CTMSSensor::AskTMSReboot()
 		|| nInvokeRes == ERROR_SENSOR_TCP_SEND)
 	{
 		// 写错误日志
-		LOGFMT(ULOG_ERROR,"NotifyTMSSMSSwitch InvokerWebServer Fail(%d)!",nInvokeRes);
+		LOGFMT(ULOG_ERROR,"AskTMSReboot InvokerWebServer Fail(%d)!",nInvokeRes);
 		return false;
 	}
 
@@ -626,14 +627,14 @@ bool CTMSSensor::AskTMSReboot()
 
 	if(retXml.empty())
 	{
-		LOGFMT(ULOG_ERROR,"NotifyTMSSMSSwitch:Parse Fail! xml is empty!");
+		LOGFMT(ULOG_ERROR,"AskTMSReboot Parse Fail! xml is empty!");
 		return false;
 	}
 
 	int nRet = -1 ;
 
 
-	//if(ParseXmlFromTMS(retXml,nRet))解析返回值
+	// 解析返回值
 	if(ParseIsRebootXml(retXml,nRet))
 	{
 		return nRet == 0 ? true:false;
@@ -660,7 +661,7 @@ bool  CTMSSensor::ParseIsRebootXml(std::string &retXml,int &nRet)
 		DOMDocument* ptrDoc = ptrParser->getDocument();	
 
 		// 读取ret节点
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("tmsState"));
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("isboot"));
 		if(ptrNodeList == NULL)
 		{
 			LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");

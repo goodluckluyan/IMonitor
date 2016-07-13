@@ -70,6 +70,7 @@ namespace FileCopyProtocol
 		if (m_pTcpServer )
 		{
 			flag =m_pTcpServer->CloseServer();
+
 			releaseTcpServer(m_pTcpServer );
 			m_pTcpServer =NULL;
 		}
