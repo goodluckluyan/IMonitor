@@ -21,7 +21,7 @@ using namespace std;
 char* LogManage::logLevelStr[] = 
 {
 	"DEBUG",
-	"INFO",
+	"_INFO",
 	"ERROR",
 	"FATAL"
 };

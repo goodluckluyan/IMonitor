@@ -65,11 +65,56 @@ C_HallList::~C_HallList()
 }
 
 // 初始化
-int C_HallList::Init(CTMSSensor * ptrTMS)
+int C_HallList::Init(CTMSSensor * ptrTMS,bool bCheckOtherSMS)
 {
 	m_ptrDM = CDataManager::GetInstance();
 	m_ptrTMS = ptrTMS;
 	C_Para *ptrPara = C_Para::GetInstance();
+	std::vector<SMSInfo> vecSMSOtherInfo;
+	if(bCheckOtherSMS)
+	{
+		std::vector<SMSStatus> vecSMSStatus;
+
+		bool bDirty=true;
+		while(bDirty)
+		{
+			time_t tmUpdate=m_ptrDM->GetOtherSMSstatus(vecSMSStatus);
+			time_t tmCur;
+			time(&tmCur);
+			if(tmCur-tmUpdate < ptrPara->m_nOtherSMSCheckDelay)
+			{
+				LOGINFFMT(0,"C_HallList::Init:Get Other SMS Lastest Status(uptm:%ld:curtm:%ld)(delay:%d)!",
+					tmUpdate,tmCur,ptrPara->m_nOtherSMSCheckDelay);
+				bDirty=false;
+			}
+			else
+			{
+				sleep(1);
+			}
+
+		}
+
+		SMSInfo node;
+		int nLen = vecSMSStatus.size();
+		for(int i = 0 ;i < nLen ;i++)
+		{
+			int bMain = ptrPara->IsMain();
+			node.strId = vecSMSStatus[i].hallid;
+
+			if(bMain)
+			{
+				// 本机为主，对端为备在对端运行则1为备，2为主
+				node.nRole = vecSMSStatus[i].nRun==1 ? 2:1;
+			}
+			else
+			{
+				// 本机为备，对端为主在对端运行则1为主，2为备
+				node.nRole = vecSMSStatus[i].nRun==1 ? 1:2;
+			}
+			vecSMSOtherInfo.push_back(node);
+		}
+
+	}
 
 	// 打开数据库
 	CppMySQL3DB mysql;
@@ -90,7 +135,7 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 		return false;
 	}
 
-	std::vector<SMSInfo> vecSMSInfo;
+	std::vector<SMSInfo> vecSMSDBInfo;
 	query.seekRow(0);
 	for(int i = 0 ;i < nRows ; i++)
 	{
@@ -143,9 +188,57 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 		node.strExepath = query.getStringField("exepath");
 		node.strConfpath = query.getStringField("confpath");
 		query.nextRow();
-		vecSMSInfo.push_back(node);
-
+		vecSMSDBInfo.push_back(node);
 	}
+
+	// 结合数据库记录位置和对端sms的状态生成新的sms信息，以便于生成位置正确的sms信息
+	std::vector<SMSInfo> vecSMSInfo;
+	int nLen = vecSMSDBInfo.size();
+	for(int i = 0 ;i < nLen ;i++)
+	{
+	  SMSInfo node;
+	  SMSInfo dbinfo = vecSMSDBInfo[i];
+	  node = dbinfo;
+	  int olen = vecSMSOtherInfo.size();
+	  for(int j = 0 ;j < olen ; j++)
+	  {
+		  SMSInfo Otherinfo = vecSMSOtherInfo[j];
+		  if(dbinfo.strId == Otherinfo.strId)
+		  {
+			  if(dbinfo.nRole != Otherinfo.nRole)
+			  {
+				  LOGINFFMT(0,"SMS(%s) Role NOT Same between DB and status of sms in other host!(db:%d OtherHost:%d)",
+					  dbinfo.strId.c_str(),dbinfo.nRole,Otherinfo.nRole);
+				  node.nRole = Otherinfo.nRole;
+				  
+					  if(node.nRole == (int)MAINRUNTYPE)
+					  {
+						  if(ptrPara->IsMain())
+						  {
+						    node.strIp = m_WebServiceLocalIP;
+						  }
+						  else
+						  {
+							   node.strIp = m_WebServiceOtherIP;
+						  }
+					  }
+					  else
+					  {
+						  if(ptrPara->IsMain())
+						  {
+							  node.strIp = m_WebServiceOtherIP;
+						  }
+						  else
+						  {
+							  node.strIp = m_WebServiceLocalIP;
+						  }
+					  }  
+				  }
+			  }
+		  }
+	   vecSMSInfo.push_back(node);
+	}
+
 
 	// 如果已有sms运行，则关联
 	std::vector<int> vecPID;
@@ -162,22 +255,23 @@ int C_HallList::Init(CTMSSensor * ptrTMS)
 		mapDir[vecPID[i] ] = strDir;
 	}
 
-	int nLen = vecSMSInfo.size();
+	nLen = vecSMSInfo.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
 		SMSInfo &node = vecSMSInfo[i];
+
+		// 判断是否要在本机运行
 		bool bRun = ptrPara->IsMain() ? node.nRole == 1 : node.nRole == 2;
-		
+
 		// 是否已经存在
 		std::map<int,std::string>::iterator it = mapDir.begin();
 		for(;it != mapDir.end();it++)
 		{
 			if(it->second == node.strExepath)
 			{
-				LOGINFFMT(0,"SMS %s:%s(%d) has been ,To Associate!",node.strIp.c_str(),it->second.c_str(),it->first);
-
 				// node中的IP设置依据数据库记录的sms的当前位置，如果要关联本机运行的sms，
 				// 有可能本机不是数据库中记录的sms运行的主机,所以要判断一下
+				LOGINFFMT(0,"SMS %s:%s(%d) has been ,To Associate!",node.strId.c_str(),it->second.c_str(),it->first);
 				if(node.strIp != m_WebServiceLocalIP)
 				{
 					node.strIp = m_WebServiceLocalIP;
@@ -330,6 +424,14 @@ bool C_HallList::GetSMSWorkState()
 	for( ;it != m_mapHall.end() ;it++)
 	{
 		C_Hall * ptr = it->second;
+		int nRunStatus = GlobalStatus::GetInstinct()->GetStatus();
+
+		// 在接管态、恢复接管态、冲突态非本地sms则不获取状态
+		if(!ptr->IsLocal() && nRunStatus != 1)
+		{
+			continue;
+		}
+
 		std::map<std::string,C_CS*>::iterator fcit=m_mapCS.find(it->first);
 		if(fcit==m_mapCS.end())
 		{
@@ -370,7 +472,10 @@ bool C_HallList::GetSMSWorkState()
 
 				// 尝试到对端去查看
 				int role = C_Para::GetInstance()->GetRole();
-				if(role!= 2 && role != 4)//4=TMPMAINROLE ,2=ONLYMAINROLE
+				int nRunStatus = GlobalStatus::GetInstinct()->GetStatus();
+
+				// 如果是决策阶段不能使用对端IP进行测试
+				if(role!= 2 && role != 4 && nRunStatus == 1)//4=TMPMAINROLE ,2=ONLYMAINROLE
 				{
 					std::string strIP;
 					int nPort;
@@ -420,31 +525,31 @@ bool C_HallList::GetSMSWorkState()
 		}//if(0 == nState && strInfo.empty())
 		else
 		{
-			if(nState == 101)
-			{
-				//每天在零晨三点重启sms
-				time_t tm;
-				time(&tm);
-				int hour=localtime(&tm)->tm_hour;
-				if(hour>=0 && hour <=5)
-				{
-					if(ptr->IsLocal()&&ptr->IsRouteReboot())
-					{
-						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
-
-						// 如果返回为2则有可能进程僵死
-						 if(ptr->ShutDownSMS()==2)
-						{
-							LOGINFFMT(0,"kill  sms:%s failed ,sms is defunc!",ptr->GetHallID().c_str());
-							//RebootMyself();
-							break;
-						}
-
-						// 再次获取状态，GetSMSWorkState内部可以检测是否运行,如果没有运行则启动！
-						ptr->GetSMSWorkState(nState,strInfo);
-					}
-				}
-			}
+// 			if(nState == 101)
+// 			{
+// 				//每天在零晨三点重启sms
+// 				time_t tm;
+// 				time(&tm);
+// 				int hour=localtime(&tm)->tm_hour;
+// 				if(hour>=0 && hour <=5)
+// 				{
+// 					if(ptr->IsLocal()&&ptr->IsRouteReboot())
+// 					{
+// 						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
+// 
+// 						// 如果返回为2则有可能进程僵死
+// 						 if(ptr->ShutDownSMS()==2)
+// 						{
+// 							LOGINFFMT(0,"kill  sms:%s failed ,sms is defunc!",ptr->GetHallID().c_str());
+// 							//RebootMyself();
+// 							break;
+// 						}
+// 
+// 						// 再次获取状态，GetSMSWorkState内部可以检测是否运行,如果没有运行则启动！
+// 						ptr->GetSMSWorkState(nState,strInfo);
+// 					}
+// 				}
+// 			}
 		}
 		
 
@@ -460,7 +565,11 @@ bool C_HallList::GetSMSWorkState()
 	}
 
 	// 更新运行状态
-	GlobalStatus::GetInstinct()->SetStatus(1);
+	GlobalStatus * ptrGS = GlobalStatus::GetInstinct();
+	if(ptrGS->GetStatus() == 0)
+	{
+		ptrGS->SetStatus(1);
+	}
 	//g_RunState = 1;
 	return true;
 }

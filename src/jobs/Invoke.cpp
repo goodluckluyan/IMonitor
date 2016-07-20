@@ -100,9 +100,11 @@ int  CInvoke::Init()
 		m_ptrTMS  = new CTMSSensor();
 		m_ptrTMS->Init(pPara->m_strOIP,pPara->m_nOPort,pPara->m_nTMSWSPort);
 	}
+	
+	int nOtherStatus =pDM->GetOtherIMonitor();
 
-	// 监测SMS模块
-	if(m_ptrLstHall == NULL)
+	// 如果没有监测到对端，则立即启动所有sms，否则根据对端返回的sms状态延迟启动
+	if(!bRunOther && m_ptrLstHall == NULL)
 	{
 		m_ptrLstHall = new C_HallList();
 		if(m_ptrLstHall->Init(m_ptrTMS)!=0)
@@ -110,38 +112,53 @@ int  CInvoke::Init()
 			return -1;
 		}
 
-		if(!bRunOther)
+		int nRole = pPara->GetRole();
+		if(nRole== (int)STDBYROLE)
 		{
-			int nRole = pPara->GetRole();
-			if(nRole== (int)STDBYROLE)
-			{
-				TakeOverMain(false);
-			}
-			else if(nRole == (int)MAINROLE)
-			{
-				TakeOverStdby(false);
-			}
-
-// 			std::vector<std::string> vecLocalRun;
-// 			m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
-// 			for(int i = 0;i<vecLocalRun.size();i++)
-// 			{
-// 				std::string strNewIP;
-// 				int nNewPort = 0;
-// 				m_ptrLstHall->GetSMSRunHost(vecLocalRun[i],strNewIP,nNewPort);
-// 				if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
-// 				{
-// 					bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecLocalRun[i],strNewIP,nNewPort);
-// 					LOGINFFMT(0,"Init:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecLocalRun[i].c_str(),
-// 						strNewIP.c_str(),nNewPort,bRet?1:0);
-// 				}
-// 			}
+			TakeOverMain(false);
 		}
-		
+		else if(nRole == (int)MAINROLE)
+		{
+			TakeOverStdby(false);
+		}
+
+// 		std::vector<std::string> vecLocalRun;
+// 		m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
+// 		for(int i = 0;i<vecLocalRun.size();i++)
+// 		{
+// 			std::string strNewIP;
+// 			int nNewPort = 0;
+// 			m_ptrLstHall->GetSMSRunHost(vecLocalRun[i],strNewIP,nNewPort);
+// 			if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
+// 			{
+// 				bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecLocalRun[i],strNewIP,nNewPort);
+// 				LOGINFFMT(0,"Init:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecLocalRun[i].c_str(),
+// 					strNewIP.c_str(),nNewPort,bRet?1:0);
+// 			}
+// 		}
 	}
+	else if(nOtherStatus > 0)
+	{
+		// 如果对端为正常运行状态（非启动、非正在接管、非恢复接管、非处理冲突），则延时启动sms。
+		// 延时启动时先获取对端的sms状态再按对端状态进行启动sms。如果对端为接管角色只有延时启动完
+		// 完成并把GlobalStatus设为1后对端才会进入恢复接管状态
+		m_bSMSBootDelay = true;
+		LOGFAT(0,"***Check Other Host IMonitor Had Booted Before Long Time,So HallList Delay Boot !");
+	}
+	else
+	{
+		LOGFAT(0,"***Check Other Host IMonitor Booting,So HallList Immediately Boot !");
+		m_ptrLstHall = new C_HallList();
+		if(m_ptrLstHall->Init(m_ptrTMS)!=0)
+		{
+			return -1;
+		}
+	}
+		
+	
 
 	std::string strLocalIP,strOtherIP;
-	m_ptrLstHall->GetWebServiceIP(strLocalIP,strOtherIP);
+	GetWebServiceIPFormDB(strLocalIP,strOtherIP);
 	IPMgr::GetInstance()->AddIP(strLocalIP,strOtherIP);
 
 	// 调度模块
@@ -210,6 +227,7 @@ void CInvoke::DeInit()
 	SAFE_DELETE(m_ptrFO);
 }
 
+// 添加定时任务
 bool CInvoke::AddInitTask()
 {
 	C_Para * pPara = C_Para::GetInstance();
@@ -234,7 +252,7 @@ bool CInvoke::AddInitTask()
 		ptrTaskList->AddTask(TASK_NUMBER_GET_TMS_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nTMSCheckDelay);
 	}
 
-	// 添加sms检测定时任务
+	// 添加sms检测定时任务，如果sms延时启动则不添加此任务
 	if(0 != pPara->m_nHallListCheckDelay)
 	{
 		ptrTaskList->AddTask(TASK_NUMBER_GET_HALL_STATUS,NULL,ptrRunPara->GetCurTime()+pPara->m_nHallListCheckDelay);
@@ -379,8 +397,7 @@ int CInvoke::GetCheckDelay(int nStateType)
 //任务执行，由不同的模块完成
 int CInvoke::Exec(int iCmd,void * ptrPara)
 {
-	if( NULL==m_ptrLstHall || NULL==m_ptrDisk 
-		|| NULL==m_ptrNet || NULL==m_ptrDispatch || NULL == m_ptrMonitor)
+	if(  NULL==m_ptrDisk || NULL==m_ptrNet || NULL==m_ptrDispatch || NULL == m_ptrMonitor)
 	{
 		return  -1;
 	}
@@ -393,7 +410,10 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		nResult = 0;
 		break;
 	case TASK_NUMBER_CONDSWITCH_ROUTINE:
-		m_ptrLstHall->ProcessCondSwitchTask();
+		if(m_ptrLstHall!=NULL)
+		{
+			m_ptrLstHall->ProcessCondSwitchTask();
+		}
 		break;
 	case TASK_NUMBER_HASHCHECK_ROUTINE:
 		m_ptrHash->ProcessHashTask();
@@ -410,7 +430,18 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 		nResult = 0;
 		break;
 	case TASK_NUMBER_GET_HALL_STATUS:
-		m_ptrLstHall->GetSMSWorkState();
+		if(m_ptrLstHall==NULL && m_bSMSBootDelay)
+		{
+			if(HasOtherSMSStatus())
+			{
+				m_ptrLstHall = new C_HallList();
+				m_ptrLstHall->Init(m_ptrTMS,true);
+			}
+		}
+		else if(m_ptrLstHall!=NULL)
+		{
+			m_ptrLstHall->GetSMSWorkState();			
+		}
 		break;
 	case TASK_NUMBER_GET_TMS_STATUS:
 		m_ptrTMS->GetTMSPID();
@@ -445,7 +476,24 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 	return nResult;
 }
 
-
+bool CInvoke::HasOtherSMSStatus()
+{
+	CDataManager * ptrDM = CDataManager::GetInstance();
+	bool bDirty=true;
+	C_Para *ptrPara = C_Para::GetInstance();
+	std::vector<SMSStatus> vecSMSStatus;
+	
+	time_t tmUpdate=ptrDM->GetOtherSMSstatus(vecSMSStatus);
+	time_t tmCur;
+	time(&tmCur);
+	if(tmCur-tmUpdate < ptrPara->m_nOtherSMSCheckDelay)
+	{
+		LOGINFFMT(0,"HasOtherSMSStatus Get Other SMS Lastest Status(uptm:%ld:curtm:%ld)(delay:%d)!",
+			tmUpdate,tmCur,ptrPara->m_nOtherSMSCheckDelay);
+		bDirty=false;
+	}
+	return !bDirty;
+}
 
 //解析输入字符串
 void CInvoke::ParseCmd(std::string strCmd, std::vector<std::string> &vecParam)
@@ -650,6 +698,59 @@ int CInvoke::Controller ()
 	return 0;
 }
 
+// 从数据库中获取本机和对端的ip
+bool CInvoke::GetWebServiceIPFormDB(std::string &WebServiceLocalIP,std::string &WebServiceOtherIP)
+{
+	C_Para * ptrPara = C_Para::GetInstance();
+
+	// 打开数据库
+	CppMySQL3DB mysql;
+	if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+		ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+	{
+		LOGINFFMT(0,"mysql open failed!\n");
+		return false;
+	}
+
+	// 读取devices表
+	int nResult;
+	CppMySQLQuery query = mysql.querySQL("select * from devices where device_type=3 and device_model=\"AQ33CS\"",nResult);
+	int nRows = 0 ;
+	if((nRows = query.numRow()) == 0) 
+	{
+		LOGINFFMT(0,"GetWebServiceIPFormDB failed,devices table no rows!\n");
+		return false;
+	}
+
+	query.seekRow(0);
+	for(int i = 0 ;i < nRows ; i++)
+	{
+		SMSInfo node;
+		node.strId = query.getStringField("hall_id");
+		std::string strIP = query.getStringField("ip");
+		int nPort = atoi(query.getStringField("port"));
+		std::string strIP2 = query.getStringField("ip2");
+		int nPort2 = atoi(query.getStringField("port"));
+		int nDefPos = query.getIntField("default_position");// 0为主，1为备
+		int nCurPos = query.getIntField("cur_position");//1为主，2为备
+
+		if(ptrPara->IsMain())
+		{
+			WebServiceLocalIP = strIP;
+			WebServiceOtherIP = strIP2;
+			break;
+		}
+		else 
+		{
+			WebServiceLocalIP = strIP2;
+			WebServiceOtherIP = strIP;
+			break;
+		}
+		query.nextRow();
+	}
+	return true;
+}
+
 // 切换TMS
 bool CInvoke::SwitchTMS()
 {
@@ -690,7 +791,8 @@ bool CInvoke::NoticTMSSMSPos()
 // 切换SMS
 bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 {
-	int nRole=C_Para::GetInstance()->GetRole();
+	C_Para *pPara = C_Para::GetInstance();
+	int nRole=pPara->GetRole();
 
 	// 只有一台主机运行时不允许切换
 	if(nRole == TMPMAINROLE || nRole == ONLYMAINROLE)
@@ -701,14 +803,16 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 
 	CDataManager *ptrDM = CDataManager::GetInstance();
 	int nOtherStatus =ptrDM->GetOtherIMonitor();
-	if(nOtherStatus <= 0)
+
+	// 如果备机状态不正常不进行切换
+	if(pPara->IsMain() && nOtherStatus <= 0)
 	{
 		LOGINFFMT(0,"SwitchSMS:Due To Other IMonitor Status Error(%d) ,So SwitchSMS Failed!",nOtherStatus);
 		nRet = 3;// 调度软件异常
 		return false;
 	}
 
-	if(bDelaySwitch && m_ptrLstHall->IsHaveCondSwitchTask(strHallID))
+	if(bDelaySwitch && m_ptrLstHall && m_ptrLstHall->IsHaveCondSwitchTask(strHallID))
 	{
 		nRet = 2;// sms正在延时切换
 		return false;
@@ -850,6 +954,11 @@ void CInvoke::Exit()
 // 切换本机接管的sms
 void CInvoke::SwtichTakeOverSMS()
 {
+	if(m_ptrLstHall == NULL)
+	{
+		return ;
+	}
+
 	sleep(3);
 	std::vector<std::string> vecSMS;
 	m_ptrLstHall->GetTakeOverSMS(vecSMS);
@@ -908,8 +1017,23 @@ void CInvoke::SwtichTakeOverSMS()
 						int nState;
 						SwitchSMS(vecSMS[i],true,nState);
 					}
-				}//对端相周的sms在运行则开闭本地sms
-				else if(OtherStatus.nRun == 1)
+				}
+				else if(OtherStatus.nRun == 2)//对端认为sms在本地运行
+				{
+					LOGINFFMT(0,"Get Other SMS(%s) Lastest Status(nRun:%d),So Run Switch SMS!",vecSMS[i].c_str(),OtherStatus.nRun);
+					if(!C_Para::GetInstance()->IsMain())
+					{
+						// 调用主的切换接口,支持延时切换
+						m_ptrLstHall->SwitchSMSByStdby(true,vecSMS[i]);
+					}
+					else
+					{
+						//支持延时切换
+						int nState;
+						SwitchSMS(vecSMS[i],true,nState);
+					}
+				}
+				else if(OtherStatus.nRun == 1)//对端相同的sms在运行则开闭本地sms
 				{
 					LOGINFFMT(0,"Get Other SMS(%s) Lastest Status(nRun:%d),So Run Close SMS!",vecSMS[i].c_str(),OtherStatus.nRun);
 					CloseSMS(vecSMS[i]);
@@ -974,6 +1098,7 @@ void CInvoke::StartALLSMS(bool bCheckOtherSMSRun,bool bLocalHost/*=false*/)
 // 接管主服务器成为主角色
 void CInvoke::TakeOverMain(bool bCheckOtherSMSRun)
 {
+	GlobalStatus::GetInstinct()->SetStatus(2);// 设置运行状态为接管状态
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverMain!");
 
 	//为了防止主数据库恢复时200ip变化时sms状态不正确的问题，在接管主机上的sms时，用localhost数据库ip代替200.
@@ -983,11 +1108,13 @@ void CInvoke::TakeOverMain(bool bCheckOtherSMSRun)
 	{
 		C_Para::GetInstance()->SetRoleFlag(TMPMAINROLE);
 	}
+	GlobalStatus::GetInstinct()->SetStatus(1);
 }
 
 // 接管备服务器成为（只有主）角色
 void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
 {
+	GlobalStatus::GetInstinct()->SetStatus(2);// 设置运行状态为接管状态
 	LOGFAT(ERROR_POLICYTRI_TMSSTARTUP,"Fault Of Policys Trigger TakeOverStdby!");
 	StartALLSMS(bCheckOtherSMSRun);
 	sleep(1);
@@ -995,6 +1122,7 @@ void CInvoke::TakeOverStdby(bool bCheckOtherSMSRun)
 	{
 		C_Para::GetInstance()->SetRoleFlag(ONLYMAINROLE);
 	}
+	GlobalStatus::GetInstinct()->SetStatus(1);
 }
 
 // 从（只有主）服务器角色改变成为主角色
@@ -1038,7 +1166,7 @@ void CInvoke::ChangeToStdby()
 	//g_RunState=2;// 设置运行状态为恢复接管状态
 	C_Para::GetInstance()->SetRoleFlag(STDBYROLE);
 	m_ptrTMS->ShutDownTMS();
-	sleep(10);
+//	sleep(3);
 	SwtichTakeOverSMS();
 
 	g_tmDBSynch = 0;
@@ -1088,8 +1216,11 @@ bool CInvoke::StartSMS(std::string strHallID)
 // 正在运行占16，运行数量站相应数量的权重
 bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 {	
-	
 
+	if(m_ptrLstHall == NULL)
+	{
+		return false;
+	}
 	int nLen = vecCI.size();
 	for(int i=0;i<nLen ;i++)
 	{
@@ -1649,7 +1780,7 @@ int CInvoke::SetupRebootTimer()
 
 	if(!nEnable||nExecnt>=nRepeatCnt)
 	{
-		LOGINFFMT(0,"-----------!nEnable:%d||nExecnt>=nRepeatCnt(%d:%d)---------",nEnable,nExecnt,nRepeatCnt);
+		LOGINFFMT(0,"------Timing Reboot Cannot Setup!(nEnable:%d||nExecnt>=nRepeatCnt(%d:%d))",nEnable,nExecnt,nRepeatCnt);
 		return 0;
 	}
 

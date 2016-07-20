@@ -32,6 +32,7 @@ public:
 	  ,m_ptrTMS(NULL)
 	  ,m_ptrHash(NULL)
 	  ,m_ptrFO(NULL)
+	  ,m_bSMSBootDelay(false)
 	  {
 	  }
 
@@ -158,6 +159,13 @@ private:
 
 	//重启或关机 0：为重启 1：关机
 	void shutdown(int nType);
+
+	// 从数据库中获取本机和对端的ip
+	bool GetWebServiceIPFormDB(std::string &WebServiceLocalIP,std::string &WebServiceOtherIP);
+
+	// 判断对端sms的状态是否可用
+	bool HasOtherSMSStatus();
+
 	
 private:
 
@@ -169,6 +177,7 @@ private:
 	CTMSSensor * m_ptrTMS;
 	CHashCheck * m_ptrHash;
 	CFileOperator * m_ptrFO;
+	bool m_bSMSBootDelay;
 };
 
 #endif

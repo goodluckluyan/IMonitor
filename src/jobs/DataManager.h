@@ -142,6 +142,7 @@ private:
 	C_CS m_csDisk;
 	C_CS m_csNet;
 	C_CS m_csSMS;
+	C_CS m_csOtherSMS;
 	C_CS m_csTMS;
 	C_CS m_csSwitch;
 	static CDataManager * m_pinstance;

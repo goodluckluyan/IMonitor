@@ -262,8 +262,7 @@ void CDispatch::ExeCmd(std::map<int,std::vector<std::string> > &mapAction)
 				std::vector<std::string> &vecStr = it->second;
 				for(int i = 0;i < vecStr.size();i++)
 				{
-					LOG(ERROR_DEVSTATUS_FAULT,vecStr[i]);
-					//printf(vecStr[i].c_str());
+					LOGERRFMT(ERROR_DEVSTATUS_FAULT,"%s",vecStr[i].c_str());
 				}
 			}
 			break;
@@ -368,7 +367,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 				strAct+=stPE.vecAct[i];
 			}
 			char buf[128];
-			snprintf(buf,sizeof(buf),"LOG:%s%d value: %s = Policy:%s->%s\n",err.ErrorName.c_str(),err.nOrdinal,
+			snprintf(buf,sizeof(buf),"***Event Trigger:%s%d value: %s = Policy:%s->%s",err.ErrorName.c_str(),err.nOrdinal,
 				err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 			mapAction[LOGCmd].push_back(std::string(buf));
 		
@@ -398,7 +397,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 					  strAct+=stPE.vecAct[i];
 					}
 					char buf[128];
-					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
+					snprintf(buf,sizeof(buf),"*** Event Trigger:%s value = %s  = Policy:%s -> %s ***",err.ErrorName.c_str(),
 						err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 					mapAction[LOGCmd].push_back(std::string(buf));
 
@@ -430,7 +429,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 						strAct+=stPE.vecAct[i];
 					}
 					char buf[128];
-					snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s -> %s \n",err.ErrorName.c_str(),
+					snprintf(buf,sizeof(buf),"*** Event Trigger:%s value = %s  = Policy:%s -> %s ***",err.ErrorName.c_str(),
 						err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 					mapAction[LOGCmd].push_back(std::string(buf));
 
@@ -450,7 +449,7 @@ bool CDispatch::ApplyPolicy(int nTaskType,struct DispatchTask &nodeTask,std::map
 					strAct+=stPE.vecAct[i];
 				}
 				char buf[128];
-				snprintf(buf,sizeof(buf),"LOG:%s value = %s  = Policy:%s->%s\n",err.ErrorName.c_str(),
+				snprintf(buf,sizeof(buf),"*** Event Trigger::%s value = %s  = Policy:%s->%s ***",err.ErrorName.c_str(),
 					err.ErrorVal.c_str(),stPE.strFault.c_str(),strAct.c_str());
 				mapAction[LOGCmd].push_back(std::string(buf));
 

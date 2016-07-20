@@ -44,7 +44,7 @@ public:
     ~C_HallList();
 
    	// 初始化所有影厅。
-    int Init(CTMSSensor * ptrTMS);
+	int Init(CTMSSensor * ptrTMS,bool bCheckOtherSMS = false);
    
 	// 获取SMS工作状态
 	bool GetSMSWorkState();

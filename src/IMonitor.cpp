@@ -450,7 +450,7 @@ int main(int argc, char** argv)
 	{
 		iMillisecond = pRunPara->GetCurMillisecond(bDateSet);
 		++iCountTime;
-		iCountTime = iCountTime% 3000;
+		iCountTime = iCountTime % 3000;
 
 		//每天0点开始更改日志文件的保存路径。
 		if(bDateSet != 0)

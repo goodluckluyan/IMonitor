@@ -270,6 +270,7 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 {
 	m_csNet.EnterCS();
 	int nLen = vecEthStatus.size();
+	std::string strTmp;
 	for(int i = 0 ;i < nLen ;i++)
 	{
 		std::map<std::string,EthStatus>::iterator fit = m_mapEthStatus.find(vecEthStatus[i].strName);
@@ -278,8 +279,16 @@ bool CDataManager::UpdateNetStat(std::vector<EthStatus> &vecEthStatus)
 			fit->second.nConnStatue = vecEthStatus[i].nConnStatue;
 			fit->second.nRxSpeed = vecEthStatus[i].nRxSpeed;
 			fit->second.nTxSpeed = vecEthStatus[i].nTxSpeed;
-			LOGDEBFMT("Eth:%s Status:%d RxSpeed:%llu, TxSpeed:%llu",vecEthStatus[i].strName.c_str(),
+			char buf[128]={'\0'};
+			snprintf(buf,128," %s[st:%d,RxSp:%8llu,TxSp:%8llu]",vecEthStatus[i].strName.c_str(),
 				vecEthStatus[i].nConnStatue,vecEthStatus[i].nRxSpeed,vecEthStatus[i].nTxSpeed);
+			strTmp+=buf;
+			if((i+1)%4==0||(i+1)==nLen)
+			{
+				LOGDEBFMT("Local Eth%s",strTmp.c_str());
+				strTmp="";
+			}
+			
 		}
 	}
 	m_csNet.LeaveCS();
@@ -348,13 +357,10 @@ bool CDataManager::UpdateSMSStat(std::string strHallID,int nState,std::string st
 	{
 		SMSInfo &info = it->second;
 		info.stStatus.nStatus = nState;
-		LOGDEBFMT("SMS:%s(%d:%d) Status:%d  (%s)",strHallID.c_str(),info.nRole,info.stStatus.nRun,nState,strInfo.c_str());
-
-// 		int nRole = C_Para::GetInstance()->GetRole();
-// 		if(info.nRole == TAKEOVERRUNTYPE &&  (nRole == MAINROLE || nRole == STDBYROLE ))
-// 		{
-// 			
-// 		}
+		std::string strRole = info.nRole==1?" main":info.nRole==3?"takeover":"slave";
+		std::string strPos = info.stStatus.nRun == 1 ? "   local":"nonlocal";
+		LOGDEBFMT("SMS:%s(%s:%s) Status:%3d  (%s)",strHallID.c_str(),
+			strRole.c_str(),strPos.c_str(),nState,strInfo.c_str());
 	}
 	m_csSMS.LeaveCS();
 
@@ -522,11 +528,17 @@ void * CDataManager::GetInvokerPtr()
 	return m_ptrInvoker;
 }
 
+//更新对端tms状态
+bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
+{
+	LOGDEBFMT("Other TMS State:bRun:%d,nWorkState:%d,nState:%d",bRun,nWorkState,nState);
+	return true;
+}
 
 //更新对端调度软件状态
 bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 {
-	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch%lld",bMain,nState,lSynch);
+	LOGDEBFMT("Other Monitor State:bMain:%d,nState:%d,lSynch:%lld",bMain,nState,lSynch);
 	m_nOtherMonitorState = nState;
 
 	int nRunState = GlobalStatus::GetInstinct()->GetStatus();
@@ -603,9 +615,9 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 	if(C_Para::GetInstance()->IsMain() == bMain && bMain )
 	{
 		int nRunState = GlobalStatus::GetInstinct()->GetStatus();
-		//本机为备机时 发现主机出现时，把临时主改回备
+		//本机为备机时 发现主机出现时并且主机角色为1时，把临时主改回备
 		//if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && g_RunState == 1)
-		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && nRunState == 1)
+		if(C_Para::GetInstance()->GetRole()==(int)TMPMAINROLE && nRunState == 1 && nState == MAINROLE)
 		{	
 			stError er;
 			std::vector<stError> vecRE;
@@ -630,6 +642,19 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 			}
 		}
+		else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE &&  nRunState == 1 && nState == TMPMAINROLE)
+		{
+			//脑裂恢复
+			stError er;
+			std::vector<stError> vecRE;
+			er.ErrorName="stdbyback";
+			er.ErrorVal="stdbyback";
+			vecRE.push_back(er);
+			if(m_ptrDispatch)
+			{
+				m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
+			}
+		}
 		
 	}
 	// 两端都是备
@@ -645,7 +670,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 			m_ptrDispatch->TriggerDispatch(IMonitorTask,vecRE);
 		}
 	}
-	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain && nRunState == 1 )
+	else if(C_Para::GetInstance()->GetRole()==(int)ONLYMAINROLE && !bMain && nRunState == 1 && nState == STDBYROLE)
 	{
 		stError er;
 		std::vector<stError> vecRE;
@@ -658,6 +683,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		}
 	}
 
+
 // 	// 由于一些原因，可能会出现正常启动后，g_tmDBSynch没有恢复0的情况，所以在这判断一下。
 // 	if(bMain && !C_Para::GetInstance()->IsMain() && g_tmDBSynch != 0)
 // 	{
@@ -666,19 +692,12 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 	return true;
 }
 
-
-//更新对端tms状态
-bool CDataManager::UpdateOtherTMSState(bool bRun,int nWorkState,int nState)
-{
-	LOGDEBFMT("Other TMS State:bRun:%d,nWorkState:%d,nState:%d",bRun,nWorkState,nState);
-	return true;
-}
-
-
 //更新对端sms状态
 bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 {
+	m_csOtherSMS.EnterCS();
 	int nLen = vecSMSStatus.size();
+	std::string strTmp;
 	for(int i = 0 ;i < nLen ;i++)
 	{
 		std::string pos ;
@@ -691,15 +710,17 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 		{
 			pos = vecSMSStatus[i].nRun==1 ? "main":"slave";
 		}
-		
-		LOGDEBFMT("Other SMS State:strHallId:%s,RunPos:%s,nState:%d",vecSMSStatus[i].hallid.c_str(),
+		char buf[64]={'\0'};
+		snprintf(buf,64," %s:[po:%5s,st:%3d]",vecSMSStatus[i].hallid.c_str(),
 			pos.c_str(),vecSMSStatus[i].nStatus);
+		strTmp+=buf;
 // 		if(vecSMSStatus[i].nRun == 0)
 // 		{
 // 			continue;
 // 		}
 
 		std::string strID = vecSMSStatus[i].hallid;
+		
 		std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.find(strID);
 		if(it != m_mapOtherSMSStatus.end())
 		{
@@ -711,7 +732,16 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			m_mapOtherSMSStatus[strID].strId=vecSMSStatus[i].hallid;
 			m_mapOtherSMSStatus[strID].stStatus=vecSMSStatus[i];
 		}
+		
+		if((i+1)%4==0 || (i+1) == nLen)
+		{
+			LOGDEBFMT("Other Host SMS%s",strTmp.c_str());
+			strTmp="";
+		}
 	}
+	m_csOtherSMS.LeaveCS();
+	
+
 	if(nLen > 0)
 	{
 		time(&m_tmUpdateOSMS);
@@ -751,10 +781,15 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 	m_csSwitch.EnterCS();
 	int bSwitching = m_bSwitching;
 	m_csSwitch.LeaveCS();
+
+	m_csOtherSMS.EnterCS();
+	std::map<std::string,SMSInfo> mapOtherSMSStatus = m_mapOtherSMSStatus;
+	m_csOtherSMS.LeaveCS();
+
 	if(!bSwitching)//在切换期间不进行冲突判断
 	{
-		std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
-		for(;it != m_mapOtherSMSStatus.end();it++)
+		std::map<std::string,SMSInfo>::iterator it = mapOtherSMSStatus.begin();
+		for(;it != mapOtherSMSStatus.end();it++)
 		{
 			SMSInfo &Other = it->second;
 			std::map<std::string,SMSInfo>::iterator fit= maptmp.find(Other.strId);
@@ -783,16 +818,16 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			// 都没有运行这个sms, 暂不对两边都不启动进行处理。在切换时会出现这种情况。
 			// 要处理两边都没有启动的情况，要过滤掉切换时出现的情况。比较繁琐，要多次上报才会处理(已做)并且要在切换时通知本函数
 			// 不要进行冲突检测。（未做）
-			// 		if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
-			// 		{
-			// 			ConflictInfo ci;
-			// 			ci.nMainState=fit->second.stStatus.nStatus;
-			// 			ci.nStdbyState=Other.stStatus.nStatus;
-			// 			ci.nType = 2;
-			// 			ci.strHallID=Other.strId;
-			// 			ci.tmTime=time();
-			// 			vecConflict.push_back(ci);
-			// 		}
+// 			if(Other.stStatus.nRun == 2 && fit->second.stStatus.nRun == 2)
+// 			{
+// 				ConflictInfo ci;
+// 				ci.nMainState=fit->second.stStatus.nStatus;
+// 				ci.nStdbyState=Other.stStatus.nStatus;
+// 				ci.nType = 2;
+// 				ci.strHallID=Other.strId;
+// 				ci.tmTime=time();
+// 				vecConflict.push_back(ci);
+// 			}
 		}
 	}
 
@@ -838,6 +873,7 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 
 time_t CDataManager::GetOtherSMSstatus(std::vector<SMSStatus> &vecSMSStatus )
 {
+	m_csOtherSMS.EnterCS();
 	std::map<std::string,SMSInfo>::iterator it = m_mapOtherSMSStatus.begin();
 	for(;it != m_mapOtherSMSStatus.end();it++)
 	{
@@ -845,6 +881,7 @@ time_t CDataManager::GetOtherSMSstatus(std::vector<SMSStatus> &vecSMSStatus )
 		status=it->second.stStatus;
 		vecSMSStatus.push_back(status);
 	}
+	m_csOtherSMS.LeaveCS();
 
 	return m_tmUpdateOSMS;
 }
@@ -898,13 +935,21 @@ bool CDataManager::UpdateOtherRaidState(int nState,int nReadSpeed,
 //更新对端eth状态
 bool  CDataManager::UpdateOtherEthState(std::vector<EthStatus> &vecEthStatus)
 {
+	std::string strTmp;
 	int nlen = vecEthStatus.size();
 	for(int i = 0 ;i < nlen ;i++)
 	{
+		char buf[36]={'\0'};
 		EthStatus &node = vecEthStatus[i];
-		LOGDEBFMT("Other %s State:nConnectState:%d,nSpeed:%d",node.strName.c_str(),
-			node.nConnStatue,node.nRxSpeed);
+		snprintf(buf,36," %s:[st:%2d,sp:%8d]",node.strName.c_str(),node.nConnStatue,node.nRxSpeed);
+		strTmp += buf;
+		if((i+1)%4==0 || (i+1) == nlen)
+		{
+			LOGDEBFMT("Other NetCard:%s",strTmp.c_str());
+			strTmp="";
+		}
 	}
+	
 	return true;
 }
 
