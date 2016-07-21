@@ -111,6 +111,16 @@ public:
 		m_bSwitching = true;
 		m_csSwitch.LeaveCS();
 	}
+
+	bool IsRestoreSwitch()
+	{
+		return m_bRestoreSwitch;
+	}
+
+	void SetRestoreSwitch(bool bRestoreSwitch)
+	{
+		m_bRestoreSwitch = bRestoreSwitch;
+	}
 	
 	void EndSwitch()
 	{
@@ -178,6 +188,8 @@ private:
 
 	// 数据库同步状态
 	int m_nDBSynchState;
+
+	bool m_bRestoreSwitch;
 };
 
 #endif

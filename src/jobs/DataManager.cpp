@@ -33,6 +33,8 @@ CDataManager::CDataManager()
 
 	m_nOtherRaidStatus = -1;
 	m_nLocalRaidStatus = -1;
+
+	m_bRestoreSwitch = false;
 }
 CDataManager::~CDataManager()
 {
@@ -558,7 +560,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 	}
 
 	// »ñÈ¡×´Ì¬Ê§°Ü
-	if(-1 == nState)
+	if(-1 == nState && nRunState == 1)
 	{
 		time_t tm;
 		time(&tm);

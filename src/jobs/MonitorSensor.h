@@ -48,7 +48,10 @@ public:
 
 	int WriteXmlFile(xercesc::DOMDocument * ptrDoc,std::string xmlFile);
 
-	
+	bool ParseAskAboutSlaveRestoreSwitch(std::string &retXml,int &nState);
+
+	bool AskAboutSlaveRestoreSwitch(int &nIsRestoreSwitch);
+
 
 private:
 

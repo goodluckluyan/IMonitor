@@ -114,3 +114,5 @@ int mons__GetDBSynchStatus(int &state);
 int mons__ShutdownServer(int nType,struct mons__RebootServerResult &result);
 
 int mons__TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,int nRepeatType,int nRepeatCnt,struct mons__RebootServerResult &result);
+
+int mons__AskAboutSlaveRestoreSwitch(int &nIsSwitch);

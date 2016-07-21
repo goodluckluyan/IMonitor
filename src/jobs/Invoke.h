@@ -140,6 +140,7 @@ public:
 
 	// 打印版本信息
 	void PrintVersionInfo();
+
 private:
 	// 打印帮助信息
 	void PrintProductInfo();
@@ -165,6 +166,8 @@ private:
 
 	// 判断对端sms的状态是否可用
 	bool HasOtherSMSStatus();
+
+
 
 	
 private:

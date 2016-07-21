@@ -38,7 +38,7 @@ int  CInvoke::Init()
 	}
 
 	// 监测对端调度软件
-	bool bRunOther = false;
+	bool bOtherRun = false;
 	if(m_ptrMonitor == NULL)
 	{
 		m_ptrMonitor = new  CMonitorSensor();
@@ -76,7 +76,7 @@ int  CInvoke::Init()
 						}
 					}
 				}
-				bRunOther = true;
+				bOtherRun = true;
 				break;
 			}
 
@@ -104,7 +104,7 @@ int  CInvoke::Init()
 	int nOtherStatus =pDM->GetOtherIMonitor();
 
 	// 如果没有监测到对端，则立即启动所有sms，否则根据对端返回的sms状态延迟启动
-	if(!bRunOther && m_ptrLstHall == NULL)
+	if(!bOtherRun && m_ptrLstHall == NULL)
 	{
 		m_ptrLstHall = new C_HallList();
 		if(m_ptrLstHall->Init(m_ptrTMS)!=0)
@@ -112,15 +112,15 @@ int  CInvoke::Init()
 			return -1;
 		}
 
-		int nRole = pPara->GetRole();
-		if(nRole== (int)STDBYROLE)
-		{
-			TakeOverMain(false);
-		}
-		else if(nRole == (int)MAINROLE)
-		{
-			TakeOverStdby(false);
-		}
+// 		int nRole = pPara->GetRole();
+// 		if(nRole== (int)STDBYROLE)
+// 		{
+// 			TakeOverMain(false);
+// 		}
+// 		else if(nRole == (int)MAINROLE)
+// 		{
+// 			TakeOverStdby(false);
+// 		}
 
 // 		std::vector<std::string> vecLocalRun;
 // 		m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
@@ -148,6 +148,20 @@ int  CInvoke::Init()
 	else
 	{
 		LOGFAT(0,"***Check Other Host IMonitor Booting,So HallList Immediately Boot !");
+		GetDBSynchStatus();
+		int nDBStatus;
+		pDM->GetDBSynchStatus(nDBStatus);
+		if(nDBStatus==1)
+		{
+			LOGFAT(0,"***Mysql DB Synch  Failed!");
+// 			while(1)
+// 			{
+// 				GetDBSynchStatus();
+// 				pDM->GetDBSynchStatus(nDBStatus);
+// 				LOGFAT(0,"***Mysql DB Synch  Failed!");
+// 			}
+			
+		}
 		m_ptrLstHall = new C_HallList();
 		if(m_ptrLstHall->Init(m_ptrTMS)!=0)
 		{
@@ -807,9 +821,27 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 	// 如果备机状态不正常不进行切换
 	if(pPara->IsMain() && nOtherStatus <= 0)
 	{
-		LOGINFFMT(0,"SwitchSMS:Due To Other IMonitor Status Error(%d) ,So SwitchSMS Failed!",nOtherStatus);
-		nRet = 3;// 调度软件异常
-		return false;
+		int nIsRestoreSwitch;
+		if(m_ptrMonitor->AskAboutSlaveRestoreSwitch(nIsRestoreSwitch))
+		{
+			if(nIsRestoreSwitch==0)
+			{
+				LOGINFFMT(0,"SwitchSMS:Due To Other IMonitor Status Error(%d) and nIsRestoreSwitch(%d) ,So SwitchSMS Failed!",
+					nOtherStatus,nIsRestoreSwitch);
+				nRet = 3;// 调度软件异常
+				return false;
+			}
+			else
+			{
+				LOGINFFMT(0,"SwitchSMS:nIsRestoreSwitch:%d,So continue switch ",nIsRestoreSwitch);
+			}
+		}
+		else
+		{
+			LOGINFFMT(0,"SwitchSMS:Due To Other IMonitor Status Error(%d) ,So SwitchSMS Failed!",nOtherStatus);
+			nRet = 3;// 调度软件异常
+			return false;
+		}
 	}
 
 	if(bDelaySwitch && m_ptrLstHall && m_ptrLstHall->IsHaveCondSwitchTask(strHallID))
@@ -963,13 +995,14 @@ void CInvoke::SwtichTakeOverSMS()
 	std::vector<std::string> vecSMS;
 	m_ptrLstHall->GetTakeOverSMS(vecSMS);
 	C_Para * pPara = C_Para::GetInstance();
+	CDataManager *pDM = CDataManager::GetInstance();
 
 	std::vector<SMSStatus> vecSMSStatus;
 
 	bool bDirty=true;
 	while(bDirty)
 	{
-		time_t tmUpdate=CDataManager::GetInstance()->GetOtherSMSstatus(vecSMSStatus);
+		time_t tmUpdate=pDM->GetOtherSMSstatus(vecSMSStatus);
 		time_t tmCur;
 		time(&tmCur);
 		if(tmCur-tmUpdate<pPara->m_nOtherSMSCheckDelay)
@@ -1024,6 +1057,7 @@ void CInvoke::SwtichTakeOverSMS()
 					if(!C_Para::GetInstance()->IsMain())
 					{
 						// 调用主的切换接口,支持延时切换
+						pDM->SetRestoreSwitch(true);
 						m_ptrLstHall->SwitchSMSByStdby(true,vecSMS[i]);
 					}
 					else
@@ -1042,6 +1076,7 @@ void CInvoke::SwtichTakeOverSMS()
 			
 		}
 	}
+	pDM->SetRestoreSwitch(false);
 }
 
 // 在本机启动所有sms

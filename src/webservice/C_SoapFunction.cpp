@@ -463,3 +463,18 @@ int mons__TimingRebootServer(struct soap* cSoap,int nDay,int nWeek,int nHour,int
 	result.state = state;
 	return 0;
 }
+
+int mons__AskAboutSlaveRestoreSwitch(struct soap* cSoap,int &nIsSwitch)
+{
+	LOGINFFMT(0,"WS:AskAboutSlaveRestoreSwitch");
+	CDataManager *pDM = CDataManager::GetInstance();
+	if(pDM->IsRestoreSwitch())
+	{
+		nIsSwitch = 1;
+	}
+	else
+	{
+		nIsSwitch = 0;
+	}
+	return 0;
+}

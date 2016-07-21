@@ -1198,7 +1198,7 @@ bool  CMonitorSensor::ParseSlaveRebootState(std::string &retXml,int &nState,std:
 		DOMDocument* ptrDoc = ptrParser->getDocument();
 
 		// 读取state节点
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("state"));
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("nState"));
 		if(ptrNodeList == NULL)
 		{
 			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
@@ -1649,6 +1649,90 @@ int CMonitorSensor::WriteXmlFile(DOMDocument * ptrDoc,std::string xmlFile)
 
 }
 
-	
+bool CMonitorSensor::AskAboutSlaveRestoreSwitch(int &nIsRestoreSwitch)
+{
+	bool bRet = false;
+	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
+	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
+	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
+	xml += "xmlns:ns1=\"http://tempuri.org/mons.xsd/Service.wsdl\" ";
+	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
+	xml += "<ns2:AskAboutSlaveRestoreSwitch></ns2:AskAboutSlaveRestoreSwitch>";
+	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
-	
+	// 通过http方式调用另一个调度软件的WebService服务
+	std::string strResponse;
+	int nInvokeRes = InvokerWebServer(xml,strResponse);
+
+
+	// 提取xml
+	std::string retXml;
+	int result = GetHttpContent(strResponse, retXml);
+	if(retXml.empty())
+	{
+		LOGFATFMT(0,"GetOtherMonitorState:Parse Fail! xml is empty!\n");
+		return false;
+	}
+
+	// 解析xml读取结果
+	int nState;
+	bRet = ParseAskAboutSlaveRestoreSwitch(retXml,nState);
+	nIsRestoreSwitch = nState;
+	return bRet;
+}
+
+// 解析重启返回状态
+bool  CMonitorSensor::ParseAskAboutSlaveRestoreSwitch(std::string &retXml,int &nState)
+{
+	XercesDOMParser *ptrParser = new  XercesDOMParser;
+	ptrParser->setValidationScheme(  XercesDOMParser::Val_Never );
+	ptrParser->setDoNamespaces( true );
+	ptrParser->setDoSchema( false );
+	ptrParser->setLoadExternalDTD( false );
+	InputSource* ptrInputsource = new  MemBufInputSource((XMLByte*)retXml.c_str(), retXml.size(), "bufId");
+
+	try
+	{
+		ptrParser->parse(*ptrInputsource);
+		DOMDocument* ptrDoc = ptrParser->getDocument();
+
+		// 读取state节点
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("nIsSwitch"));
+		if(ptrNodeList == NULL)
+		{
+			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,
+				"ParseSlaveRebootState:没有找到state节点");
+			return false;
+		}
+		else
+		{
+			DOMNode* ptrNode = ptrNodeList->item(0);
+			char *pstate = XMLString::transcode(ptrNode->getFirstChild()->getNodeValue());
+			std::string str_state =  pstate;
+			if(!str_state.empty())
+			{
+				nState = atoi(str_state.c_str());
+			}
+			XMLString::release(&pstate);
+		}
+	}
+	catch(  XMLException& e )
+	{
+		char* message =  XMLString::transcode( e.getMessage() );
+		XMLString::release( &message );
+		LOGFAT(ERROR_PARSE_MONITORSTATE_XML,message);
+		delete ptrParser;
+		ptrInputsource = NULL;
+		delete ptrInputsource;
+		ptrParser = NULL;
+	}
+
+
+	delete ptrParser;
+	delete ptrInputsource;
+	ptrInputsource = NULL;
+	ptrParser = NULL;
+	return true;
+}

@@ -569,6 +569,7 @@ bool C_HallList::GetSMSWorkState()
 	if(ptrGS->GetStatus() == 0)
 	{
 		ptrGS->SetStatus(1);
+		LOGINFFMT(0,"************Global Status:1**************");
 	}
 	//g_RunState = 1;
 	return true;
