@@ -1198,7 +1198,7 @@ bool  CMonitorSensor::ParseSlaveRebootState(std::string &retXml,int &nState,std:
 		DOMDocument* ptrDoc = ptrParser->getDocument();
 
 		// ¶ÁÈ¡state½Úµã
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("nState"));
+		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("state"));
 		if(ptrNodeList == NULL)
 		{
 			LOGFAT(ERROR_PARSE_MONITORSTATE_XML,

@@ -112,30 +112,6 @@ int  CInvoke::Init()
 			return -1;
 		}
 
-// 		int nRole = pPara->GetRole();
-// 		if(nRole== (int)STDBYROLE)
-// 		{
-// 			TakeOverMain(false);
-// 		}
-// 		else if(nRole == (int)MAINROLE)
-// 		{
-// 			TakeOverStdby(false);
-// 		}
-
-// 		std::vector<std::string> vecLocalRun;
-// 		m_ptrLstHall->GetAllLocalRunHallID(vecLocalRun);
-// 		for(int i = 0;i<vecLocalRun.size();i++)
-// 		{
-// 			std::string strNewIP;
-// 			int nNewPort = 0;
-// 			m_ptrLstHall->GetSMSRunHost(vecLocalRun[i],strNewIP,nNewPort);
-// 			if(!strNewIP.empty() && nNewPort > 0 && C_Para::GetInstance()->IsMain())
-// 			{
-// 				bool bRet = m_ptrTMS->NotifyTMSSMSSwitch(vecLocalRun[i],strNewIP,nNewPort);
-// 				LOGINFFMT(0,"Init:NotifyTMSSMSSwitch< %s Switch To %s:%d Host Result:%d>",vecLocalRun[i].c_str(),
-// 					strNewIP.c_str(),nNewPort,bRet?1:0);
-// 			}
-// 		}
 	}
 	else if(nOtherStatus > 0)
 	{
@@ -158,7 +134,11 @@ int  CInvoke::Init()
 // 			{
 // 				GetDBSynchStatus();
 // 				pDM->GetDBSynchStatus(nDBStatus);
-// 				LOGFAT(0,"***Mysql DB Synch  Failed!");
+// 				if(nDBStatus == 0)
+// 				{
+// 					break;
+// 				}
+// 				LOGFAT(0,"***Mysql DB Synch  Failed! Waiting DB to Synching......");
 // 			}
 			
 		}
@@ -587,12 +567,15 @@ void CInvoke::PrintVersionInfo()
 {
 	std::string strMORS = C_Para::GetInstance()->IsMain() ? "MAIN" :"STDBY";
 	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
-	LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.4>>>>                               #");
+	LOGINFFMT(0,"#                      <<<<<IMonitor1.0.0.5>>>>                               #");
 	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
 	LOGINFFMT(0,"%s",strMORS.c_str());
 	LOGINFFMT(0,"修改:");
-	LOGINFFMT(0,"	1、解决了主备启动两个相同sms的问题");
-	LOGINFFMT(0,"	2、增加网络不稳定时主备都接管当稳定时恢复正常的功能");	
+	LOGINFFMT(0,"	1、串行化splitbrain时的恢复，先主恢复接管再备恢复接管");
+	LOGINFFMT(0,"	2、增加重启接口和定时重启接口");
+	LOGINFFMT(0,"	3、对全局状态进行加锁控制并由GlobalStatus类管理");
+	LOGINFFMT(0,"	4、通过使用GlobalStatus来进行主备状态的互斥，防止竞态条件");
+	LOGINFFMT(0,"	5、启动时如果对端已经启动则按对端的报告的sms的状态启动");
 	LOGINFFMT(0,"#-----------------------------------------------------------------------------#");
 
 }
@@ -818,10 +801,12 @@ bool CInvoke::SwitchSMS(std::string strHallID,bool bDelaySwitch,int &nRet)
 	CDataManager *ptrDM = CDataManager::GetInstance();
 	int nOtherStatus =ptrDM->GetOtherIMonitor();
 
-	// 如果备机状态不正常不进行切换
+	// 如果备机状态为0不进行切换
+	// 对端机状态为0说明，对端正在启动或正在接管、恢复控管、处理冲突
 	if(pPara->IsMain() && nOtherStatus <= 0)
 	{
 		int nIsRestoreSwitch;
+		// 如果备机正处于恢复接管时并执行了切换，这种情况允许执行切换。
 		if(m_ptrMonitor->AskAboutSlaveRestoreSwitch(nIsRestoreSwitch))
 		{
 			if(nIsRestoreSwitch==0)
@@ -1813,7 +1798,7 @@ int CInvoke::SetupRebootTimer()
 	int iRet = m_ptrMonitor->ReadRebootTask(nEnable,nDay,nWeek,nHour,nMinute,nType,nRepeatCnt,nExecnt);
 
 
-	if(!nEnable||nExecnt>=nRepeatCnt)
+	if(!nEnable||(nRepeatCnt>0 && nExecnt>=nRepeatCnt))
 	{
 		LOGINFFMT(0,"------Timing Reboot Cannot Setup!(nEnable:%d||nExecnt>=nRepeatCnt(%d:%d))",nEnable,nExecnt,nRepeatCnt);
 		return 0;

@@ -801,9 +801,8 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 				LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
 				int nPID;
 				StartSMS(nPID,m_bUseLocalDB);
-				sleep(2);
+				sleep(5);
 			}
-			
 		}
 	}
 	
