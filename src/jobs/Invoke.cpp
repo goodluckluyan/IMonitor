@@ -10,6 +10,7 @@
 #include "C_constDef.h"
 #include "utility/C_Time.h"
 
+
 extern time_t g_tmDBSynch;
 //extern int g_RunState;
 bool g_bQuit = false;
@@ -130,16 +131,17 @@ int  CInvoke::Init()
 		if(nDBStatus==1)
 		{
 			LOGFAT(0,"***Mysql DB Synch  Failed!");
-// 			while(1)
-// 			{
-// 				GetDBSynchStatus();
-// 				pDM->GetDBSynchStatus(nDBStatus);
-// 				if(nDBStatus == 0)
-// 				{
-// 					break;
-// 				}
-// 				LOGFAT(0,"***Mysql DB Synch  Failed! Waiting DB to Synching......");
-// 			}
+			while(1)
+			{
+				GetDBSynchStatus();
+				pDM->GetDBSynchStatus(nDBStatus);
+
+				if(nDBStatus == 0)
+				{
+					break;
+				}
+				LOGFAT(0,"***Mysql DB Synch  Failed! Waiting DB to Synching......");
+			}
 			
 		}
 		m_ptrLstHall = new C_HallList();
@@ -204,6 +206,11 @@ int  CInvoke::Init()
 		m_ptrFO = new CFileOperator;
 	}
 
+	std::string strPath;
+	C_RunPara::GetInstance()->GetExePath(strPath);
+	CWatchdog * ptr = new CWatchdog("ingest_cs",strPath);
+	m_vecPtrWathdog.push_back(ptr);
+
 	GetDBSynchStatus();
 	//GetDBSynchStatus_PIP();
 }
@@ -219,6 +226,14 @@ void CInvoke::DeInit()
 	SAFE_DELETE(m_ptrDispatch);
 	SAFE_DELETE(m_ptrHash);
 	SAFE_DELETE(m_ptrFO);
+
+	int nLen = m_vecPtrWathdog.size();
+	for(int i = 0; i < nLen ;i++)
+	{
+		CWatchdog * ptr = m_vecPtrWathdog[i];
+		SAFE_DELETE(ptr);
+	}
+	m_vecPtrWathdog.clear();
 }
 
 // 添加定时任务
@@ -324,6 +339,9 @@ bool CInvoke::AddInitTask()
 	// 添加文件任务
 	ptrTaskList->AddTask(TASK_NUMBER_FILEOPERATION_ROUTINE,NULL,-1);
 
+	// 添加看门狗监测任务
+	ptrTaskList->AddTask(TASK_NUMBER_CHECKWATCHDOG,NULL,ptrRunPara->GetCurTime() + 2);
+
 
 	SetupRebootTimer();
 
@@ -333,9 +351,6 @@ bool CInvoke::AddInitTask()
 		// 添加处理用户输入命令
 		ptrTaskList->AddTask(TASK_NUMBER_PROCESS_USERINPUT,NULL,0);
 	}
-
-
-
 }
 
 // 获取时间间隔
@@ -383,6 +398,8 @@ int CInvoke::GetCheckDelay(int nStateType)
 		break;
 	case TASK_NUMBER_GET_DB_SYNCN_STATUS:
 		nDelay = pPara->m_nDBSynchCheckDelay;
+	case TASK_NUMBER_CHECKWATCHDOG:
+		nDelay = 2;
 		break;
 	}
 	return nDelay;
@@ -464,6 +481,8 @@ int CInvoke::Exec(int iCmd,void * ptrPara)
 	case TASK_NUMBER_SHUTDOWN:
 		shutdown(1);//关机
 		break;
+	case TASK_NUMBER_CHECKWATCHDOG:
+		CheckByWatchdog();
 	default:
 	    nResult = 2;
 	}
@@ -1758,8 +1777,10 @@ int CInvoke::TimingRebootServer(int nDay,int nWeek,int nHour,int nMinute,
 
 	if(bMain)
 	{
+		int slave_stat=0;
+		std::string slave_Desc;
 		m_ptrMonitor->InvokeSlaveTimingReboot(nDay,nWeek,nHour,nMinute,nRepeatType,
-			nRepeatCnt,nState,strDesc);
+			nRepeatCnt,slave_stat,slave_Desc);
 	}
 
 	
@@ -1853,6 +1874,20 @@ int CInvoke::SetupRebootTimer()
 
 }
 
+// 看门狗监测
+int CInvoke::CheckByWatchdog()
+{
+	int nLen = m_vecPtrWathdog.size();
+	for(int i = 0 ;i < nLen ; i++)
+	{
+		CWatchdog * ptrDog = m_vecPtrWathdog[i];
+		if(!ptrDog->IsRun())
+		{
+			int nPid;
+			ptrDog->StartInCurTerminal(nPid);
+		}
+	}
+}
 
 
 

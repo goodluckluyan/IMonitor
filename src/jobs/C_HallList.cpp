@@ -566,7 +566,7 @@ bool C_HallList::GetSMSWorkState()
 
 	// 更新运行状态
 	GlobalStatus * ptrGS = GlobalStatus::GetInstinct();
-	if(ptrGS->GetStatus() == 0)
+	if(ptrGS->GetStatus() == 0)//必须判断是否为0，否则进入2，3状态时也会被设置成0，会造成状态混乱。
 	{
 		ptrGS->SetStatus(1);
 		LOGINFFMT(0,"************Global Status:1**************");

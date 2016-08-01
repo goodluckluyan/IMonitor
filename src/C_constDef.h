@@ -40,6 +40,7 @@ const int TASK_NUMBER_FILEOPERATION_ROUTINE = 0x0901;
 
 const int TASK_NUMBER_REBOOT = 0x0902;
 const int TASK_NUMBER_SHUTDOWN = 0x0903;
+const int TASK_NUMBER_CHECKWATCHDOG = 0x0904;
 
 // sms 状态
 const int SMS_STATE_SUCCESS = 101 ;    // 连接正常

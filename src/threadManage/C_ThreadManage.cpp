@@ -120,7 +120,7 @@ void  C_ThreadManage::DestoryInstance()
 	{
 		delete m_pInstance;
 	}
-	m_pInstance = NULL
+	m_pInstance = NULL;
 }
 
 C_ThreadManage::C_ThreadManage()

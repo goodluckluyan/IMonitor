@@ -552,7 +552,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		return true;
 	}
 	
-	// 对端机状态为0说明，对端正在启动或正在接管、恢复控管、处理冲突
+	// 对端机状态为0说明对端正在启动或正在接管、恢复控管、处理冲突
 	if(0 == nState)
 	{
        m_nOtherMonitorState = 0;

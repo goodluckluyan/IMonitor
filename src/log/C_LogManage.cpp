@@ -194,6 +194,12 @@ int C_LogManage::InitLogPath(std::string &strBootPath)
 	m_strBootPath = strBootPath;
 	int iResult = -1;
 
+	if(!FileExist(strBootPath))
+	{
+		CreateDirectoryPath(strBootPath);
+	}
+
+
 	if((iResult = CheckLogPath(strBootPath)) != 0)
 	{
 		return iResult;
@@ -208,6 +214,44 @@ int C_LogManage::InitLogPath(std::string &strBootPath)
 		return iResult;
 	}
 	return 0;
+}
+
+bool C_LogManage::FileExist(const std::string& path )
+{
+	int erno =access(path.c_str(),F_OK );
+	return !erno;
+}
+
+bool C_LogManage::CreateDirectoryPath(const std::string& path )
+{
+	char dir[500];  
+	strcpy(dir,path.c_str() );  
+	int len = strlen(dir);  
+	if(dir[len-1]!='/')
+	{
+		strcat(dir,"/");
+	}
+	len = strlen(dir);
+	bool flag =true;
+	for(int i=1; i<len; i++ )  
+	{  
+		if(dir[i]=='/')  
+		{  
+			dir[i]='\0';
+			std::string dirpath =dir;
+			dirpath +="/";
+			if(access(dirpath.c_str(), F_OK )!=0   )  
+			{  
+				if(mkdir(dirpath.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH )==-1)  
+				{     
+					flag =false;
+					break;
+				}
+			}  
+			dir[i] ='/';  
+		}  
+	}
+	return flag;
 }
 
 int C_LogManage::SetLogDate()

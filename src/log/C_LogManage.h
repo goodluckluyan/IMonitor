@@ -76,24 +76,36 @@ public:
 	}
 	int SetLogLevel(int iLevel);
 	int SetLogLevel(int iLevel, int iModele, int iSubModule);
+
 	//初始化日志目录 首先调用CheckLogPath，然后调用
 	int InitLogPath(std::string &strBootPath);
+
 	int SetLogDate();
+
 	//检查日志根目录strBootPath是否合法。同时检测“01”---“31”子目录是否存在，
 	//如果不存在则创建子目录。
 	//返回值：默认。
 	//参数：strBootPath 所有日志文件的根目录。
 	int CheckLogPath(std::string &strBootPath);
+
 	//删除以前的日志文件。
 	//返回值默认；
 	//参数：strPath 日志文件的目录
 	int DeletePreLog(std::string &strPath);
+
 	// 创建日志结构,系统初始化时调用。
 	//返回值默认。
 	int CreateLogStruct(std::string &strPath);
 	int ModifyLogStruct(std::string &strPath);
+
 	//重新初始化日志 每天0点由主线程调用。
 	int ReInitLog();
+
+	// 创建目录
+	bool CreateDirectoryPath(const std::string& path );
+
+	// 检测目录是否存在
+	bool FileExist(const std::string& path );
 
 		
 protected:

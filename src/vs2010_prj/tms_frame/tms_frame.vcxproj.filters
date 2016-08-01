@@ -380,5 +380,8 @@
     <ClInclude Include="..\..\parser_xml.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\jobs\watchdog.h">
+      <Filter>jobs</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

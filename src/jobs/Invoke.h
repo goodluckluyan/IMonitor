@@ -14,7 +14,7 @@
 #include "TMSSensor.h"
 #include "HashCheck.h"
 #include "FileOperator.h"
-
+#include "watchdog.h"
 #define SAFE_DELETE(ptr) if(ptr != NULL) {delete ptr ; ptr = NULL;}
 
 
@@ -167,11 +167,12 @@ private:
 	// 判断对端sms的状态是否可用
 	bool HasOtherSMSStatus();
 
-
+	// 看门狗监测
+	int CheckByWatchdog();
 
 	
 private:
-
+	std::vector<CWatchdog*> m_vecPtrWathdog;
 	C_HallList *m_ptrLstHall;
 	CheckDisk *m_ptrDisk;
 	Test_NetCard *m_ptrNet;

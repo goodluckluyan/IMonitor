@@ -406,7 +406,6 @@ int main(int argc, char** argv)
 	{
 		return -1; 
 	} 
-	
 
 	// 创建执行体
 	CInvoke Invoker;
@@ -427,15 +426,15 @@ int main(int argc, char** argv)
 	InitSigFun(pLogManage);
 
 	//导片线程
-	CFileCopyProtSerProxy * pProxy =new CFileCopyProtSerProxy;
-	pProxy->SetServerPort(12319);
-	pProxy->SetLogPath(pPara->m_strLogPath+"cpfile/");
-	if (!pProxy->Start() )
-	{
-		LOGINFFMT(LOG_ERR,"导片线程启动失败");
-		delete pProxy;
-		return 0;
-	}
+// 	CFileCopyProtSerProxy * pProxy =new CFileCopyProtSerProxy;
+// 	pProxy->SetServerPort(12319);
+// 	pProxy->SetLogPath(pPara->m_strLogPath+"cpfile/");
+// 	if (!pProxy->Start() )
+// 	{
+// 		LOGINFFMT(LOG_ERR,"导片线程启动失败");
+// 		delete pProxy;
+// 		return 0;
+// 	}
 
 	//初试化定时器。
 	int iMillisecond = 0;
@@ -488,17 +487,16 @@ int main(int argc, char** argv)
 			LOGINFFMT(LOG_ERR,"RereadPara Set Log Level:%d",C_Para::GetInstance()->m_nWirteLogLevel);
 			C_LogManage::GetInstance()->SetLogLevel(C_Para::GetInstance()->m_nWirteLogLevel);
 			Invoker.PrintVersionInfo();
-//			Invoker.SwitchAllSMS();
 			
 		}
 	}
 
 	// 不要改变析构顺序，否则会出现无法结束线程管理类的情况
-	if(pProxy)
-	{
-		pProxy->Close();
-		delete pProxy;
-	}
+// 	if(pProxy)
+// 	{
+// 		pProxy->Close();
+// 		delete pProxy;
+// 	}
 	Invoker.DeInit();
 	C_TaskList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
