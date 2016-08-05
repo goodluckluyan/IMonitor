@@ -134,7 +134,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 	std::vector<int> vecCurPID;
 	if(Getpid(strEXE,vecCurPID) < 0)
 	{
-		LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
+		LOGERRFMT(0,"StartSMS_CurTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
 		return false;
 	}
 
@@ -160,7 +160,8 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 	}
 	else if(cpid == 0)
 	{
-		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
+		//最好不要使用日志输出，因为日志中使用了mutx可能会在fork时引起死锁
+//		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
 
 		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
 		if(rl.rlim_max == RLIM_INFINITY)
@@ -171,24 +172,12 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		{
 			close(i);
 		}
-
-// 		setsid();
-// 
-// 		if ((pid = fork()) < 0)
-// 		{
-// 			printf("%s: can't fork", cmd);
-// 			exit(-1);
-// 		}
-// 		else if (pid != 0) /* parent */
-// 		{
-// 			exit(0);
-// 		}
-// 		
+	
 		// 再次fork防止出现僵尸进程
 		int ccpid=0;
 		if((ccpid = fork()) < 0)
 		{
-			LOGERRFMT(0,"StartSMS_CurTerminal:failed to create process!");
+//			LOGERRFMT(0,"StartSMS_CurTerminal:failed to create process!");
 			return false;
 		}
 		else if(ccpid > 0)
@@ -218,8 +207,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 			std::string tmp = m_SMS.strConfpath.substr(0,m_SMS.strConfpath.rfind('.'));
 			m_SMS.strConfpath = tmp + "_local.ini";
 		}
-//		m_SMS.strConfpath +=" &";
-		LOGINFFMT(0,"execl:%s %s %s",m_SMS.strExepath.c_str(),strEXE.c_str(),m_SMS.strConfpath.c_str());
+//		LOGINFFMT(0,"execl:%s %s %s",m_SMS.strExepath.c_str(),strEXE.c_str(),m_SMS.strConfpath.c_str());
 		if(!strEXE.empty() && execl(m_SMS.strExepath.c_str(),strEXE.c_str(),
 		m_SMS.strConfpath.c_str(),NULL) < 0)
 		{

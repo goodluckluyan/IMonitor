@@ -106,7 +106,7 @@ void CFileOperator::ProcessFileOptTask()
 		if(0==ret && strlen(strCmdAfter)>0)
 		{
 			int retafter = system(strCmdAfter);
-			LOGINFFMT(0,"%s <Result:%d>",strCmdAfter,retafter);
+//			LOGINFFMT(0,"%s <Result:%d>",strCmdAfter,retafter);
 		}
 		exit(ret);
 	}

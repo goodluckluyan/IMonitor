@@ -429,7 +429,8 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 		       LOGFMT(ULOG_ERROR,"Cannot Set TMS SIGCHLD Signal Catchfun! ");
 		}
 
-		LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
+		//最好不要在fork后使用日志输出，因为日志中使用了mutx可能会在fork时引起死锁
+//		LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
 		if(execl(strTMSPath.c_str(),"Tms20_DeviceService&","",NULL) < 0)
 		{
 			perror("execl error");
@@ -1069,7 +1070,7 @@ int CTMSSensor::ForkExeSh(std::string strExe)
 
 		char buf[128]={'\0'};
 		snprintf(buf,sizeof(buf),"sudo /bin/bash %s",strExe.c_str());
-		LOGFMT(ULOG_INFO,"%s\n",buf);
+//		LOGFMT(ULOG_INFO,"%s\n",buf);
 		system(buf);
 		exit(0);
 	}

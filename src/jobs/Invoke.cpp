@@ -124,11 +124,13 @@ int  CInvoke::Init()
 	}
 	else
 	{
-		LOGFAT(0,"***Check Other Host IMonitor Booting,So HallList Immediately Boot !");
 		GetDBSynchStatus();
 		int nDBStatus;
 		pDM->GetDBSynchStatus(nDBStatus);
-		if(nDBStatus==1)
+
+		// 主发现数据库不同步，则忽略按本机数据启动sms
+		// 备发现数据库不同步则等待数据库同步或等待主启动完成后从主获取sms的启动位置
+		if(nDBStatus==1 && !pPara->IsMain())
 		{
 			LOGFAT(0,"***Mysql DB Synch  Failed!");
 			while(1)
@@ -140,15 +142,38 @@ int  CInvoke::Init()
 				{
 					break;
 				}
+
 				LOGFAT(0,"***Mysql DB Synch  Failed! Waiting DB to Synching......");
+
+				if(m_ptrMonitor->GetOtherMonitorState(TASK_NUMBER_GET_OTHERMONITOR_STATUS))
+				{
+					nOtherStatus =pDM->GetOtherIMonitor();
+					if(nOtherStatus > 0)
+					{
+						// 如果对端为正常运行状态（非启动、非正在接管、非恢复接管、非处理冲突），则延时启动sms。
+						// 延时启动时先获取对端的sms状态再按对端状态进行启动sms。如果对端为接管角色只有延时启动完
+						// 完成并把GlobalStatus设为1后对端才会进入恢复接管状态
+						m_bSMSBootDelay = true;
+						LOGFAT(0,"***Check Other Host IMonitor Had Booted Before Long Time,So HallList Delay Boot !");
+						break;
+					}
+				}
+				sleep(1);
+
 			}
 			
 		}
-		m_ptrLstHall = new C_HallList();
-		if(m_ptrLstHall->Init(m_ptrTMS)!=0)
+
+		if(!m_bSMSBootDelay)
 		{
-			return -1;
+			LOGFAT(0,"***Check Other Host IMonitor Booting,So HallList Immediately Boot !");
+			m_ptrLstHall = new C_HallList();
+			if(m_ptrLstHall->Init(m_ptrTMS)!=0)
+			{
+				return -1;
+			}
 		}
+		
 	}
 		
 	
@@ -1817,7 +1842,8 @@ int CInvoke::SetupRebootTimer()
 
 
 	int iRet = m_ptrMonitor->ReadRebootTask(nEnable,nDay,nWeek,nHour,nMinute,nType,nRepeatCnt,nExecnt);
-
+	LOGINFFMT(0,"------ReadRebootTask(%d,%d,%d,%d,%d,%d,%d,%d)",nEnable,nDay,nWeek,nHour,nMinute,
+		nType,nRepeatCnt,nExecnt);
 
 	if(!nEnable||(nRepeatCnt>0 && nExecnt>=nRepeatCnt))
 	{
@@ -1861,6 +1887,7 @@ int CInvoke::SetupRebootTimer()
 		}
 		break;
 	case 3:
+	case 4:
 		if(t1.getHour() < nHour)
 		{
 			ptrTaskList->AddTask(TASK_NUMBER_REBOOT,NULL,

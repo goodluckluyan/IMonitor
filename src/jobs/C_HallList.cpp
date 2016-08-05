@@ -356,7 +356,6 @@ bool C_HallList::ExeShell_Fork(std::string strPath,std::string strShell)
 
 		char buf[128]={'\0'};
 		snprintf(buf,sizeof(buf),"/bin/bash %s%s",strPath.c_str(),strShell.c_str());
-		LOGINFFMT(0,"%s\n",buf);
 		system(buf);
 		exit(0);
 	}
@@ -1307,7 +1306,7 @@ bool  C_HallList::RebootMyself()
 	}
 	else if(pid == 0)
 	{
-		LOGINFFMT(0,"Fork Process(%d) service imonitord restart",getpid());
+//		LOGINFFMT(0,"Fork Process(%d) service imonitord restart",getpid());
 
 		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
 		if(rl.rlim_max == RLIM_INFINITY)
@@ -1332,7 +1331,7 @@ bool  C_HallList::RebootMyself()
 
 		char buf[64]={'\0'};
 		snprintf(buf,sizeof(buf),"service imonitord restart");
-		LOGINFFMT(0,"kill failed ,popen (%s)",buf);
+//		LOGINFFMT(0,"kill failed ,popen (%s)",buf);
 
 		FILE *pp = popen(buf,"r");
 		if(!pp)

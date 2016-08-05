@@ -100,12 +100,13 @@ public:
 		pid_t cpid ;
 		if((cpid = fork()) < 0)
 		{
-			LOGERRFMT(0,"StartInCurTerminal:failed to create process!");
+			perror("StartInCurTerminal:failed to create process!");
 			return false;
 		}
 		else if(cpid == 0)
 		{
-			LOGINFFMT(0,"Fork Process(%d) Start %s ... \n",getpid(),m_strExe.c_str());
+			//最好不要在fork后使用LOGINFFMT日志输出，因为日志中使用了mutx可能会在fork时引起死锁
+//			LOGINFFMT(0,"Fork Process(%d) Start %s ... \n",getpid(),m_strExe.c_str());
 
 			// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
 			if(rl.rlim_max == RLIM_INFINITY)
@@ -122,7 +123,7 @@ public:
 			int ccpid=0;
 			if((ccpid = fork()) < 0)
 			{
-				LOGERRFMT(0,"StartInCurTerminal:failed to create process!");
+				perror("StartInCurTerminal:failed to create process!");
 				return false;
 			}
 			else if(ccpid > 0)
@@ -138,7 +139,7 @@ public:
 			sa.sa_flags = 0;
 			if(sigaction(SIGCHLD,&sa,NULL)<0)
 			{
-				LOGINFFMT(ULOG_ERROR,"Start_CurTerminal::Cannot Set SIGCHLD Signal Catchfun! ");
+				perror("Start_CurTerminal::Cannot Set SIGCHLD Signal Catchfun! ");
 			}
 
 			chdir(m_strPath.c_str());
@@ -154,10 +155,10 @@ public:
 			{
 				tmp = m_strPath+m_strExe;
 			}
-			LOGINFFMT(0,"execl:%s %s",tmp.c_str(),strEXE.c_str());
+
 			if(!strEXE.empty() && execl(tmp.c_str(),strEXE.c_str(),NULL) < 0)
 			{
-				LOGERRFMT(0,"execl error");
+				perror("execl error");
 				exit(0);
 			}
 		}
