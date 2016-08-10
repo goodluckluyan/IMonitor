@@ -9,6 +9,7 @@
 #define _TMS20_PARA
 #include <string>
 #include <pthread.h>
+#include "threadManage/C_CS.h"
 using namespace std;
 
 // 主机角色，主机只有MAINROLE一种状态，备机有STDBYROLE和TMPMAINROLE两种状态
@@ -160,6 +161,7 @@ public:
 	{
 		pthread_mutex_destroy(&m_mutx);
 		pthread_cond_destroy(&m_cond);
+		
 	}
 
 	int GetStatus()
@@ -195,7 +197,7 @@ public:
 
 	}
 
-
+	C_CS m_mutxSignal;
 private:
 	GlobalStatus()
 	{
@@ -210,5 +212,7 @@ private:
 	static GlobalStatus * m_globalstatus;
 	pthread_mutex_t m_mutx;
 	pthread_cond_t m_cond;
+
+	
 };
 #endif //_TMS20_PARA

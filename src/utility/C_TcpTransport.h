@@ -29,7 +29,7 @@ public:
 	~TcpTransport();
 
 	//success return 0, failed return -1;
-	int TcpConnect(const char *ip, unsigned short port, int wait = 2);
+	int TcpConnect(const char *ip, unsigned short port, int wait = 1);
 
 	bool BeConnected()const;
 

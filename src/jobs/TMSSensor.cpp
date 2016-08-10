@@ -386,7 +386,7 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 	{
 		return false;
 	}
-	
+	GlobalStatus::GetInstinct()->m_mutxSignal.EnterCS();
 	pid_t pid;
 	if((pid = fork()) < 0)
 	{
@@ -420,14 +420,14 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 
 		// 为了防止TMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
 		// 因为TMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
-		struct sigaction sa;
-		sa.sa_handler=SIG_DFL;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = 0;
-		if(sigaction(SIGCHLD,&sa,NULL)<0)
-		{
-		       LOGFMT(ULOG_ERROR,"Cannot Set TMS SIGCHLD Signal Catchfun! ");
-		}
+// 		struct sigaction sa;
+// 		sa.sa_handler=SIG_DFL;
+// 		sigemptyset(&sa.sa_mask);
+// 		sa.sa_flags = 0;
+// 		if(sigaction(SIGCHLD,&sa,NULL)<0)
+// 		{
+// 		       LOGFMT(ULOG_ERROR,"Cannot Set TMS SIGCHLD Signal Catchfun! ");
+// 		}
 
 		//最好不要在fork后使用日志输出，因为日志中使用了mutx可能会在fork时引起死锁
 //		LOGFMT(ULOG_INFO,"Fork Process(%d) Start TMS ... \n",getpid());
@@ -440,18 +440,19 @@ bool CTMSSensor::StartTMS_CurTerminal(std::string strTMSPath)
 
 	// 文件迁移时会把信号SIGCHID处理方式设为默认，为了防止这时进行启动
 	// 所以进行判断SIGCHID处理方式
-	struct sigaction cursa;
-	if(sigaction(SIGCHLD,NULL,&cursa)<0)
-	{
-		LOGFMT(ULOG_ERROR,"Cannot Set TMS SIGCHLD Signal Catchfun! ");
-	}
+// 	struct sigaction cursa;
+// 	if(sigaction(SIGCHLD,NULL,&cursa)<0)
+// 	{
+// 		LOGFMT(ULOG_ERROR,"Cannot Set TMS SIGCHLD Signal Catchfun! ");
+// 	}
+// 
+// 	if(cursa.sa_handler==SIG_DFL)
+// 	{
+// 		int nStatus;
+// 		waitpid(pid,&nStatus,NULL);
+// 	}
 
-	if(cursa.sa_handler==SIG_DFL)
-	{
-		int nStatus;
-		waitpid(pid,&nStatus,NULL);
-	}
-
+	GlobalStatus::GetInstinct()->m_mutxSignal.LeaveCS();
 	bool bRun = false;
 	int exepid = 0;
 	time_t tm1;

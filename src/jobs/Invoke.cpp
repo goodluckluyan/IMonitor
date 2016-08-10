@@ -1622,6 +1622,7 @@ bool CInvoke::GetSMSPosition(std::string strHallID,std::string &strPos,int& nPor
 
 bool CInvoke::GetDBSynchStatus()
 {
+	C_GuardCS guard(&GlobalStatus::GetInstinct()->m_mutxSignal);
 	struct sigaction sa;
 	struct sigaction oldsa;
 	sa.sa_handler=SIG_DFL;
@@ -1655,6 +1656,8 @@ bool CInvoke::GetDBSynchStatus_PIP()
 {
 	FILE *fp;
 	int nStatus=0;
+
+
 	struct sigaction sa;
 	struct sigaction oldsa;
 	sa.sa_handler=SIG_DFL;

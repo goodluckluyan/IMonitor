@@ -24,7 +24,6 @@
 #include "log/C_LogManage.h"
 #include "database/CppMySQL3DB.h"
 #include "utility/C_TcpTransport.h"
-#include "Server/C_FileCopyProtSerProxy.h"
 #include "parser_xml.h"
 #include "execinfo.h"
 
@@ -67,6 +66,12 @@ void sigterm(int signo)
 {
   syslog(LOG_ERR,"catch TERM Signal !");
   g_bQuit = true;
+}
+
+void sigchild(int signo)
+{
+	int status;  
+	while(waitpid(-1, &status, WNOHANG) > 0); 
 }
 
 void sighup(int signo)
@@ -133,7 +138,11 @@ void InitSigFun(C_LogManage *pLogManage)
 	}
 
 	// 忽略子进程结束时发送的SIGCLD信号 ，防止僵尸进程
-	signal(SIGCHLD,SIG_IGN);
+//	signal(SIGCHLD,SIG_IGN);
+ 	if(signal(SIGCHLD,sigchild) == SIG_ERR)
+ 	{
+ 		pLogManage->WriteLog(ULOG_FATAL,LOG_MODEL_OTHER,0,ERROR_SIGCATCH_FUN,"add signal Number:SIGCHLD"); 
+ 	}
 }
 
 void daemonize(const char *cmd)

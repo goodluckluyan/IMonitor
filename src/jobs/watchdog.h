@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include"log/C_LogManage.h"
+#include "para/C_Para.h"
 #define  LOG(errid,msg)  C_LogManage::GetInstance()->WriteLog(ULOG_FATAL,LOG_MODEL_JOBS,0,errid,msg)
 #define  LOGERRFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_ERROR,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
 #define  LOGINFFMT(errid,fmt,...)  C_LogManage::GetInstance()->WriteLogFmt(ULOG_INFO,LOG_MODEL_JOBS,0,errid,fmt,##__VA_ARGS__)
@@ -95,7 +96,7 @@ public:
 			return false;
 		}
 
-
+		GlobalStatus::GetInstinct()->m_mutxSignal.EnterCS();
 
 		pid_t cpid ;
 		if((cpid = fork()) < 0)
@@ -133,14 +134,14 @@ public:
 
 			// 为了防止SMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
 			// 因为SMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
-			struct sigaction sa;
-			sa.sa_handler=SIG_DFL;
-			sigemptyset(&sa.sa_mask);
-			sa.sa_flags = 0;
-			if(sigaction(SIGCHLD,&sa,NULL)<0)
-			{
-				perror("Start_CurTerminal::Cannot Set SIGCHLD Signal Catchfun! ");
-			}
+// 			struct sigaction sa;
+// 			sa.sa_handler=SIG_DFL;
+// 			sigemptyset(&sa.sa_mask);
+// 			sa.sa_flags = 0;
+// 			if(sigaction(SIGCHLD,&sa,NULL)<0)
+// 			{
+// 				perror("Start_CurTerminal::Cannot Set SIGCHLD Signal Catchfun! ");
+// 			}
 
 			chdir(m_strPath.c_str());
 			std::string strEXE = m_strExe + "&";
@@ -165,18 +166,19 @@ public:
 
 		// 文件迁移时会把信号SIGCHID处理方式设为默认，为了防止这时进行启动
 		// 所以进行判断SIGCHID处理方式
-		struct sigaction cursa;
-		if(sigaction(SIGCHLD,NULL,&cursa)<0)
-		{
-			LOGINFFMT(ULOG_ERROR,"StartInCurTerminal::Cannot Set SIGCHLD Signal Catchfun! ");
-		}
+// 		struct sigaction cursa;
+// 		if(sigaction(SIGCHLD,NULL,&cursa)<0)
+// 		{
+// 			LOGINFFMT(ULOG_ERROR,"StartInCurTerminal::Cannot Set SIGCHLD Signal Catchfun! ");
+// 		}
 
-		if(cursa.sa_handler==SIG_DFL)
-		{
-			int nStatus;
-			waitpid(cpid,&nStatus,NULL);
-		}
+// 		if(cursa.sa_handler==SIG_DFL)
+// 		{
+// 			int nStatus;
+// 			waitpid(cpid,&nStatus,NULL);
+// 		}
 
+		GlobalStatus::GetInstinct()->m_mutxSignal.LeaveCS();
 		bool bRun = false;
 		int exepid = 0;
 		time_t tm1;

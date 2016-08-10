@@ -145,12 +145,7 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 		return false;
 	}
 
-// 	std::vector<int> vecCurPID;
-// 	if(Getpid(strEXE,vecCurPID) < 0)
-// 	{
-// 		LOGERRFMT(0,"StartSMS_NewTerminal Getpid Failed (Start SMS:%s)!",m_SMS.strId.c_str());
-// 		return false;
-// 	}
+	GlobalStatus::GetInstinct()->m_mutxSignal.EnterCS();
 
 	pid_t cpid ;
 	if((cpid = fork()) < 0)
@@ -160,7 +155,8 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 	}
 	else if(cpid == 0)
 	{
-		//最好不要使用日志输出，因为日志中使用了mutx可能会在fork时引起死锁
+		//最好不要使用日志输出，因为子进行会继承父进程的互斥锁，在某一时刻父进程日志中的互斥锁lock后
+		//fork子进程会复制lock状态，子进程再lock就会死锁
 //		LOGINFFMT(0,"Fork Process(%d) Start SMS(%s) ... \n",getpid(),m_SMS.strId.c_str());
 
 		// 关闭所有父进程打开的文件描述符，以免子进程继承父进程打开的端口。
@@ -187,14 +183,14 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 
 		// 为了防止SMS要获取它子进程的状态时失败，所以把SIGCHLD信号处理设成默认处理方式。
 		// 因为SMS会继承调度软件的信号处理方式,调度软件的SIGCHLD信号处理方法是忽略。
-		struct sigaction sa;
-		sa.sa_handler=SIG_DFL;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = 0;
-		if(sigaction(SIGCHLD,&sa,NULL)<0)
-		{
-			LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
-		}
+// 		struct sigaction sa;
+// 		sa.sa_handler=SIG_DFL;
+// 		sigemptyset(&sa.sa_mask);
+// 		sa.sa_flags = 0;
+// 		if(sigaction(SIGCHLD,&sa,NULL)<0)
+// 		{
+// 			LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
+// 		}
 
 		
 		int nPos = m_SMS.strExepath.rfind('/');
@@ -218,18 +214,19 @@ bool C_Hall::StartSMS_CurTerminal(int &nPid,bool bLocalHost/*=false*/)
 
 	// 文件迁移时会把信号SIGCHID处理方式设为默认，为了防止这时进行启动
 	// 所以进行判断SIGCHID处理方式
-	struct sigaction cursa;
-	if(sigaction(SIGCHLD,NULL,&cursa)<0)
-	{
-		LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
-	}
+// 	struct sigaction cursa;
+// 	if(sigaction(SIGCHLD,NULL,&cursa)<0)
+// 	{
+// 		LOGINFFMT(ULOG_ERROR,"Cannot Set SMS SIGCHLD Signal Catchfun! ");
+// 	}
+// 
+// 	if(cursa.sa_handler==SIG_DFL)
+// 	{
+// 		int nStatus;
+// 		waitpid(cpid,&nStatus,NULL);
+// 	}
 
-	if(cursa.sa_handler==SIG_DFL)
-	{
-		int nStatus;
-		waitpid(cpid,&nStatus,NULL);
-	}
-
+	GlobalStatus::GetInstinct()->m_mutxSignal.LeaveCS();
 	bool bRun = false;
 	int exepid = 0;
 	time_t tm1;
