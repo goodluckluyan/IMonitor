@@ -73,7 +73,15 @@ int  CInvoke::Init()
 						else 
 						{
 							LOGFAT(0,"Mysql DB Synch  Failed! Try Again Wait 5 Sec.");
-							sleep(5);
+                            sleep(5);
+
+                            time_t tm2;
+                            time(&tm2);
+                            if(tm2-tm1 >= 300)
+                            {
+                                LOGFAT(ERROR_OTHERMONITOR_NORUN,"waiting timeout 5 min ,start delay boot!");
+                                break;
+                            }
 						}
 					}
 				}

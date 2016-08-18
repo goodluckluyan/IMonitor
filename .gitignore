@@ -39,7 +39,7 @@
 *.creator
 *.files
 *.includes
-
+*.creator.*
 #dir
 bin/
 
