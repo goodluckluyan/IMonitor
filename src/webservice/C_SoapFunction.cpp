@@ -51,7 +51,7 @@ int mons__GetSMSState(struct soap* cSoap , std::vector<struct mons__SMSState> &v
 	// 处于恢复状态不进行状态获取
 	int nRunState = GlobalStatus::GetInstinct()->GetStatus();
 	//if(2 == g_RunState)
-	if(2 == nRunState)
+    if(2 == nRunState|| 0 == nRunState)
 	{
 		return 0;
 	}

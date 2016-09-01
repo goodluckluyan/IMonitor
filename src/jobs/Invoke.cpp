@@ -1042,6 +1042,7 @@ void CInvoke::SwtichTakeOverSMS()
 	bool bDirty=true;
 	while(bDirty)
 	{
+        vecSMSStatus.clear();
 		time_t tmUpdate=pDM->GetOtherSMSstatus(vecSMSStatus);
 		time_t tmCur;
 		time(&tmCur);
@@ -1068,7 +1069,9 @@ void CInvoke::SwtichTakeOverSMS()
 			{
 				if(vecSMSStatus[j].hallid==vecSMS[i])
 				{
-					OtherStatus=vecSMSStatus[j];
+                    OtherStatus=vecSMSStatus[j];
+                    LOGINFFMT(0,"id:(%s) run(%d) stat(%d)",OtherStatus.hallid.c_str(),
+                              OtherStatus.nRun,OtherStatus.nStatus);
 					break;
 				}
 			}
@@ -1302,7 +1305,7 @@ bool CInvoke::SolveConflict(std::vector<ConflictInfo> &vecCI)
 		int nMWeight=0;
 		int nSWeight=0;
 		ConflictInfo &node = vecCI[i];
-		LOGINFFMT(0," SolveConflict %s!",node.strHallID.c_str());
+        LOGINFFMT(0," SolveConflict %s type:%d!",node.strHallID.c_str(),node.nType);
 		if(node.nMainState>103)
 		{
 			nMWeight+=16;

@@ -776,12 +776,12 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 		if(!ISSMSRun())
 		{
 			int i = 0;
-			while(!ISSMSRun() && i<3)
+            while(!ISSMSRun() && i<2)
 			{
 				i++;
 			}
 			
-			if(3==i)
+            if(2==i)
 			{
 				LOGERRFMT(0,"Check SMS(%s) was Shutdown ,Start It!",m_SMS.strId.c_str());
 				int nPID;
@@ -812,7 +812,7 @@ int C_Hall::GetSMSWorkState( int &state, string &info)
 	string http;
 	LOGINFFMT(0,"GetSMSWorkState %s:%s:%d",m_SMS.strId.c_str(),m_SMS.strIp.c_str(),m_SMS.nPort);
 	UsherHttp(strUsherLocation,m_SMS.strIp, xml, strUsherNs,http);
-	iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c,2);
+    iResult = TcpOperator(m_SMS.strIp,m_SMS.nPort, http, response_c,1);
 	if (iResult != 0)
 	{
 		return iResult;//SoftwareSTATE_ERROR_TCP

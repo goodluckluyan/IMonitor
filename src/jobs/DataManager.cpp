@@ -79,7 +79,9 @@ void CDataManager::SetSMSInfo(std::vector<SMSInfo> vecHall)
 	int nLen = vecHall.size();
 	for(int i = 0 ;i < nLen ;i++)
 	{
-		SMSInfo & node = vecHall[i];
+        SMSInfo & node = vecHall[i];
+        LOGDEBFMT("id:(%s) role(%d) run(%d) pos(%d) stat(%d)",node.strId.c_str(),
+                  node.nRole,node.stStatus.nRun,node.stStatus.nPosition,node.stStatus.nStatus);
 		m_mapSmsStatus[node.strId] = node;
 	}
 	m_csSMS.LeaveCS();
@@ -378,7 +380,9 @@ bool CDataManager::UpdateSMSStat(std::string strHallID,SMSInfo &stSMSInfo)
 	if(it != m_mapSmsStatus.end())
 	{
 		SMSInfo &info = it->second;
-		info = stSMSInfo;
+        info = stSMSInfo;
+        LOGDEBFMT("SMS:%s(role:%d run:%d status:%3d)",info.strId.c_str(),
+            info.nRole,info.stStatus.nRun,info.stStatus.nStatus);
 	}
 	m_csSMS.LeaveCS();
 	return true;
@@ -475,8 +479,8 @@ bool CDataManager::GetSMSStat(std::vector<SMSStatus>& vecSMSState)
 		{
 			state.nStatus = info.stStatus.nStatus;
 			state.hallid = info.strId;
-			state.nPosition = info.stStatus.nPosition;
-			state.nRun = info.stStatus.nRun;
+            state.nPosition = info.stStatus.nPosition;
+            state.nRun = info.stStatus.nRun;
 			state.strSPLUuid = info.stStatus.strSPLUuid;
 			vecSMSState.push_back(state);
 		}
@@ -713,8 +717,8 @@ bool CDataManager::UpdateOtherSMSState(std::vector<SMSStatus> &vecSMSStatus)
 			pos = vecSMSStatus[i].nRun==1 ? "main":"slave";
 		}
 		char buf[64]={'\0'};
-		snprintf(buf,64," %s:[po:%5s,st:%3d]",vecSMSStatus[i].hallid.c_str(),
-			pos.c_str(),vecSMSStatus[i].nStatus);
+        snprintf(buf,64," %s:[po:%5s,st:%3d,run:%3d]",vecSMSStatus[i].hallid.c_str(),
+            pos.c_str(),vecSMSStatus[i].nStatus,vecSMSStatus[i].nRun);
 		strTmp+=buf;
 // 		if(vecSMSStatus[i].nRun == 0)
 // 		{

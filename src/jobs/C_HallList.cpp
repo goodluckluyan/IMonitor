@@ -78,6 +78,7 @@ int C_HallList::Init(CTMSSensor * ptrTMS,bool bCheckOtherSMS)
 		bool bDirty=true;
 		while(bDirty)
 		{
+            vecSMSStatus.clear();
 			time_t tmUpdate=m_ptrDM->GetOtherSMSstatus(vecSMSStatus);
 			time_t tmCur;
 			time(&tmCur);
@@ -631,7 +632,7 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 		{
 			// 测试3次获取sms的状态
 			int i = 0;
-			while(i<3)
+            while(i<2)
 			{
 				int nState = -1;
 				std::string strInfo;
@@ -651,7 +652,7 @@ bool C_HallList::StartAllSMS(bool bCheckOtherSMSRun,std::vector<std::string>& ve
 			}
 
 			// 三次获取状态失败才开启sms
-			if(i<3)
+            if(i<2)
 			{
 				LOGERRFMT(ERROR_SMSSWITCH_LOCALRUN,"StartAllSMS:SMS:%s run normal can't local run!",ptr->GetHallID().c_str());
 				continue;
