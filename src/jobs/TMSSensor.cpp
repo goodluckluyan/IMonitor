@@ -601,17 +601,17 @@ bool CTMSSensor::AskTMSReboot()
 		return false;
 	}
 
-	std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-	xml += "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" ";
-	xml += "xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" ";
-	xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
-	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
-	xml += "xmlns:ns1=\"http://tempuri.org/ns1.xsd\" ";
-	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
-	xml += "<ns1:IsReboot></ns1:IsReboot>";
-	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
+    std::string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    xml += "<SOAP-ENV:Envelope ";
+    xml += "xmlns:ns0=\"http://tempuri.org/ns1.xsd\" ";
+    xml += "xmlns:ns1=\"http://schemas.xmlsoap.org/soap/envelope/\" " ;
+    xml += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " ;
+    xml += "xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">";
+    xml += "<SOAP-ENV:Header/>";
+    xml += "<ns1:Body><ns0:IfReboot/></ns1:Body>";
+    xml += "</SOAP-ENV:Envelope>";
 
-	// 通过http方式调用另一个调度软件的WebService服务
+    // 通过http方式调用另一个调度软件的WebService服务
 	std::string strResponse;
 	std::string strURI = "/";
 	int nInvokeRes = InvokerWebServer(true,strURI,xml,strResponse);
@@ -663,17 +663,17 @@ bool  CTMSSensor::ParseIsRebootXml(std::string &retXml,int &nRet)
 		DOMDocument* ptrDoc = ptrParser->getDocument();	
 
 		// 读取ret节点
-		DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("isboot"));
+        DOMNodeList *ptrNodeList = ptrDoc->getElementsByTagName(C2X("ret"));
 		if(ptrNodeList == NULL)
 		{
-			LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
+            LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseIsRebootXml:ret");
 			return false;
 		}
 		else 
 		{
 			if(ptrNodeList->getLength() == 0)
 			{
-				LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseXmlFromTMSState:tmsState");
+                LOGIDFMT(ULOG_ERROR,ERROR_PARSE_MONITORSTATE_XML,"ParseIsRebootXml:ret");
 				return false;
 			}
 			DOMNode* ptrNode = ptrNodeList->item(0);

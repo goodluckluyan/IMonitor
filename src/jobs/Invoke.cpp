@@ -239,10 +239,13 @@ int  CInvoke::Init()
 		m_ptrFO = new CFileOperator;
 	}
 
+
+#ifndef INGEST_MODULE
 	std::string strPath;
 	C_RunPara::GetInstance()->GetExePath(strPath);
 	CWatchdog * ptr = new CWatchdog("ingest_cs",strPath);
 	m_vecPtrWathdog.push_back(ptr);
+#endif
 
 	GetDBSynchStatus();
 	//GetDBSynchStatus_PIP();
@@ -1750,14 +1753,14 @@ int CInvoke::ShutdownServer(int nType,int &state,std::string &strDesc)
 			return 1;
 		}
 		
-		// 询问tms是否可以重启
-// 		if(!m_ptrTMS->AskTMSReboot())
-// 		{
-// 			state = 1;
-// 			strDesc = "system busy ,can not reboot!";
-// 			return 1;
-// 		}
-// 		else
+        // 询问tms是否可以重启
+        if(!m_ptrTMS->AskTMSReboot())
+        {
+            state = 1;
+            strDesc = "system busy ,can not reboot!";
+            return 1;
+        }
+        else
 		{
 			//再让主机执行
 			ptrTaskList->AddTask(nType==0?TASK_NUMBER_REBOOT:TASK_NUMBER_SHUTDOWN,NULL,ptrRunPara->GetCurTime() + 3,ONCE_TASK);
@@ -1922,6 +1925,12 @@ int CInvoke::SetupRebootTimer()
 int CInvoke::CheckByWatchdog()
 {
 	int nLen = m_vecPtrWathdog.size();
+
+    if(nLen == 0)
+    {
+        LOGINFFMT(0,"-----no watched by watchdog-----");
+    }
+
 	for(int i = 0 ;i < nLen ; i++)
 	{
 		CWatchdog * ptrDog = m_vecPtrWathdog[i];

@@ -27,6 +27,10 @@
 #include "parser_xml.h"
 #include "execinfo.h"
 
+#ifdef INGEST_MODULE
+#include "Server/C_FileCopyProtSerProxy.h"
+#endif
+
 extern bool g_bQuit;
 extern int g_nRunType;  // 1为守护进程 0为交互模式
 bool g_bReread = false; // 是否重读配置文件
@@ -434,16 +438,18 @@ int main(int argc, char** argv)
 	// 初始化信号处理
 	InitSigFun(pLogManage);
 
+#ifdef INGEST_MODULE
 	//导片线程
-// 	CFileCopyProtSerProxy * pProxy =new CFileCopyProtSerProxy;
-// 	pProxy->SetServerPort(12319);
-// 	pProxy->SetLogPath(pPara->m_strLogPath+"cpfile/");
-// 	if (!pProxy->Start() )
-// 	{
-// 		LOGINFFMT(LOG_ERR,"导片线程启动失败");
-// 		delete pProxy;
-// 		return 0;
-// 	}
+    CFileCopyProtSerProxy * pProxy =new CFileCopyProtSerProxy;
+    pProxy->SetServerPort(12319);
+    pProxy->SetLogPath(pPara->m_strLogPath+"cpfile/");
+    if (!pProxy->Start() )
+    {
+        LOGINFFMT(LOG_ERR,"导片线程启动失败");
+        delete pProxy;
+        return 0;
+    }
+#endif
 
 	//初试化定时器。
 	int iMillisecond = 0;
@@ -483,6 +489,7 @@ int main(int argc, char** argv)
 			usleep(100000);
 		}
 
+
 		//add thread check 
 // 		if((++iCountTime) == 20)
 // 		{
@@ -500,12 +507,15 @@ int main(int argc, char** argv)
 		}
 	}
 
+#ifdef INGEST_MODULE
 	// 不要改变析构顺序，否则会出现无法结束线程管理类的情况
-// 	if(pProxy)
-// 	{
-// 		pProxy->Close();
-// 		delete pProxy;
-// 	}
+    if(pProxy)
+    {
+        pProxy->Close();
+        delete pProxy;
+    }
+#endif
+
 	Invoker.DeInit();
 	C_TaskList::DestoryInstance();
 	C_ThreadManage::DestoryInstance();
