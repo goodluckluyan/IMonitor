@@ -170,6 +170,19 @@ bool CTMSSensor::ShutDownTMS()
 			if(nRet == 0 && vecPID.size()==0)
 			{
 				LOGFMT(ULOG_INFO,"Kill Local TMS(%d) Done!\n",nPid);
+                // 本机关闭tms,把位置更新到对端
+                C_Para * ptr = C_Para::GetInstance();
+                int nRole=ptr->GetRole();
+                if(nRole==MAINROLE || nRole == ONLYMAINROLE)
+                {
+                    UpdateDataBaseTMSPos(1);
+                }
+
+                //  本机关闭tms,把位置更新到对端
+                if(nRole==STDBYROLE || nRole == TMPMAINROLE)
+                {
+                    UpdateDataBaseTMSPos(0);
+                }
 				bRet = true;
 				break;
 			}
@@ -557,7 +570,7 @@ bool CTMSSensor::GetTMSWorkState()
 	xml += "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ";
 	xml += "xmlns:ns1=\"http://tempuri.org/ns1.xsd\" ";
 	xml += "xmlns:ns2=\"http://tempuri.org/mons.xsd\"> <SOAP-ENV:Body> ";
-	xml += "<ns1:IfReboot></ns1:IfReboot>";
+    xml += "<ns1:GetTMSState></ns1:GetTMSState>";
 	xml +="</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
 	// 通过http方式调用另一个调度软件的WebService服务

@@ -1867,6 +1867,11 @@ int CInvoke::SetupRebootTimer()
 
 	if(!nEnable||(nRepeatCnt>0 && nExecnt>=nRepeatCnt))
 	{
+        // 对第二天重启的任务执行后要把数据库状态重置，设成不操作
+        if(nType == 4 && nExecnt >= nRepeatCnt)
+        {
+            ResetTimeRebootStatus();
+        }
 		LOGINFFMT(0,"------Timing Reboot Cannot Setup!(nEnable:%d||nExecnt>=nRepeatCnt(%d:%d))",nEnable,nExecnt,nRepeatCnt);
 		return 0;
 	}
@@ -1942,5 +1947,33 @@ int CInvoke::CheckByWatchdog()
 	}
 }
 
+// 对第二天重启的任务执行后要把数据库状态重置，设成不操作
+bool  CInvoke::ResetTimeRebootStatus()
+{
+    // 打开数据库
+    C_Para *ptrPara = C_Para::GetInstance();
+    CppMySQL3DB mysql;
+    if(mysql.open(ptrPara->m_strDBServiceIP.c_str(),ptrPara->m_strDBUserName.c_str(),
+        ptrPara->m_strDBPWD.c_str(),ptrPara->m_strDBName.c_str()) == -1)
+    {
+        LOGINFFMT(0,"mysql open failed!");
+        return false;
+    }
+
+    char sql[256]={'\0'};
+    snprintf(sql,sizeof(sql),"update system_config set conf_val=0  where conf_item=\"cs_restart\"");
+
+    int nResult = mysql.execSQL(sql);
+
+    if(nResult == -1)
+    {
+        LOGINFFMT(0,"update conf_val=0 field from tms.system_config!\n");
+        return false;
+    }
+
+    return true;
+
+
+}
 
 

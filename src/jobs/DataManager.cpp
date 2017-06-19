@@ -593,7 +593,7 @@ bool CDataManager::UpdateOtherMonitorState(bool bMain,int nState,long lSynch)
 		}
 
 		bool bTrigger = (nCnt!=nSmsSize || (nRole != ONLYMAINROLE && nRole != TMPMAINROLE));
-		if(m_nOterHostFail > 2 && bTrigger)
+        if(m_nOterHostFail > 6 && bTrigger)
 		{
 			int nPerSec = nSec/m_nOterHostFail;
 			char buf[16]={'\0'};

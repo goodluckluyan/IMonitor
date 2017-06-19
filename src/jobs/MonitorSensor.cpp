@@ -69,7 +69,7 @@ int CMonitorSensor::SendAndRecvResponse(const std::string &request, std::string 
 
 	std::string strIP=m_strIP;
 	TcpTransport tcp;
-	int result = tcp.TcpConnect(strIP.c_str(), m_nPort);
+    int result = tcp.TcpConnect(strIP.c_str(), m_nPort,delayTime);
 	if(result < 0)
 	{	
 		LOGFATFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nPort);
@@ -77,7 +77,7 @@ int CMonitorSensor::SendAndRecvResponse(const std::string &request, std::string 
 		IPMgr::GetInstance()->GetNextOtherIP(strIP);
 		if(strIP!=m_strIP)
 		{
-			result = tcp.TcpConnect(strIP.c_str(), m_nPort);
+            result = tcp.TcpConnect(strIP.c_str(), m_nPort,delayTime);
 			if(result < 0)
 			{
 				LOGFATFMT(ULOG_ERROR,"CMonitorSensor::SendAndRecvResponse TcpConnect %s:%d Fail !\n",strIP.c_str(), m_nPort);
@@ -154,7 +154,7 @@ int CMonitorSensor::InvokerWebServer(std::string &xml,std::string &strResponse)
 	request.SetSoapAction("");
 	std::string strHttp = request.GetHttpRequest();
 
-	int result = SendAndRecvResponse(strHttp, strResponse);
+    int result = SendAndRecvResponse(strHttp, strResponse,10);
 	
 	return result;
 	

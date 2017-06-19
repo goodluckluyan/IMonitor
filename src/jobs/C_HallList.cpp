@@ -525,31 +525,31 @@ bool C_HallList::GetSMSWorkState()
 		}//if(0 == nState && strInfo.empty())
 		else
 		{
-// 			if(nState == 101)
-// 			{
-// 				//每天在零晨三点重启sms
-// 				time_t tm;
-// 				time(&tm);
-// 				int hour=localtime(&tm)->tm_hour;
-// 				if(hour>=0 && hour <=5)
-// 				{
-// 					if(ptr->IsLocal()&&ptr->IsRouteReboot())
-// 					{
-// 						LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
-// 
-// 						// 如果返回为2则有可能进程僵死
-// 						 if(ptr->ShutDownSMS()==2)
-// 						{
-// 							LOGINFFMT(0,"kill  sms:%s failed ,sms is defunc!",ptr->GetHallID().c_str());
-// 							//RebootMyself();
-// 							break;
-// 						}
-// 
-// 						// 再次获取状态，GetSMSWorkState内部可以检测是否运行,如果没有运行则启动！
-// 						ptr->GetSMSWorkState(nState,strInfo);
-// 					}
-// 				}
-// 			}
+            if(nState == 101)
+            {
+                //每天在零晨三点重启sms
+                time_t tm;
+                time(&tm);
+                int hour=localtime(&tm)->tm_hour;
+                if(hour>=0 && hour <=5)
+                {
+                    if(ptr->IsLocal()&&ptr->IsRouteReboot())
+                    {
+                        LOGINFFMT(0,"Route Reboot sms:%s",ptr->GetHallID().c_str());
+
+                        // 如果返回为2则有可能进程僵死
+                         if(ptr->ShutDownSMS()==2)
+                        {
+                            LOGINFFMT(0,"kill  sms:%s failed ,sms is defunc!",ptr->GetHallID().c_str());
+                            //RebootMyself();
+                            break;
+                        }
+
+                        // 再次获取状态，GetSMSWorkState内部可以检测是否运行,如果没有运行则启动！
+                        ptr->GetSMSWorkState(nState,strInfo);
+                    }
+                }
+            }
 		}
 		
 

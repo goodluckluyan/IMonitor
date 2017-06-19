@@ -16,7 +16,7 @@
 #include "FileOperator.h"
 #include "watchdog.h"
 #define SAFE_DELETE(ptr) if(ptr != NULL) {delete ptr ; ptr = NULL;}
-
+#define INGEST_MODULE
 
 
 
@@ -169,6 +169,9 @@ private:
 
 	// 看门狗监测
 	int CheckByWatchdog();
+
+    // 对第二天重启的任务执行后要把数据库状态重置，设成不操作
+    bool  ResetTimeRebootStatus();
 
 	
 private:

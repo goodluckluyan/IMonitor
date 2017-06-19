@@ -12,7 +12,7 @@
 #include "threadManage/C_CS.h"
 using namespace std;
 
-// 主机角色，主机只有MAINROLE一种状态，备机有STDBYROLE和TMPMAINROLE两种状态
+// 主机角色，主机只有MAINROLE,ONLYMAINROLE两种状态，备机有STDBYROLE和TMPMAINROLE两种状态
 enum enHOSTROLE{MAINROLE = 1,ONLYMAINROLE=2,STDBYROLE = 3,TMPMAINROLE = 4};
 class C_Para
 {
