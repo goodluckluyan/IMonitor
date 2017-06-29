@@ -478,3 +478,21 @@ int mons__AskAboutSlaveRestoreSwitch(struct soap* cSoap,int &nIsSwitch)
 	}
 	return 0;
 }
+
+
+int mons__KillTMS(struct soap* cSoap,int &result)
+{
+    LOGINFFMT(0,"WS:KillTMS");
+    CDataManager *pDM = CDataManager::GetInstance();
+    CInvoke *ptr = (CInvoke * )pDM->GetInvokerPtr();
+    if(ptr->KillTMS())
+    {
+        result = 1;
+    }
+    else
+    {
+        result = 0;
+    }
+
+    return 0;
+}

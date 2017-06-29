@@ -1976,4 +1976,10 @@ bool  CInvoke::ResetTimeRebootStatus()
 
 }
 
+// kill TMS 不涉及位置变化
+bool CInvoke::KillTMS()
+{
+     return m_ptrTMS->KillTMS();
+}
+
 

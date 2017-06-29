@@ -141,6 +141,9 @@ public:
 	// 打印版本信息
 	void PrintVersionInfo();
 
+    // kill TMS 不涉及位置变化
+    bool KillTMS();
+
 private:
 	// 打印帮助信息
 	void PrintProductInfo();
@@ -172,6 +175,8 @@ private:
 
     // 对第二天重启的任务执行后要把数据库状态重置，设成不操作
     bool  ResetTimeRebootStatus();
+
+
 
 	
 private:

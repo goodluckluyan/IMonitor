@@ -83,6 +83,9 @@ public:
 	// kill tms PID
 	bool ShutDownTMS();
 
+    // kill tms 不涉及位置变化
+    bool KillTMS();
+
 private:
 	
 	// 用不同的方式启动tms

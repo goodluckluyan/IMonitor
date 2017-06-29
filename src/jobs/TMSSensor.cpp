@@ -196,6 +196,41 @@ bool CTMSSensor::ShutDownTMS()
 	}
 }
 
+// kill tms 不涉及位置变化
+bool CTMSSensor::KillTMS()
+{
+    bool bRet = false;
+    m_csPID.EnterCS();
+    int nPid = m_nPid;
+    m_csPID.LeaveCS();
+
+    if(nPid > 0)
+    {
+        int i=0;
+        while(i<3)
+        {
+            kill(nPid,9);
+            sleep(1);
+            std::vector<int> vecPID;
+            int nRet = Getpid("Tms20_DeviceService",vecPID);
+            if(nRet == 0 && vecPID.size()==0)
+            {
+                LOGFMT(ULOG_INFO,"Kill Local TMS(%d) Done!\n",nPid);
+                bRet = true;
+                break;
+            }
+            i++;
+        }
+        return bRet;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+
 // 启动tms
 bool CTMSSensor::StartTMS()
 {
